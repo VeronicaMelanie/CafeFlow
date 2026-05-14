@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "360795635337",
+    "project_id": "cafeflow-5tg",
+    "storage_bucket": "cafeflow-5tg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360795635337:android:408e1e9877563003001058",
+        "android_client_info": {
+          "package_name": "com.fivetogo.fivetogo_scheduler"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "360795635337-q2un44recrtnd9u1k6qndkn1elcms5gs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fivetogo.fivetogo_scheduler",
+            "certificate_hash": "f7173f363926338497dadda5d5bdeb42cbe7b703"
+          }
+        },
+        {
+          "client_id": "360795635337-ke84ii4cl5f7spbafq50rfb7t76k853q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmqEMM5SgYQu2N9FJmx5po6q9TP0TUhv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "360795635337-ke84ii4cl5f7spbafq50rfb7t76k853q.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "360795635337-3tsqgolkmkfv1jbrrli25h4rqj66802p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.fivetogo.fivetogoScheduler"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
