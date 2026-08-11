@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/admin_guard.dart';
@@ -154,6 +155,22 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
+              Icon(Icons.work_outline, size: 14, color: AppColors.textLight),
+              const SizedBox(width: 4),
+              Text(
+                user.employmentDate == null
+                    ? 'Employment date: not set'
+                    : 'Started: ${DateFormat('dd MMM yyyy').format(user.employmentDate!)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
               Icon(Icons.access_time, size: 14, color: AppColors.textLight),
               const SizedBox(width: 4),
               Text(
@@ -209,10 +226,12 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     );
     String selectedWorkType = user.workType;
     String selectedLocation = user.primaryLocation;
+    DateTime? selectedEmploymentDate = user.employmentDate;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Edit Employee'),
         content: SingleChildScrollView(
@@ -231,6 +250,38 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Employment Start Date'),
+                subtitle: Text(
+                  selectedEmploymentDate == null
+                      ? 'Not set'
+                      : DateFormat('dd MMM yyyy').format(selectedEmploymentDate!),
+                ),
+                trailing: const Icon(Icons.calendar_today_outlined),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedEmploymentDate ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setDialogState(() => selectedEmploymentDate = picked);
+                  }
+                },
+              ),
+              if (selectedEmploymentDate != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {
+                      setDialogState(() => selectedEmploymentDate = null);
+                    },
+                    child: const Text('Clear employment date'),
+                  ),
+                ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: selectedWorkType,
@@ -265,22 +316,30 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final updateData = <String, dynamic>{
+                'name': nameController.text,
+                'monthlyTargetHours':
+                    int.tryParse(targetController.text) ??
+                    user.monthlyTargetHours,
+                'workType': selectedWorkType,
+                'primaryLocation': selectedLocation,
+              };
+              if (selectedEmploymentDate == null) {
+                updateData['employmentDate'] = FieldValue.delete();
+              } else {
+                updateData['employmentDate'] =
+                    Timestamp.fromDate(selectedEmploymentDate!);
+              }
               await FirebaseFirestore.instance
                   .collection('users')
                   .doc(user.uid)
-                  .update({
-                    'name': nameController.text,
-                    'monthlyTargetHours':
-                        int.tryParse(targetController.text) ??
-                        user.monthlyTargetHours,
-                    'workType': selectedWorkType,
-                    'primaryLocation': selectedLocation,
-                  });
+                  .update(updateData);
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Save'),
           ),
         ],
+      ),
       ),
     );
   }

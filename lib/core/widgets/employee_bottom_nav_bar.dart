@@ -155,17 +155,23 @@ class EmployeeBottomNavLayout {
       );
 
   /// True when [label] fits beside the active icon within [contentWidth].
-  static bool activeLabelFits(String label, double contentWidth) {
+  static bool activeLabelFits(
+    String label,
+    double contentWidth, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) {
     if (contentWidth < activeIconSize) return false;
 
     final textPainter = TextPainter(
       text: TextSpan(text: label, style: activeLabelStyle(Colors.black)),
       maxLines: 1,
       textDirection: TextDirection.ltr,
+      textScaler: textScaler,
     )..layout();
 
+    const safetyMargin = 2.0;
     final requiredWidth =
-        activeIconSize + AppSpacing.sm + textPainter.width;
+        activeIconSize + AppSpacing.sm + textPainter.width + safetyMargin;
     return requiredWidth <= contentWidth;
   }
 }
@@ -181,8 +187,12 @@ class _ActivePillContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showLabel =
-        EmployeeBottomNavLayout.activeLabelFits(tab.label, contentWidth);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final showLabel = EmployeeBottomNavLayout.activeLabelFits(
+      tab.label,
+      contentWidth,
+      textScaler: textScaler,
+    );
     final labelStyle =
         EmployeeBottomNavLayout.activeLabelStyle(tab.accentColor);
 
@@ -201,6 +211,7 @@ class _ActivePillContent extends StatelessWidget {
             Text(
               tab.label,
               maxLines: 1,
+              softWrap: false,
               style: labelStyle,
             ),
           ],

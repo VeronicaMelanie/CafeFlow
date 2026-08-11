@@ -9,6 +9,7 @@ class VacationRepository {
     return _firestore
         .collection('vacations')
         .where('userId', isEqualTo: userId)
+        .orderBy('requestedAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => VacationModel.fromMap(doc.data(), doc.id))

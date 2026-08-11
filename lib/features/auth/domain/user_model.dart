@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String email;
@@ -7,6 +9,7 @@ class UserModel {
   final int monthlyTargetHours;
   final String primaryLocation;
   final String secondaryLocation;
+  final DateTime? employmentDate;
   final String? fcmToken;
   final List<String>? availability; // Store dates in ISO format
   final String? contractType; // 'full_time' | 'part_time'
@@ -22,6 +25,7 @@ class UserModel {
     required this.monthlyTargetHours,
     required this.primaryLocation,
     required this.secondaryLocation,
+    this.employmentDate,
     this.fcmToken,
     this.availability,
     this.contractType,
@@ -40,6 +44,9 @@ class UserModel {
         monthlyTargetHours: (map['monthlyTargetHours'] as num?)?.toInt() ?? 160,
         primaryLocation: map['primaryLocation']?.toString() ?? 'Gara',
         secondaryLocation: map['secondaryLocation']?.toString() ?? 'Avantgarden',
+        employmentDate: map['employmentDate'] is Timestamp
+            ? (map['employmentDate'] as Timestamp).toDate()
+            : null,
         fcmToken: map['fcmToken']?.toString(),
         availability: map['availability'] is List 
             ? List<String>.from(map['availability']) 
@@ -62,6 +69,8 @@ class UserModel {
       'monthlyTargetHours': monthlyTargetHours,
       'primaryLocation': primaryLocation,
       'secondaryLocation': secondaryLocation,
+      if (employmentDate != null)
+        'employmentDate': Timestamp.fromDate(employmentDate!),
       'fcmToken': fcmToken,
       'availability': availability,
       'contractType': contractType,

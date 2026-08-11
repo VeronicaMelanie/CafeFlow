@@ -175,6 +175,36 @@ void main() {
     }
   });
 
+  testWidgets('Active pill text stays inside pill bounds on wide layout', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Stack(
+            children: [
+              EmployeeBottomNavBar(
+                selectedIndex: 0,
+                onTabSelected: (_) {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final pillFinder = find.byType(DecoratedBox).first;
+    final labelFinder = find.text('Schedule');
+    expect(labelFinder, findsOneWidget);
+
+    final pillRect = tester.getRect(pillFinder);
+    final labelRect = tester.getRect(labelFinder);
+    expect(pillRect.contains(labelRect.topLeft), isTrue);
+    expect(pillRect.contains(labelRect.bottomRight), isTrue);
+  });
+
   test('EmployeeBottomNavLayout hides Schedule label when pill is too narrow', () {
     expect(
       EmployeeBottomNavLayout.activeLabelFits('Schedule', 42),
