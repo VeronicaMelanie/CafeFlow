@@ -1,0 +1,84 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'stable'
+        channel: 'stable'
+        cache: true
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Verify Flutter installation
+      run: flutter doctor -v
+      
+    - name: Import Code Signing Certificates
+      run: |
+        CERTIFICATE_BASE64=${{ secrets.IOS_CERTIFICATE_BASE64 }}
+        if [ -n "$CERTIFICATE_BASE64" ]; then
+          echo $CERTIFICATE_BASE64 | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k ~/Library/Keychains/build.keychain -P ${{ secrets.IOS_CERTIFICATE_PASSWORD }} -T /usr/bin/codesign
+          security list-keychains -s ~/Library/Keychains/build.keychain
+          security default-keychain -s ~/Library/Keychains/build.keychain
+          security unlock-keychain -p "" ~/Library/Keychains/build.keychain
+          security set-key-partition-list -s apple-tool:,apple: -s -k "" ~/Library/Keychains/build.keychain
+        fi
+        
+    - name: Import Provisioning Profile
+      run: |
+        PROFILE_BASE64=${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        if [ -n "$PROFILE_BASE64" ]; then
+          echo $PROFILE_BASE64 | base64 --decode > profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+        fi
+        
+    - name: Build iOS with code signing
+      run: |
+        if [ -n "${{ secrets.IOS_CERTIFICATE_BASE64 }}" ]; then
+          flutter build ios --release
+        else
+          echo "Warning: No code signing configured, building without codesign"
+          flutter build ios --release --no-codesign
+        fi
+      env:
+        IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        
+    - name: Create IPA
+      run: |
+        cd build/ios/iphoneos
+        mkdir -p Payload
+        cp -R Runner.app Payload/
+        zip -r ../../../CafeFlow.ipa Payload/
+        cd ../../..
+        
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-ipa
+        path: CafeFlow.ipa
+        retention-days: 30
+        
+    - name: Upload Runner.app artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-app
+        path: build/ios/iphoneos/Runner.app
+        retention-days: 30

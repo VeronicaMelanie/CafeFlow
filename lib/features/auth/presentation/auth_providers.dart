@@ -12,7 +12,11 @@ final authStateProvider = StreamProvider<User?>((ref) {
 });
 
 final currentUserProvider = FutureProvider<UserModel?>((ref) async {
-  final user = ref.watch(authStateProvider).value;
+  final user = await ref.watch(authStateProvider.future);
   if (user == null) return null;
-  return ref.watch(authRepositoryProvider).getCurrentUserModel();
+  return ref.read(authRepositoryProvider).getCurrentUserModel();
+});
+
+final allEmployeesProvider = StreamProvider<List<UserModel>>((ref) {
+  return ref.watch(authRepositoryProvider).getAllEmployees();
 });

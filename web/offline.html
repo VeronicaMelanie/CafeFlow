@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6B9B">
+  <title>CafeFlow — Offline</title>
+  <link rel="stylesheet" href="pwa-styles.css">
+  <style>
+  .offline-page {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #fdfbf7;
+    color: #2d2d2d;
+  }
+  .offline-page img { width: 72px; border-radius: 16px; margin-bottom: 1rem; }
+  .offline-page h1 { font-size: 1.35rem; margin: 0 0 0.5rem; }
+  .offline-page p { color: #8e8e93; font-size: 0.95rem; max-width: 280px; line-height: 1.5; }
+  .offline-page button {
+    margin-top: 1.5rem;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #ff6b9b, #f791a9);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  </style>
+</head>
+<body>
+  <div class="offline-page">
+    <img src="icons/apple-touch-icon-180.png" alt="CafeFlow">
+    <h1>You're offline</h1>
+    <p>Open CafeFlow from your Home Screen when you're back online. Cached schedules may still be available in the app.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

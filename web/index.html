@@ -1,47 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="CafeFlow — Coffee shop scheduling and team management for 5ToGo.">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Viewport: safe areas, no zoom bounce (iOS standalone) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- Web App Manifest (Android + modern browsers; iOS uses meta + apple-touch-icon) -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#FF6B9B">
+  <meta name="color-scheme" content="light">
+
+  <!-- Android / Chromium -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="CafeFlow">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <!-- iOS Safari — required for Add to Home Screen standalone mode -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CafeFlow">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Apple Touch Icons — 180×180 is the primary iOS Home Screen size -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+
+  <!-- iOS startup images (splash) — replace href with web/splash/*.png when generated -->
+  <link rel="apple-touch-startup-image" href="splash/iphone-15-pro-max-portrait.png"
+    media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/iphone-15-pro-portrait.png"
+    media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/iphone-14-portrait.png"
+    media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/iphone-x-portrait.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/iphone-8-plus-portrait.png"
+    media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/iphone-se-portrait.png"
+    media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/ipad-pro-12-portrait.png"
+    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="pwa-styles.css">
 
   <title>CafeFlow</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="google-signin-client-id" content="925861994797-u4bpijf63c8m9740u2amjogmlv2g9uut.apps.googleusercontent.com">
+
+  <!-- Google Sign-In (web client ID) -->
+  <meta name="google-signin-client_id" content="925861994797-80vrot56p4iimj07ho21h51khr8p21sm.apps.googleusercontent.com">
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <div id="cafeflow-splash" aria-hidden="true">
+    <img class="splash-logo" src="icons/apple-touch-icon-180.png" alt="" width="96" height="96">
+    <p class="splash-title">CafeFlow</p>
+    <p class="splash-subtitle">Loading your schedule…</p>
+    <div class="splash-spinner" role="status" aria-label="Loading"></div>
+    <p id="cafeflow-offline-hint">You're offline. Cached data may still be available.</p>
+  </div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <script src="pwa-init.js"></script>
+  <script src="register-sw.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -1,20 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../data/consumption_repository.dart';
 import '../domain/consumption_model.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/widgets/screen_header.dart';
+import '../../../core/widgets/interactive_scale.dart';
 
 class ConsumptionEntryScreen extends ConsumerStatefulWidget {
   const ConsumptionEntryScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<ConsumptionEntryScreen> createState() => _ConsumptionEntryScreenState();
+  ConsumerState<ConsumptionEntryScreen> createState() =>
+      _ConsumptionEntryScreenState();
 }
 
-class _ConsumptionEntryScreenState extends ConsumerState<ConsumptionEntryScreen> {
+class _ConsumptionEntryScreenState
+    extends ConsumerState<ConsumptionEntryScreen> {
   String? _selectedProduct;
   int _quantity = 1;
+  String? _editingId;
+  final TextEditingController _productController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  String _filterPeriod = 'all';
+  DateTime _selectedDate = DateTime.now();
+
+  @override
+  void dispose() {
+    _productController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +44,36 @@ class _ConsumptionEntryScreenState extends ConsumerState<ConsumptionEntryScreen>
       backgroundColor: AppColors.offWhite,
       body: Column(
         children: [
-          _buildHeader(context),
+          ScreenHeader(
+            title: 'Log Consumption',
+            onBack: () => Navigator.pop(context),
+          ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Daily Consumption',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     'Keep track of what you drink or eat during your shift.',
-                    style: TextStyle(color: AppColors.textLight, fontSize: 14),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textLight,
+                        ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
                   _buildInputCard(),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: AppSpacing.huge),
                   _buildPrimaryCTA(user?.uid),
+                  const SizedBox(height: AppSpacing.huge),
+                  _buildHistorySection(user?.uid),
                 ],
               ),
             ),
@@ -53,68 +83,110 @@ class _ConsumptionEntryScreenState extends ConsumerState<ConsumptionEntryScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 24, left: 16, right: 24),
-      decoration: const BoxDecoration(
-        gradient: AppColors.pinkGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Log Consumption',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildInputCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.pureWhite,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(color: AppColors.shadowColor, blurRadius: 15, offset: const Offset(0, 8)),
-        ],
-      ),
+    return AppSurface(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Product Detail', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 16),
+          Text(
+            'Product Detail',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           TextFormField(
+            controller: _productController,
             decoration: InputDecoration(
               labelText: 'What did you have?',
               hintText: 'e.g. Double Espresso, Croissant',
-              prefixIcon: const Icon(Icons.restaurant_menu, color: AppColors.primaryPink),
+              prefixIcon: const Icon(
+                Icons.restaurant_menu,
+                color: AppColors.primaryPink,
+              ),
               filled: true,
-              fillColor: AppColors.softPink.withOpacity(0.3),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+              fillColor: AppColors.softPink.withValues(alpha: 0.3),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: (value) => setState(() => _selectedProduct = value),
           ),
-          const SizedBox(height: 24),
-          const Text('Quantity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.xxl),
+          Text(
+            'Quantity',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildQtyBtn(Icons.remove, _quantity > 1 ? () => setState(() => _quantity--) : null),
+              _buildQtyBtn(
+                Icons.remove,
+                _quantity > 1 ? () => setState(() => _quantity--) : null,
+              ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text('$_quantity', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primaryPink)),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                child: Text(
+                  '$_quantity',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaryPink,
+                  ),
+                ),
               ),
               _buildQtyBtn(Icons.add, () => setState(() => _quantity++)),
             ],
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          Text(
+            'Date',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          InteractiveScale(
+            onTap: () => _selectDate(),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.softPink.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    color: AppColors.primaryPink,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    DateFormat('dd MMM yyyy').format(_selectedDate),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          Text(
+            'Notes (optional)',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _notesController,
+            decoration: InputDecoration(
+              hintText: 'Add any notes...',
+              filled: true,
+              fillColor: AppColors.softPink.withValues(alpha: 0.3),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide.none,
+              ),
+            ),
           ),
         ],
       ),
@@ -122,64 +194,313 @@ class _ConsumptionEntryScreenState extends ConsumerState<ConsumptionEntryScreen>
   }
 
   Widget _buildQtyBtn(IconData icon, VoidCallback? onTap) {
-    return GestureDetector(
+    return InteractiveScale(
       onTap: onTap,
+      enabled: onTap != null,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: onTap != null ? AppColors.softPink : AppColors.borderLight,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
-        child: Icon(icon, color: onTap != null ? AppColors.primaryPink : AppColors.textLight),
+        child: Icon(
+          icon,
+          color: onTap != null ? AppColors.primaryPink : AppColors.textLight,
+        ),
       ),
     );
   }
 
   Widget _buildPrimaryCTA(String? userId) {
-    final bool isValid = _selectedProduct != null && _selectedProduct!.isNotEmpty && userId != null;
+    final bool isValid =
+        _selectedProduct != null &&
+        _selectedProduct!.isNotEmpty &&
+        userId != null;
     return Container(
       width: double.infinity,
       height: 60,
       decoration: BoxDecoration(
         gradient: isValid ? AppColors.pinkGradient : null,
-        color: isValid ? null : AppColors.textLight.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: isValid ? [
-          BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6)),
-        ] : null,
+        color: isValid ? null : AppColors.textLight.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+        boxShadow: isValid ? AppShadows.coloredGlow(AppColors.primaryPink) : null,
       ),
       child: ElevatedButton(
         onPressed: isValid ? () => _submit(userId) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+          ),
         ),
-        child: const Text('Add to My Log', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        child: Text(
+          _editingId != null ? 'Update Entry' : 'Add to My Log',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }
 
-  Future<void> _submit(String userId) async {
-    final consumption = ConsumptionModel(
-      id: '',
-      userId: userId,
-      productName: _selectedProduct!,
-      quantity: _quantity,
-      date: DateTime.now(),
+  Widget _buildHistorySection(String? userId) {
+    if (userId == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent History',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            _buildFilterDropdown(),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        StreamBuilder<List<ConsumptionModel>>(
+          stream: ref
+              .read(consumptionRepositoryProvider)
+              .getConsumptionsForUser(userId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const AppLoadingIndicator(size: 24);
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            final consumptions = _filterConsumptions(snapshot.data ?? []);
+
+            if (consumptions.isEmpty) {
+              return const Text(
+                'No consumptions logged yet',
+                style: TextStyle(color: AppColors.textLight),
+              );
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: consumptions.length,
+              itemBuilder: (context, index) {
+                final consumption = consumptions[index];
+                return _buildConsumptionCard(consumption);
+              },
+            );
+          },
+        ),
+      ],
     );
+  }
 
-    await ref.read(consumptionRepositoryProvider).addConsumption(consumption);
+  Widget _buildFilterDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.pureWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.borderLight.withValues(alpha: 0.6)),
+        boxShadow: AppShadows.xs,
+      ),
+      child: DropdownButton<String>(
+        value: _filterPeriod,
+        underline: const SizedBox.shrink(),
+        items: const [
+          DropdownMenuItem(value: 'all', child: Text('All Time')),
+          DropdownMenuItem(value: 'today', child: Text('Today')),
+          DropdownMenuItem(value: 'week', child: Text('This Week')),
+          DropdownMenuItem(value: 'month', child: Text('This Month')),
+        ],
+        onChanged: (value) => setState(() => _filterPeriod = value!),
+      ),
+    );
+  }
 
+  List<ConsumptionModel> _filterConsumptions(
+    List<ConsumptionModel> consumptions,
+  ) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    switch (_filterPeriod) {
+      case 'today':
+        return consumptions.where((c) => c.date.isAfter(today)).toList();
+      case 'week':
+        final weekAgo = today.subtract(const Duration(days: 7));
+        return consumptions.where((c) => c.date.isAfter(weekAgo)).toList();
+      case 'month':
+        final monthAgo = today.subtract(const Duration(days: 30));
+        return consumptions.where((c) => c.date.isAfter(monthAgo)).toList();
+      default:
+        return consumptions;
+    }
+  }
+
+  Widget _buildConsumptionCard(ConsumptionModel consumption) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.pureWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: AppColors.borderLight.withValues(alpha: 0.6),
+          width: 0.5,
+        ),
+        boxShadow: AppShadows.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.softPink,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.coffee, color: AppColors.primaryPink),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  consumption.productName,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  '${consumption.quantity}x • ${DateFormat('dd MMM, HH:mm').format(consumption.date)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textLight,
+                  ),
+                ),
+                if (consumption.notes != null && consumption.notes!.isNotEmpty)
+                  Text(
+                    consumption.notes!,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.edit,
+              size: 18,
+              color: AppColors.primaryPink,
+            ),
+            onPressed: () => _editConsumption(consumption),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+            onPressed: () => _deleteConsumption(consumption.id),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editConsumption(ConsumptionModel consumption) {
+    setState(() {
+      _editingId = consumption.id;
+      _selectedProduct = consumption.productName;
+      _productController.text = consumption.productName;
+      _quantity = consumption.quantity;
+      _notesController.text = consumption.notes ?? '';
+    });
+  }
+
+  Future<void> _deleteConsumption(String id) async {
+    await ref.read(consumptionRepositoryProvider).deleteConsumption(id);
+  }
+
+  Future<void> _submit(String userId) async {
+    final wasEditing = _editingId != null;
+
+    try {
+      if (wasEditing) {
+        await ref
+            .read(consumptionRepositoryProvider)
+            .updateConsumption(
+              _editingId!,
+              _selectedProduct!,
+              _quantity,
+              _notesController.text,
+            );
+      } else {
+        final consumption = ConsumptionModel(
+          id: '',
+          userId: userId,
+          productName: _selectedProduct!,
+          quantity: _quantity,
+          date: _selectedDate,
+          notes: _notesController.text,
+        );
+        await ref
+            .read(consumptionRepositoryProvider)
+            .addConsumption(consumption);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not save: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+      return;
+    }
+
+    _clearForm();
     if (mounted) {
-      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Logged! Enjoy your coffee! ☕'),
+        SnackBar(
+          content: Text(
+            wasEditing
+                ? 'Entry updated!'
+                : 'Logged! Enjoy your coffee! ☕',
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.primaryPink,
         ),
       );
     }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(DateTime.now().year, DateTime.now().month, 1),
+      lastDate: DateTime(DateTime.now().year, DateTime.now().month + 1, 0),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _clearForm() {
+    setState(() {
+      _editingId = null;
+      _selectedProduct = null;
+      _productController.clear();
+      _quantity = 1;
+      _notesController.clear();
+      _selectedDate = DateTime.now();
+    });
   }
 }

@@ -1,18 +1,143 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc().data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function userRoleUnchanged() {
+      return request.resource.data.role == resource.data.role;
+    }
+
+    function validContractType(value) {
+      return value in ['full_time', 'part_time'];
+    }
+
+    function validSelfUserUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'fcmToken',
+          'contractType',
+          'needsContractType'
+        ])
+        && userRoleUnchanged()
+        && (
+          !('contractType' in request.resource.data)
+          || validContractType(request.resource.data.contractType)
+        )
+        && (
+          !('needsContractType' in request.resource.data)
+          || request.resource.data.needsContractType is bool
+        );
+    }
+
+    function validAdminUserUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'name',
+          'monthlyTargetHours',
+          'workType',
+          'primaryLocation',
+          'secondaryLocation',
+          'fcmToken',
+          'contractType',
+          'needsContractType'
+        ]) && userRoleUnchanged();
+    }
+
+    function validShiftType() {
+      // 'part_time' is kept for legacy docs; new writes should use 'custom_hours'.
+      return request.resource.data.shiftType in ['full_time', 'custom_hours', 'part_time'];
+    }
+
+    function availabilityTimesValid() {
+      return request.resource.data.shiftType == 'full_time'
+        || (
+          request.resource.data.customStartTime != null
+          && request.resource.data.customEndTime != null
+          && request.resource.data.customEndTime > request.resource.data.customStartTime
+        );
+    }
+
+    function validInitialUserCreate() {
+      return request.resource.data.role in ['employee', 'admin']
+        && request.resource.data.email is string
+        && request.resource.data.name is string
+        && request.resource.data.workType in ['Full-time', 'Part-time']
+        && request.resource.data.monthlyTargetHours is int
+        && request.resource.data.primaryLocation is string
+        && request.resource.data.secondaryLocation is string
+        && request.resource.data.needsContractType == true
+        && request.resource.data.authProvider in ['email', 'google'];
+    }
+
+    // Users collection
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isSignedIn();
+      // Free (Spark) plan: user creates own profile document on first sign-in.
+      allow create: if isOwner(userId) && validInitialUserCreate();
+      // Users cannot modify roles from client; only specific fields are writable.
+      allow update: if (isOwner(userId) && validSelfUserUpdate())
+        || (isAdmin() && validAdminUserUpdate());
+      allow delete: if isAdmin();
     }
+
+    // Shifts collection
     match /shifts/{shiftId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && (request.resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      allow delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth.uid == request.resource.data.userId || isAdmin();
+      allow delete: if request.auth.uid == request.resource.data.userId || isAdmin();
     }
+
+    // Availability collection
+    match /availability/{availabilityId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && validShiftType()
+        && availabilityTimesValid()
+        && request.resource.data.submissionTimestamp != null;
+
+      allow update: if (isOwner(resource.data.userId) || isAdmin())
+        && request.resource.data.userId == resource.data.userId
+        && validShiftType()
+        && availabilityTimesValid();
+
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Admin-controlled monthly scheduling gates
+    match /scheduling_config/{configId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Vacations collection
+    match /vacations/{vacationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Consumptions collection
     match /consumptions/{consumptionId} {
-      allow read, create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
     }
   }
 }

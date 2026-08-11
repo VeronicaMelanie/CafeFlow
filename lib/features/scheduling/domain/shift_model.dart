@@ -28,17 +28,27 @@ class ShiftModel {
   }
 
   factory ShiftModel.fromMap(Map<String, dynamic> map, String id) {
-    return ShiftModel(
-      id: id,
-      userId: map['userId'] ?? '',
-      userName: map['userName'] ?? '',
-      date: (map['date'] as Timestamp).toDate(),
-      startTime: (map['startTime'] as Timestamp).toDate(),
-      endTime: (map['endTime'] as Timestamp).toDate(),
-      type: map['type'] ?? 'FULL',
-      location: map['location'] ?? 'Gara',
-      status: map['status'] ?? 'pending',
-    );
+    try {
+      return ShiftModel(
+        id: id,
+        userId: map['userId']?.toString() ?? '',
+        userName: map['userName']?.toString() ?? '',
+        date: map['date'] is Timestamp 
+            ? (map['date'] as Timestamp).toDate() 
+            : DateTime.now(),
+        startTime: map['startTime'] is Timestamp 
+            ? (map['startTime'] as Timestamp).toDate() 
+            : DateTime.now(),
+        endTime: map['endTime'] is Timestamp 
+            ? (map['endTime'] as Timestamp).toDate() 
+            : DateTime.now().add(const Duration(hours: 8)),
+        type: map['type']?.toString() ?? 'FULL',
+        location: map['location']?.toString() ?? 'Gara',
+        status: map['status']?.toString() ?? 'pending',
+      );
+    } catch (e) {
+      throw FormatException('Eroare la parsarea ShiftModel (id: $id). Detalii: $e');
+    }
   }
 
   Map<String, dynamic> toMap() {

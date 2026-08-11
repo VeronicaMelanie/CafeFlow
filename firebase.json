@@ -1,1 +1,104 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"cafeflow-5tg","appId":"1:360795635337:android:408e1e9877563003001058","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"cafeflow-5tg","configurations":{"android":"1:360795635337:android:408e1e9877563003001058","ios":"1:360795635337:ios:b9b9b2a02ed0539a001058","macos":"1:360795635337:ios:b9b9b2a02ed0539a001058","web":"1:360795635337:web:e9eafcdaa33b23b9001058","windows":"1:360795635337:web:7d6099d8e8e9f421001058"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "cafeflow-5tg",
+          "appId": "1:360795635337:android:408e1e9877563003001058",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "cafeflow-5tg",
+          "configurations": {
+            "android": "1:360795635337:android:408e1e9877563003001058",
+            "ios": "1:360795635337:ios:b9b9b2a02ed0539a001058",
+            "macos": "1:360795635337:ios:b9b9b2a02ed0539a001058",
+            "web": "1:360795635337:web:e9eafcdaa33b23b9001058",
+            "windows": "1:360795635337:web:7d6099d8e8e9f421001058"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/flutter_service_worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/firebase-messaging-sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css|wasm)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "/icons/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      }
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
+  }
+}

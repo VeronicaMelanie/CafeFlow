@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/services/fcm_service.dart';
 import 'auth_providers.dart';
 import 'login_screen.dart';
+import 'contract_type_onboarding.dart';
 import '../../admin/presentation/admin_dashboard.dart';
-import '../../scheduling/presentation/employee_dashboard.dart';
+import '../../scheduling/presentation/employee_main_shell.dart';
 
-class AuthWrapper extends ConsumerWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+class AuthWrapper extends ConsumerStatefulWidget {
+  const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  String? _fcmSyncedForUid;
+  bool _contractSheetShown = false;
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
     return authState.when(
@@ -38,17 +49,42 @@ class AuthWrapper extends ConsumerWidget {
                 ),
               );
             }
+
+            if (userModel.needsContractType && !_contractSheetShown) {
+              _contractSheetShown = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                final selected = await showContractTypeOnboarding(
+                  context: context,
+                  userName: userModel.name.isNotEmpty ? userModel.name : 'Employee',
+                );
+                if (selected == null) {
+                  _contractSheetShown = false;
+                  return;
+                }
+                await ref.read(authRepositoryProvider).setContractType(
+                      uid: userModel.uid,
+                      contractType: selected,
+                    );
+                ref.invalidate(currentUserProvider);
+              });
+            }
+
+            if (_fcmSyncedForUid != userModel.uid) {
+              _fcmSyncedForUid = userModel.uid;
+              FcmService.syncTokenForUser(userModel.uid);
+            }
+
             if (userModel.isAdmin) {
               return const AdminDashboard();
             } else {
-              return const EmployeeDashboard();
+              return const EmployeeMainShell();
             }
           },
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          loading: () => const Scaffold(body: AppLoadingIndicator()),
           error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(body: AppLoadingIndicator()),
       error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }

@@ -1,15 +1,26 @@
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../auth/data/auth_repository.dart';
 import '../../auth/presentation/auth_providers.dart';
-import 'widgets/coffee_calendar_widget.dart';
 import 'scheduling_providers.dart';
 import '../../consumption/presentation/consumption_entry_screen.dart';
 import 'submit_availability_screen.dart';
+import 'vacation_status_screen.dart';
+import 'my_full_schedule_screen.dart';
 import '../domain/shift_model.dart';
+import '../data/vacation_repository.dart';
+import '../utils/monthly_progress_calculator.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/pwa/pwa_responsive.dart';
+import '../../../core/pwa/widgets/pwa_limitations_banner.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/theme/app_motion.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/widgets/interactive_scale.dart';
+import '../../../core/widgets/employee_bottom_nav_bar.dart';
 
 class EmployeeDashboard extends ConsumerStatefulWidget {
   const EmployeeDashboard({Key? key}) : super(key: key);
@@ -19,8 +30,6 @@ class EmployeeDashboard extends ConsumerStatefulWidget {
 }
 
 class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
-  int _currentIndex = 0;
-
   @override
   void initState() {
     super.initState();
@@ -31,18 +40,22 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     await Future.delayed(const Duration(seconds: 2));
     final user = ref.read(currentUserProvider).value;
     if (user != null) {
-      final shifts = await ref.read(shiftRepositoryProvider).getEmployeeShifts(user.uid);
+      final shifts = await ref
+          .read(shiftRepositoryProvider)
+          .getEmployeeShifts(user.uid);
       final notificationService = NotificationService();
       await notificationService.cancelAllNotifications();
       for (int i = 0; i < shifts.length; i++) {
         final shift = shifts[i];
         if (shift.status == 'approved') {
-          final reminderTime = shift.startTime.subtract(const Duration(days: 1));
+          final reminderTime = shift.startTime.subtract(
+            const Duration(days: 1),
+          );
           if (reminderTime.isAfter(DateTime.now())) {
             await notificationService.scheduleShiftReminder(
               id: i,
               title: 'Shift Tomorrow!',
-              body: 'Reminder: You have a shift tomorrow at ${shift.location} from ${DateFormat('HH:mm').format(shift.startTime)} to ${DateFormat('HH:mm').format(shift.endTime)}.',
+              body: 'Reminder: You have a shift tomorrow at  from  to .',
               scheduledDate: reminderTime,
             );
           }
@@ -53,82 +66,112 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final location = ref.watch(selectedLocationProvider);
     final userAsync = ref.watch(currentUserProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.creamBackground,
       body: userAsync.when(
         data: (user) {
           if (user == null) return const Center(child: Text('Not logged in'));
-          final statsAsync = ref.watch(employeeStatsProvider(user.uid));
 
-          return Stack(
+          return Column(
             children: [
-              Column(
-                children: [
-                  _buildHeader(context),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                      child: Column(
+              _buildHeader(context, user.name),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    EmployeeBottomNavMetrics.contentBottomPadding(context),
+                  ),
+                  child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppSpacing.md),
+                          const PwaLimitationsBanner(),
+                          const SizedBox(height: AppSpacing.md),
                           _buildLocationSwitcher(location),
-                          const SizedBox(height: 24),
-                          _buildStatsSection(statsAsync),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: AppSpacing.xxl),
+                          _buildMonthlyStatsCards(
+                            user.uid,
+                            user.monthlyTargetHours,
+                          ),
+                          const SizedBox(height: AppSpacing.xxl),
                           _buildUpcomingShiftsSection(user.uid),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: AppSpacing.xxxl),
                           _buildActionCards(context),
-                          const SizedBox(height: 32),
-                          _buildPrimaryCTA(context, location, user),
-                        ],
-                      ),
-                    ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildVacationCard(context),
+                    ],
                   ),
-                ],
+                ),
               ),
-              _buildBottomNavBar(),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        loading: () => const AppLoadingIndicator(),
+        error: (e, st) => Center(child: Text('Error: ')),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, String userName) {
+    final top = PwaResponsive.topSafePadding(context);
+    final now = DateTime.now();
     return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 20, left: 20, right: 20),
+      padding: EdgeInsets.only(
+        top: top + AppSpacing.lg,
+        bottom: AppSpacing.xl,
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+      ),
       decoration: const BoxDecoration(
-        gradient: AppColors.pinkGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+        gradient: AppColors.headerGradient,
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppSpacing.xxxl),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () {},
-          ),
-          const Text(
-            'My Schedule',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Hi, $userName',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('EEEE, MMM d').format(now),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+              _HeaderIconButton(
+                icon: Icons.notifications_outlined,
                 onPressed: () {},
               ),
-              IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white),
+              const SizedBox(width: 8),
+              _HeaderIconButton(
+                icon: Icons.logout_rounded,
                 onPressed: () => ref.read(authRepositoryProvider).signOut(),
               ),
             ],
@@ -138,19 +181,155 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     );
   }
 
+  Widget _buildMonthlyStatsCards(String userId, int targetHours) {
+    final now = DateTime.now();
+    return StreamBuilder<List<ShiftModel>>(
+      stream: ref
+          .read(shiftRepositoryProvider)
+          .getUserShiftsForMonth(userId, now),
+      builder: (context, shiftSnap) {
+        if (shiftSnap.connectionState == ConnectionState.waiting) {
+          return const AppStatSkeletonRow();
+        }
+        return StreamBuilder(
+          stream: ref
+              .read(vacationRepositoryProvider)
+              .getVacationsForUser(userId),
+          builder: (context, vacSnap) {
+            final shifts = shiftSnap.data ?? [];
+            final vacations = vacSnap.data ?? [];
+            final progressResult = MonthlyProgressCalculator.calculate(
+              shifts: shifts,
+              vacations: vacations,
+              month: now,
+              targetHours: targetHours.toDouble(),
+            );
+            final completed = progressResult.workedHours;
+            final remaining = progressResult.remainingHours;
+            final progress = progressResult.progress;
+
+            return Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.pureWhite,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                border: Border.all(
+                  color: AppColors.borderLight.withValues(alpha: 0.8),
+                  width: 0.5,
+                ),
+                boxShadow: AppShadows.md,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Monthly Progress',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      Text(
+                        '${completed.toStringAsFixed(1)} / $targetHours h',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.brandMustard,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      backgroundColor: AppColors.borderLight,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.brandGreen,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildMiniStat(
+                        'Target',
+                        '$targetHours h',
+                        AppColors.brandTurquoise,
+                      ),
+                      _buildMiniStat(
+                        'Done',
+                        '${completed.toStringAsFixed(1)} h',
+                        AppColors.brandGreen,
+                      ),
+                      _buildMiniStat(
+                        'Left',
+                        '${remaining.toStringAsFixed(1)} h',
+                        AppColors.brandMustard,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, Color dotColor) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textLight,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildLocationSwitcher(String location) {
     return Container(
-      height: 50,
+      height: 48,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+        border: Border.all(
+          color: AppColors.borderLight.withValues(alpha: 0.6),
+          width: 0.5,
+        ),
+        boxShadow: AppShadows.sm,
       ),
       child: Row(
         children: [
@@ -166,21 +345,18 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       child: GestureDetector(
         onTap: () => ref.read(selectedLocationProvider.notifier).state = label,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.all(4),
+          duration: AppMotion.slow,
+          curve: AppMotion.easeOut,
           decoration: BoxDecoration(
             color: isSelected ? AppColors.pureWhite : Colors.transparent,
-            borderRadius: BorderRadius.circular(21),
-            border: isSelected ? Border.all(color: AppColors.primaryPink.withOpacity(0.3)) : null,
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primaryPink.withOpacity(0.1),
-                      blurRadius: 4,
-                      spreadRadius: 1,
-                    )
-                  ]
+            borderRadius: BorderRadius.circular(AppSpacing.radiusPill - 3),
+            border: isSelected
+                ? Border.all(
+                    color: AppColors.brandGreen.withValues(alpha: 0.3),
+                    width: 0.5,
+                  )
                 : null,
+            boxShadow: isSelected ? AppShadows.xs : null,
           ),
           child: Center(
             child: Row(
@@ -188,81 +364,39 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               children: [
                 Icon(
                   Icons.store_outlined,
-                  size: 18,
-                  color: isSelected ? AppColors.primaryPink : AppColors.textLight,
+                  size: 16,
+                  color: isSelected
+                      ? AppColors.brandGreen
+                      : AppColors.textLight,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? AppColors.primaryPink : AppColors.textLight,
+                const SizedBox(width: AppSpacing.sm),
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                      fontSize: 13,
+                      color: isSelected
+                          ? AppColors.brandGreen
+                          : AppColors.textLight,
+                    ),
                   ),
                 ),
                 if (isSelected) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.check_circle, size: 14, color: AppColors.primaryPink),
-                ]
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 14,
+                    color: AppColors.brandGreen,
+                  ),
+                ],
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatsSection(AsyncValue<EmployeeStats> statsAsync) {
-    return statsAsync.when(
-      data: (stats) {
-        final now = DateTime.now();
-        final lastDay = DateTime(now.year, now.month + 1, 0).day;
-        final daysLeft = lastDay - now.day;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildStatCard('This Month', '$daysLeft', 'Days left', AppColors.softPink, Icons.calendar_today),
-              const SizedBox(width: 12),
-              _buildStatCard('Target Hours', '${stats.targetHours}h', 'Monthly goal', AppColors.softYellow, Icons.access_time),
-              const SizedBox(width: 12),
-              _buildStatCard('Completed', '${stats.totalHours.toInt()}h', 'This month', AppColors.softGreen, Icons.check_circle_outline),
-              const SizedBox(width: 12),
-              _buildStatCard('Remaining', '${(stats.targetHours - stats.totalHours).clamp(0, stats.targetHours).toInt()}h', 'To reach goal', AppColors.softPurple, Icons.hourglass_empty),
-            ],
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => const Text('Error loading stats'),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, String subtitle, Color color, IconData icon) {
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.pureWhite,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: AppColors.shadowColor, blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Icon(icon, size: 20, color: AppColors.textDark.withOpacity(0.7)),
-          ),
-          const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
-        ],
       ),
     );
   }
@@ -274,32 +408,80 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Upcoming Shifts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Upcoming Shifts',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             TextButton.icon(
-              onPressed: () {},
-              icon: const Text('View full calendar', style: TextStyle(color: AppColors.primaryPink, fontSize: 13)),
-              label: const Icon(Icons.arrow_forward, size: 14, color: AppColors.primaryPink),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyFullScheduleScreen(),
+                  ),
+                );
+              },
+              icon: const Text(
+                'View calendar',
+                style: TextStyle(
+                  color: AppColors.brandGreen,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              label: const Icon(
+                Icons.arrow_forward_rounded,
+                size: 14,
+                color: AppColors.brandGreen,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(
           height: 140,
           child: StreamBuilder<List<ShiftModel>>(
-            stream: ref.read(shiftRepositoryProvider).getUserShiftsForMonth(userId, now),
+            stream: ref
+                .read(shiftRepositoryProvider)
+                .getUserShiftsForMonth(userId, now),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-              final shifts = snapshot.data!;
-              
-              // Get next 7 days
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4,
+                  itemBuilder: (_, __) => Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.md),
+                    child: const AppSkeleton(
+                      width: 110,
+                      height: 140,
+                      borderRadius: AppSpacing.radiusLg,
+                    ),
+                  ),
+                );
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: '));
+              }
+
+              final shifts = snapshot.data ?? [];
+
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 7,
                 itemBuilder: (context, index) {
                   final date = now.add(Duration(days: index));
-                  final dayShifts = shifts.where((s) => s.date.day == date.day && s.date.month == date.month).toList();
-                  
-                  return _buildShiftCard(date, dayShifts.isNotEmpty ? dayShifts.first : null);
+                  final dayShifts = shifts
+                      .where(
+                        (s) =>
+                            s.date.day == date.day &&
+                            s.date.month == date.month,
+                      )
+                      .toList();
+
+                  return _buildShiftCard(
+                    date,
+                    dayShifts.isNotEmpty ? dayShifts.first : null,
+                  );
                 },
               );
             },
@@ -311,33 +493,88 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
 
   Widget _buildShiftCard(DateTime date, ShiftModel? shift) {
     final isToday = date.day == DateTime.now().day;
-    final colors = [AppColors.softPink, AppColors.softYellow, AppColors.softGreen, AppColors.softPurple, AppColors.softBlue];
-    final color = shift != null ? colors[date.day % colors.length] : AppColors.pureWhite;
+    final colors = [
+      AppColors.brandTurquoise.withValues(alpha: 0.15),
+      AppColors.brandMustard.withValues(alpha: 0.15),
+      AppColors.brandGreen.withValues(alpha: 0.15),
+      AppColors.brandPurple.withValues(alpha: 0.15),
+    ];
+    final color = shift != null
+        ? colors[date.day % colors.length]
+        : AppColors.pureWhite;
 
     return Container(
       width: 110,
-      margin: const EdgeInsets.only(right: 12),
+      margin: const EdgeInsets.only(right: AppSpacing.md),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isToday ? AppColors.primaryPink : AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(color: AppColors.shadowColor, blurRadius: 8, offset: const Offset(0, 2)),
-        ],
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isToday
+              ? AppColors.brandGreen
+              : AppColors.borderLight.withValues(alpha: 0.8),
+          width: isToday ? 2.0 : 0.5,
+        ),
+        boxShadow: isToday
+            ? AppShadows.coloredGlow(AppColors.brandGreen, intensity: 0.2)
+            : AppShadows.xs,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(DateFormat('EEE').format(date), style: const TextStyle(color: AppColors.primaryPink, fontWeight: FontWeight.bold)),
-          Text('${date.day}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
+          Text(
+            DateFormat('EEE').format(date).toUpperCase(),
+            style: TextStyle(
+              color: isToday
+                  ? AppColors.brandGreen
+                  : AppColors.textDark.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+          Text(
+            '${date.day}',
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
           if (shift != null) ...[
-            Text('${DateFormat('HH:mm').format(shift.startTime)} - ${DateFormat('HH:mm').format(shift.endTime)}', 
-                 style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-            Text(shift.location, style: const TextStyle(fontSize: 10, color: AppColors.textLight)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.pureWhite,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${DateFormat('HH:mm').format(shift.startTime)} - ${DateFormat('HH:mm').format(shift.endTime)}',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              shift.location,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDark,
+              ),
+            ),
           ] else ...[
             const Text('—', style: TextStyle(color: AppColors.textLight)),
-            const Text('No shift', style: TextStyle(fontSize: 10, color: AppColors.textLight)),
+            const Text(
+              'No shift',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textLight,
+              ),
+            ),
           ],
         ],
       ),
@@ -347,50 +584,174 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   Widget _buildActionCards(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _buildSmallActionCard('Consumption', 'Add or view your\nconsumptions', Icons.coffee_outlined, () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ConsumptionEntryScreen()));
-        })),
-        const SizedBox(width: 16),
-        Expanded(child: _buildSmallActionCard('Availability', 'Manage your\navailable days', Icons.calendar_month_outlined, () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const SubmitAvailabilityScreen()));
-        })),
+        Expanded(
+          child: _buildSmallActionCard(
+            'Consumption',
+            'Log daily items',
+            Icons.emoji_food_beverage_rounded,
+            AppColors.brandRed,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ConsumptionEntryScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          child: _buildSmallActionCard(
+            'Availability',
+            'Manage days',
+            Icons.calendar_month_rounded,
+            AppColors.brandTurquoise,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SubmitAvailabilityScreen(),
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSmallActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
+  Widget _buildVacationCard(BuildContext context) {
+    return InteractiveScale(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VacationStatusScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
-          color: AppColors.softPink.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(color: AppColors.shadowColor, blurRadius: 10, offset: const Offset(0, 4)),
+          color: AppColors.brandPurple.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(
+            color: AppColors.brandPurple.withValues(alpha: 0.2),
+            width: 1,
+          ),
+          boxShadow: AppShadows.sm,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.pureWhite,
+                shape: BoxShape.circle,
+                boxShadow: AppShadows.xs,
+              ),
+              child: const Icon(
+                Icons.beach_access_rounded,
+                color: AppColors.brandPurple,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Vacation Status',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'View your time off requests',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppColors.brandPurple,
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallActionCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color brandColor,
+    VoidCallback onTap,
+  ) {
+    return InteractiveScale(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: brandColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(
+            color: brandColor.withValues(alpha: 0.2),
+            width: 1,
+          ),
+          boxShadow: AppShadows.sm,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: AppColors.pureWhite, shape: BoxShape.circle),
-              child: Icon(icon, color: AppColors.primaryPink),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.pureWhite,
+                shape: BoxShape.circle,
+                boxShadow: AppShadows.xs,
+              ),
+              child: Icon(icon, color: brandColor),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
-                  ],
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textLight,
+                    ),
+                  ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textLight),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: brandColor,
+                ),
               ],
             ),
           ],
@@ -398,239 +759,32 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       ),
     );
   }
-
-  Widget _buildPrimaryCTA(BuildContext context, String location, dynamic user) {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        gradient: AppColors.pinkGradient,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryPink.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () => _showBookingModal(context, ref, location, user),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Book Shift', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Positioned(
-      bottom: 20,
-      left: 20,
-      right: 20,
-      child: Container(
-        height: 70,
-        decoration: BoxDecoration(
-          color: AppColors.pureWhite,
-          borderRadius: BorderRadius.circular(35),
-          boxShadow: [
-            BoxShadow(color: AppColors.shadowColor, blurRadius: 20, offset: const Offset(0, 10)),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(0, Icons.calendar_today_outlined, 'My Schedule'),
-            _buildNavItem(1, Icons.people_outline, 'Team'),
-            _buildNavItem(2, Icons.bar_chart_outlined, 'Stats'),
-            _buildNavItem(3, Icons.person_outline, 'Profile'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, IconData icon, String label) {
-    final isSelected = _currentIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: isSelected ? BoxDecoration(
-          color: AppColors.softPink.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
-        ) : null,
-        child: Row(
-          children: [
-            Icon(icon, color: isSelected ? AppColors.primaryPink : AppColors.textLight),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: AppColors.primaryPink, fontWeight: FontWeight.bold, fontSize: 12)),
-            ]
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showBookingModal(BuildContext context, WidgetRef ref, String location, dynamic user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _BookingModal(location: location, user: user);
-      }
-    );
-  }
 }
 
-class _BookingModal extends ConsumerStatefulWidget {
-  final String location;
-  final dynamic user;
-  const _BookingModal({required this.location, required this.user});
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, required this.onPressed});
 
-  @override
-  ConsumerState<_BookingModal> createState() => _BookingModalState();
-}
-
-class _BookingModalState extends ConsumerState<_BookingModal> {
-  TimeOfDay _startTime = const TimeOfDay(hour: 7, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 18, minute: 0);
-  bool _isCustom = false;
+  final IconData icon;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final selectedDate = ref.watch(selectedDateProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: AppColors.pureWhite,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.borderLight, borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 24),
-          Text('Book Shift at ${widget.location}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text('Date: ${DateFormat('dd MMMM yyyy').format(selectedDate)}', style: const TextStyle(color: AppColors.textLight)),
-          const SizedBox(height: 24),
-          _buildOption(
-            title: 'Full Shift (07:00 - 18:00)',
-            subtitle: '11 hours total',
-            isSelected: !_isCustom,
-            onTap: () => setState(() => _isCustom = false),
-          ),
-          const SizedBox(height: 12),
-          _buildOption(
-            title: 'Custom Hours',
-            subtitle: _isCustom ? '${_startTime.format(context)} - ${_endTime.format(context)}' : 'Select specific interval',
-            isSelected: _isCustom,
-            onTap: () => setState(() => _isCustom = true),
-          ),
-          if (_isCustom) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: OutlinedButton(
-                  onPressed: () async {
-                    final time = await showTimePicker(context: context, initialTime: _startTime);
-                    if (time != null) setState(() => _startTime = time);
-                  },
-                  child: Text('Start: ${_startTime.format(context)}'),
-                )),
-                const SizedBox(width: 16),
-                Expanded(child: OutlinedButton(
-                  onPressed: () async {
-                    final time = await showTimePicker(context: context, initialTime: _endTime);
-                    if (time != null) setState(() => _endTime = time);
-                  },
-                  child: Text('End: ${_endTime.format(context)}'),
-                )),
-              ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Material(
+          color: AppColors.glassWhite,
+          child: InkWell(
+            onTap: onPressed,
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
-          ],
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () => _confirmBooking(context, selectedDate),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-            ),
-            child: const Text('Confirm Booking', style: TextStyle(fontSize: 18)),
           ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOption({required String title, required String subtitle, required bool isSelected, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? AppColors.primaryPink : AppColors.borderLight, width: 2),
-          borderRadius: BorderRadius.circular(20),
-          color: isSelected ? AppColors.softPink.withOpacity(0.3) : null,
-        ),
-        child: Row(
-          children: [
-            Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primaryPink : AppColors.textLight),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
-              ],
-            ),
-          ],
         ),
       ),
     );
-  }
-
-  Future<void> _confirmBooking(BuildContext context, DateTime date) async {
-    final startDateTime = DateTime(date.year, date.month, date.day, _startTime.hour, _startTime.minute);
-    final endDateTime = DateTime(date.year, date.month, date.day, _endTime.hour, _endTime.minute);
-
-    final shift = ShiftModel(
-      id: '',
-      userId: widget.user.uid,
-      userName: widget.user.name,
-      date: date,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      type: _isCustom ? 'CUSTOM' : 'FULL',
-      location: widget.location,
-      status: 'pending',
-    );
-
-    final error = await ref.read(shiftRepositoryProvider).bookShift(shift);
-    if (context.mounted) {
-      if (error == null) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shift booked successfully!')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
-      }
-    }
   }
 }

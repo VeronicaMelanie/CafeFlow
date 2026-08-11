@@ -4,6 +4,10 @@ import '../../scheduling/data/vacation_repository.dart';
 import '../../scheduling/domain/vacation_model.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/admin_guard.dart';
+import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/widgets/screen_header.dart';
 
 class VacationApprovalScreen extends ConsumerWidget {
   const VacationApprovalScreen({Key? key}) : super(key: key);
@@ -12,66 +16,41 @@ class VacationApprovalScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vacationsAsync = ref.watch(pendingVacationsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.offWhite,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: vacationsAsync.when(
-              data: (vacations) {
-                if (vacations.isEmpty) return _buildEmptyState();
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: vacations.length,
-                  itemBuilder: (context, index) {
-                    final vacation = vacations[index];
-                    return _buildVacationCard(ref, vacation);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('Error: $e')),
+    return AdminGuard(
+      child: Scaffold(
+        backgroundColor: AppColors.offWhite,
+        body: Column(
+          children: [
+            ScreenHeader(
+              title: 'Vacation Requests',
+              onBack: () => Navigator.pop(context),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            Expanded(
+              child: vacationsAsync.when(
+                data: (vacations) {
+                  if (vacations.isEmpty) return _buildEmptyState();
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 24, left: 16, right: 24),
-      decoration: const BoxDecoration(
-        gradient: AppColors.pinkGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Vacation Requests',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ],
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    itemCount: vacations.length,
+                    itemBuilder: (context, index) {
+                      final vacation = vacations[index];
+                      return _buildVacationCard(ref, vacation);
+                    },
+                  );
+                },
+                loading: () => const AppLoadingIndicator(),
+                error: (e, st) => Center(child: Text('Error: $e')),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildVacationCard(WidgetRef ref, VacationModel vacation) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.pureWhite,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+    return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -79,13 +58,13 @@ class VacationApprovalScreen extends ConsumerWidget {
             children: [
               CircleAvatar(
                 backgroundColor: AppColors.softPink,
-                child: Text(vacation.userName[0], style: const TextStyle(color: AppColors.primaryPink, fontWeight: FontWeight.bold)),
+                child: Text(vacation.userName[0], style: const TextStyle(color: AppColors.primaryPink, fontWeight: FontWeight.w800)),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(vacation.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(vacation.userName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                   const Text('Pending Request', style: TextStyle(color: AppColors.textLight, fontSize: 11)),
                 ],
               ),
@@ -119,7 +98,7 @@ class VacationApprovalScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textLight)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
       ],
     );
   }
@@ -128,13 +107,13 @@ class VacationApprovalScreen extends ConsumerWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         foregroundColor: color,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
     );
   }
 
@@ -143,7 +122,7 @@ class VacationApprovalScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.beach_access_outlined, size: 64, color: AppColors.textLight.withOpacity(0.3)),
+          Icon(Icons.beach_access_outlined, size: 64, color: AppColors.textLight.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           const Text('No pending requests', style: TextStyle(color: AppColors.textLight, fontSize: 16)),
         ],

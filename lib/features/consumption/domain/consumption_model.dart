@@ -6,6 +6,7 @@ class ConsumptionModel {
   final String productName;
   final int quantity;
   final DateTime date;
+  final String? notes;
 
   ConsumptionModel({
     required this.id,
@@ -13,16 +14,24 @@ class ConsumptionModel {
     required this.productName,
     required this.quantity,
     required this.date,
+    this.notes,
   });
 
   factory ConsumptionModel.fromMap(Map<String, dynamic> map, String id) {
-    return ConsumptionModel(
-      id: id,
-      userId: map['userId'] ?? '',
-      productName: map['productName'] ?? '',
-      quantity: map['quantity'] ?? 0,
-      date: (map['date'] as Timestamp).toDate(),
-    );
+    try {
+      return ConsumptionModel(
+        id: id,
+        userId: map['userId']?.toString() ?? '',
+        productName: map['productName']?.toString() ?? '',
+        quantity: (map['quantity'] as num?)?.toInt() ?? 0,
+        date: map['date'] is Timestamp 
+            ? (map['date'] as Timestamp).toDate() 
+            : DateTime.now(),
+        notes: map['notes']?.toString(),
+      );
+    } catch (e) {
+      throw FormatException('Eroare la parsarea ConsumptionModel (id: $id). Detalii: $e');
+    }
   }
 
   Map<String, dynamic> toMap() {
@@ -31,6 +40,7 @@ class ConsumptionModel {
       'productName': productName,
       'quantity': quantity,
       'date': Timestamp.fromDate(date),
+      if (notes != null) 'notes': notes,
     };
   }
 }

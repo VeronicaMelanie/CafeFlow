@@ -26,16 +26,26 @@ class VacationModel {
   }
 
   factory VacationModel.fromMap(Map<String, dynamic> map, String id) {
-    return VacationModel(
-      id: id,
-      userId: map['userId'] ?? '',
-      userName: map['userName'] ?? '',
-      startDate: (map['startDate'] as Timestamp).toDate(),
-      endDate: (map['endDate'] as Timestamp).toDate(),
-      status: map['status'] ?? 'pending',
-      adminComment: map['adminComment'],
-      requestedAt: (map['requestedAt'] as Timestamp).toDate(),
-    );
+    try {
+      return VacationModel(
+        id: id,
+        userId: map['userId']?.toString() ?? '',
+        userName: map['userName']?.toString() ?? '',
+        startDate: map['startDate'] is Timestamp 
+            ? (map['startDate'] as Timestamp).toDate() 
+            : DateTime.now(),
+        endDate: map['endDate'] is Timestamp 
+            ? (map['endDate'] as Timestamp).toDate() 
+            : DateTime.now().add(const Duration(days: 1)),
+        status: map['status']?.toString() ?? 'pending',
+        adminComment: map['adminComment']?.toString(),
+        requestedAt: map['requestedAt'] is Timestamp 
+            ? (map['requestedAt'] as Timestamp).toDate() 
+            : DateTime.now(),
+      );
+    } catch (e) {
+      throw FormatException('Eroare la parsarea VacationModel (id: $id). Detalii: $e');
+    }
   }
 
   Map<String, dynamic> toMap() {
