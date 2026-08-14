@@ -96,7 +96,8 @@ service cloud.firestore {
     // Shifts collection
     match /shifts/{shiftId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && (request.resource.data.userId == request.auth.uid || isAdmin());
       allow update: if request.auth.uid == request.resource.data.userId || isAdmin();
       allow delete: if request.auth.uid == request.resource.data.userId || isAdmin();
     }
@@ -138,6 +139,31 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Cleaning task definitions (admin-managed)
+    match /cleaning_tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Weekly employee cleaning completions
+    match /cleaning_completions/{completionId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && (
+          (request.resource.data.employeeId == request.auth.uid
+            && request.resource.data.keys().hasAll([
+              'employeeId',
+              'taskId',
+              'listId',
+              'location',
+              'weekId',
+              'completed'
+            ]))
+          || isAdmin()
+        );
+      allow delete: if isAdmin();
     }
   }
 }

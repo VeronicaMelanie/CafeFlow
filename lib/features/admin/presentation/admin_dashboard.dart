@@ -14,6 +14,7 @@ import 'employee_management_screen.dart';
 import 'consumption_log_screen.dart';
 import 'distribution_screen.dart';
 import 'calendar_schedule_screen.dart';
+import '../../cleaning/presentation/cleaning_lists_admin_screen.dart';
 import 'open_scheduling_screen.dart';
 
 class AdminDashboard extends ConsumerWidget {
@@ -115,6 +116,21 @@ class AdminDashboard extends ConsumerWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ConsumptionLogScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildAdminCard(
+                    context,
+                    'Cleaning\nTo-Do Lists',
+                    Icons.cleaning_services_outlined,
+                    AppColors.brandGreen,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const CleaningListsAdminScreen(),
                         ),
                       );
                     },

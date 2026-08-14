@@ -1,9 +1,12 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../auth/presentation/auth_providers.dart';
 import 'scheduling_providers.dart';
+import '../../cleaning/presentation/cleaning_todo_screen.dart';
+import '../../cleaning/data/cleaning_notification_helper.dart';
+import '../../cleaning/domain/cleaning_list_key.dart';
 import '../../consumption/presentation/consumption_entry_screen.dart';
 import 'submit_availability_screen.dart';
 import 'vacation_status_screen.dart';
@@ -59,6 +62,13 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               scheduledDate: reminderTime,
             );
           }
+          if (shift.endTime.isAfter(DateTime.now())) {
+            await CleaningNotificationHelper.scheduleClosingReminder(
+              employeeId: user.uid,
+              shiftEndTime: shift.endTime,
+              listKey: CleaningListKey.closing,
+            );
+          }
         }
       }
     }
@@ -101,9 +111,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                           const SizedBox(height: AppSpacing.xxl),
                           _buildUpcomingShiftsSection(user.uid),
                           const SizedBox(height: AppSpacing.xxxl),
-                          _buildActionCards(context),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildVacationCard(context),
+                          _buildActionGrid(context),
                     ],
                   ),
                 ),
@@ -581,117 +589,76 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     );
   }
 
-  Widget _buildActionCards(BuildContext context) {
-    return Row(
+  Widget _buildActionGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: AppSpacing.lg,
+      mainAxisSpacing: AppSpacing.lg,
+      childAspectRatio: 1,
       children: [
-        Expanded(
-          child: _buildSmallActionCard(
-            'Consumption',
-            'Log daily items',
-            Icons.emoji_food_beverage_rounded,
-            AppColors.brandRed,
-            () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ConsumptionEntryScreen(),
-                ),
-              );
-            },
-          ),
+        _buildSquareActionCard(
+          'Consumption',
+          'Log daily items',
+          Icons.emoji_food_beverage_rounded,
+          AppColors.brandRed,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ConsumptionEntryScreen(),
+              ),
+            );
+          },
         ),
-        const SizedBox(width: AppSpacing.lg),
-        Expanded(
-          child: _buildSmallActionCard(
-            'Availability',
-            'Manage days',
-            Icons.calendar_month_rounded,
-            AppColors.brandTurquoise,
-            () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SubmitAvailabilityScreen(),
-                ),
-              );
-            },
-          ),
+        _buildSquareActionCard(
+          'Availability',
+          'Manage days',
+          Icons.calendar_month_rounded,
+          AppColors.brandTurquoise,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SubmitAvailabilityScreen(),
+              ),
+            );
+          },
+        ),
+        _buildSquareActionCard(
+          'Vacation Status',
+          'View your time off',
+          Icons.beach_access_rounded,
+          AppColors.brandPurple,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VacationStatusScreen(),
+              ),
+            );
+          },
+        ),
+        _buildSquareActionCard(
+          'Cleaning To-Do List',
+          'View and complete tasks',
+          Icons.cleaning_services_rounded,
+          AppColors.brandGreen,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CleaningTodoScreen(),
+              ),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildVacationCard(BuildContext context) {
-    return InteractiveScale(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const VacationStatusScreen()),
-        );
-      },
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
-          color: AppColors.brandPurple.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(
-            color: AppColors.brandPurple.withValues(alpha: 0.2),
-            width: 1,
-          ),
-          boxShadow: AppShadows.sm,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.pureWhite,
-                shape: BoxShape.circle,
-                boxShadow: AppShadows.xs,
-              ),
-              child: const Icon(
-                Icons.beach_access_rounded,
-                color: AppColors.brandPurple,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Vacation Status',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'View your time off requests',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: AppColors.brandPurple,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSmallActionCard(
+  Widget _buildSquareActionCard(
     String title,
     String subtitle,
     IconData icon,
@@ -702,7 +669,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: brandColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -722,24 +689,27 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                 shape: BoxShape.circle,
                 boxShadow: AppShadows.xs,
               ),
-              child: Icon(icon, color: brandColor),
+              child: Icon(icon, color: brandColor, size: 22),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const Spacer(),
             Text(
               title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 16,
+                fontSize: 15,
                 color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

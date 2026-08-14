@@ -17,7 +17,6 @@ class AuthWrapper extends ConsumerStatefulWidget {
 
 class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   String? _fcmSyncedForUid;
-  bool _contractSheetShown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         if (user == null) {
           return const LoginScreen();
         }
-        
+
         final currentUser = ref.watch(currentUserProvider);
         return currentUser.when(
           data: (userModel) {
@@ -41,7 +40,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
                       const Text('Profile not found in database.'),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                        onPressed: () =>
+                            ref.read(authRepositoryProvider).signOut(),
                         child: const Text('Sign Out & Try Again'),
                       ),
                     ],
@@ -50,23 +50,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
               );
             }
 
-            if (userModel.needsContractType && !_contractSheetShown) {
-              _contractSheetShown = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                final selected = await showContractTypeOnboarding(
-                  context: context,
-                  userName: userModel.name.isNotEmpty ? userModel.name : 'Employee',
-                );
-                if (selected == null) {
-                  _contractSheetShown = false;
-                  return;
-                }
-                await ref.read(authRepositoryProvider).setContractType(
-                      uid: userModel.uid,
-                      contractType: selected,
-                    );
-                ref.invalidate(currentUserProvider);
-              });
+            if (userModel.needsContractType) {
+              return ContractTypeOnboardingScreen(user: userModel);
             }
 
             if (_fcmSyncedForUid != userModel.uid) {

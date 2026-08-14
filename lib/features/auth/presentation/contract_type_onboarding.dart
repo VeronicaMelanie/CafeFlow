@@ -1,103 +1,92 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/interactive_scale.dart';
+import '../domain/user_model.dart';
+import 'auth_providers.dart';
 
-Future<String?> showContractTypeOnboarding({
-  required BuildContext context,
-  required String userName,
-}) {
-  return showModalBottomSheet<String>(
-    context: context,
-    isDismissible: false,
-    enableDrag: false,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => _ContractTypeSheet(userName: userName),
-  );
-}
+/// Full-screen gate shown until the employee selects a contract type.
+/// Using a dedicated screen avoids modal barriers dimming routes pushed on top.
+class ContractTypeOnboardingScreen extends ConsumerWidget {
+  const ContractTypeOnboardingScreen({
+    super.key,
+    required this.user,
+  });
 
-class _ContractTypeSheet extends StatelessWidget {
-  final String userName;
-  const _ContractTypeSheet({required this.userName});
+  final UserModel user;
 
   @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.pureWhite,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-          border: Border.all(
-            color: AppColors.borderLight.withValues(alpha: 0.6),
-            width: 0.5,
-          ),
-          boxShadow: AppShadows.xl,
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.lg, AppSpacing.xxl, AppSpacing.xxl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.borderLight,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Welcome, $userName',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'What type of contract do you have?',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                _OptionTile(
-                  title: 'Full-Time',
-                  subtitle: 'Standard monthly target (160h)',
-                  accent: AppColors.brandGreen,
-                  icon: Icons.calendar_today_rounded,
-                  onTap: () => Navigator.pop(context, 'full_time'),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _OptionTile(
-                  title: 'Part-Time',
-                  subtitle: 'Reduced monthly target (80h)',
-                  accent: AppColors.brandMustard,
-                  icon: Icons.schedule_rounded,
-                  onTap: () => Navigator.pop(context, 'part_time'),
-                ),
-              ],
-            ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final displayName =
+        user.name.isNotEmpty ? user.name : 'Employee';
+
+    return Scaffold(
+      backgroundColor: AppColors.offWhite,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              Text(
+                'Welcome, $displayName',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'What type of contract do you have?',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              ContractTypeOptionTile(
+                title: 'Full-Time',
+                subtitle: 'Standard monthly target (160h)',
+                accent: AppColors.brandGreen,
+                icon: Icons.calendar_today_rounded,
+                onTap: () => _save(context, ref, 'full_time'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ContractTypeOptionTile(
+                title: 'Part-Time',
+                subtitle: 'Reduced monthly target (80h)',
+                accent: AppColors.brandMustard,
+                icon: Icons.schedule_rounded,
+                onTap: () => _save(context, ref, 'part_time'),
+              ),
+              const Spacer(flex: 2),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Future<void> _save(
+    BuildContext context,
+    WidgetRef ref,
+    String contractType,
+  ) async {
+    await ref.read(authRepositoryProvider).setContractType(
+          uid: user.uid,
+          contractType: contractType,
+        );
+    ref.invalidate(currentUserProvider);
+  }
 }
 
-class _OptionTile extends StatelessWidget {
+class ContractTypeOptionTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color accent;
   final IconData icon;
   final VoidCallback onTap;
 
-  const _OptionTile({
+  const ContractTypeOptionTile({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.accent,

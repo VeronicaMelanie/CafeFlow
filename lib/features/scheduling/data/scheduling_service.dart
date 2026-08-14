@@ -4,18 +4,35 @@ import '../domain/shift_model.dart';
 import '../domain/availability_model.dart';
 import '../domain/shift_type.dart';
 import '../domain/scheduling_config_model.dart';
+import '../utils/scheduling_month_utils.dart';
 
 class SchedulingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<SchedulingConfigModel> getConfig(DateTime month, String location) async {
-    final monthKey = '${month.year}-${month.month.toString().padLeft(2, '0')}';
-    final docSnap = await _firestore.collection('scheduling_configs').doc('${location}_$monthKey').get();
-    if (docSnap.exists) {
-      return SchedulingConfigModel.fromMap(docSnap.data()!, docSnap.id);
+    final collection = _firestore.collection('scheduling_config');
+    final locationDocId = SchedulingMonthUtils.locationConfigDocId(
+      month.year,
+      month.month,
+      location,
+    );
+    final globalDocId = SchedulingMonthUtils.globalConfigDocId(
+      month.year,
+      month.month,
+    );
+
+    final locationSnap = await collection.doc(locationDocId).get();
+    if (locationSnap.exists) {
+      return SchedulingConfigModel.fromMap(locationSnap.data()!, locationSnap.id);
     }
+
+    final globalSnap = await collection.doc(globalDocId).get();
+    if (globalSnap.exists) {
+      return SchedulingConfigModel.fromMap(globalSnap.data()!, globalSnap.id);
+    }
+
     return SchedulingConfigModel(
-      id: '${location}_$monthKey',
+      id: locationDocId,
       year: month.year,
       month: month.month,
       location: location,

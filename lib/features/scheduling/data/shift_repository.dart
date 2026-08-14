@@ -4,13 +4,23 @@ import '../../../core/pwa/schedule_offline_cache.dart';
 import '../domain/shift_model.dart';
 
 class ShiftRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  ShiftRepository({FirebaseFirestore? firestore, bool testMode = false})
+      : _firestore = testMode ? null : (firestore ?? FirebaseFirestore.instance),
+        _testMode = testMode;
+
+  @visibleForTesting
+  ShiftRepository.test() : this(testMode: true);
+
+  final FirebaseFirestore? _firestore;
+  final bool _testMode;
 
   Stream<List<ShiftModel>> getShiftsForMonth(DateTime month, String location) {
+    if (_testMode) return Stream.value(const []);
+
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    return _firestore
+    return _firestore!
         .collection('shifts')
         .where('location', isEqualTo: location)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
@@ -24,10 +34,12 @@ class ShiftRepository {
   }
 
   Stream<List<ShiftModel>> getUserShiftsForMonth(String userId, DateTime month) {
+    if (_testMode) return Stream.value(const []);
+
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    return _firestore
+    return _firestore!
         .collection('shifts')
         .where('userId', isEqualTo: userId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
@@ -50,11 +62,13 @@ class ShiftRepository {
   }
 
   Future<void> deleteShift(String shiftId) async {
-    await _firestore.collection('shifts').doc(shiftId).delete();
+    if (_testMode) return;
+    await _firestore!.collection('shifts').doc(shiftId).delete();
   }
 
   Future<List<ShiftModel>> getEmployeeShifts(String userId) async {
-    final snap = await _firestore
+    if (_testMode) return const [];
+    final snap = await _firestore!
         .collection('shifts')
         .where('userId', isEqualTo: userId)
         .get();
