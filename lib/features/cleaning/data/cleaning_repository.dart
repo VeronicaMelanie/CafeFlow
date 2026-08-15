@@ -1,8 +1,12 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/api/api_client.dart';
+import '../../../core/api/api_exception.dart';
+import '../../auth/data/users_repository.dart';
+import '../../locations/data/location_repository.dart';
+import '../../locations/utils/location_catalog.dart';
 import '../domain/cleaning_list_key.dart';
 import '../domain/cleaning_task_model.dart';
 import '../utils/cleaning_week_utils.dart';
@@ -19,24 +23,128 @@ class _MemoryCleaningStore {
   void dispose() => _controller.close();
 }
 
+class _CleaningListRef {
+  const _CleaningListRef({
+    required this.id,
+    required this.locationName,
+    required this.flutterListId,
+  });
+
+  final String id;
+  final String locationName;
+  final String flutterListId;
+}
+
+class _CleaningBundle {
+  const _CleaningBundle({
+    required this.tasks,
+    required this.completions,
+  });
+
+  final List<CleaningTaskModel> tasks;
+  final List<CleaningTaskCompletionModel> completions;
+}
+
 class CleaningRepository {
-  CleaningRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
+  CleaningRepository({
+    ApiClient? apiClient,
+    UsersRepository? usersRepository,
+    LocationRepository? locationRepository,
+  })  : _api = apiClient,
+        _users = usersRepository,
+        _locations = locationRepository,
         _memory = null;
 
   @visibleForTesting
   CleaningRepository.test()
-      : _firestore = null,
+      : _api = null,
+        _users = null,
+        _locations = null,
         _memory = _MemoryCleaningStore();
 
-  final FirebaseFirestore? _firestore;
+  final ApiClient? _api;
+  final UsersRepository? _users;
+  final LocationRepository? _locations;
   final _MemoryCleaningStore? _memory;
 
-  CollectionReference<Map<String, dynamic>> get _tasksCollection =>
-      _firestore!.collection('cleaning_tasks');
+  ApiClient get _client {
+    final api = _api;
+    if (api == null) {
+      throw const ApiException('Cleaning API client is not configured');
+    }
+    return api;
+  }
 
-  CollectionReference<Map<String, dynamic>> get _completionsCollection =>
-      _firestore!.collection('cleaning_completions');
+  /// GET /api/cleaning returns lists + tasks + completions; filter client-side.
+  Future<_CleaningBundle> _loadBundle() async {
+    final users = _users;
+    final locations = _locations;
+    if (users == null || locations == null) {
+      throw const ApiException('Cleaning API client is not configured');
+    }
+
+    final json = await _client.getJson('/api/cleaning');
+    if (json is! Map) {
+      throw const ApiException('Expected a JSON object from /api/cleaning');
+    }
+    final payload = Map<String, dynamic>.from(json);
+    final listsJson = payload['lists'];
+    final tasksJson = payload['tasks'];
+    final completionsJson = payload['completions'];
+    if (listsJson is! List || tasksJson is! List || completionsJson is! List) {
+      throw const ApiException('GET /api/cleaning is missing lists/tasks/completions');
+    }
+
+    final catalog = await locations.getLocations();
+    final usersByPostgresId = await users.byPostgresId();
+    final listsById = <String, _CleaningListRef>{};
+    for (final item in listsJson) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final locationId = map['location_id']?.toString() ?? '';
+      final key = map['key']?.toString() ?? '';
+      final location = LocationCatalog.byId(catalog, locationId);
+      if (location == null || key.isEmpty) continue;
+      final listKey = CleaningListKey.fromStorage(key);
+      listsById[map['id']?.toString() ?? ''] = _CleaningListRef(
+        id: map['id']?.toString() ?? '',
+        locationName: location.name,
+        flutterListId: CleaningListKey.listId(location.name, listKey),
+      );
+    }
+
+    final tasks = <CleaningTaskModel>[];
+    final tasksById = <String, CleaningTaskModel>{};
+    for (final item in tasksJson) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final list = listsById[map['list_id']?.toString() ?? ''];
+      if (list == null) continue;
+      final task = CleaningTaskModel.fromApiJson(
+        map,
+        flutterListId: list.flutterListId,
+        locationName: list.locationName,
+      );
+      tasks.add(task);
+      tasksById[task.id] = task;
+    }
+
+    final completions = <CleaningTaskCompletionModel>[];
+    for (final item in completionsJson) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final user = usersByPostgresId[map['user_id']?.toString() ?? ''];
+      final task = tasksById[map['task_id']?.toString() ?? ''];
+      if (user == null || task == null) continue;
+      completions.add(
+        CleaningTaskCompletionModel.fromApiJson(
+          map,
+          firebaseUid: user.uid,
+          flutterListId: task.listId,
+          locationName: task.location,
+        ),
+      );
+    }
+
+    return _CleaningBundle(tasks: tasks, completions: completions);
+  }
 
   Stream<List<CleaningTaskModel>> watchTasksForList(String listId) {
     if (_memory != null) {
@@ -48,17 +156,15 @@ class CleaningRepository {
       }).startWith(_sortedTasksForList(listId));
     }
 
-    return _tasksCollection
-        .where('listId', isEqualTo: listId)
-        .where('active', isEqualTo: true)
-        .snapshots()
-        .map((snapshot) {
-      final tasks = snapshot.docs
-          .map((doc) => CleaningTaskModel.fromMap(doc.data(), doc.id))
-          .toList();
-      tasks.sort((a, b) => a.order.compareTo(b.order));
-      return tasks;
-    });
+    return Stream.fromFuture(_apiTasksForList(listId));
+  }
+
+  Future<List<CleaningTaskModel>> _apiTasksForList(String listId) async {
+    final tasks = (await _loadBundle()).tasks
+        .where((task) => task.listId == listId && task.active)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    return tasks;
   }
 
   Stream<List<CleaningTaskCompletionModel>> watchCompletionsForEmployeeWeek({
@@ -79,16 +185,26 @@ class CleaningRepository {
       }).startWith(_completionsFor(employeeId, weekId, listId));
     }
 
-    return _completionsCollection
-        .where('employeeId', isEqualTo: employeeId)
-        .where('weekId', isEqualTo: weekId)
-        .where('listId', isEqualTo: listId)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => CleaningTaskCompletionModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+    return Stream.fromFuture(_apiCompletionsForEmployeeWeek(
+      employeeId: employeeId,
+      weekId: weekId,
+      listId: listId,
+    ));
+  }
+
+  Future<List<CleaningTaskCompletionModel>> _apiCompletionsForEmployeeWeek({
+    required String employeeId,
+    required String weekId,
+    required String listId,
+  }) async {
+    return (await _loadBundle()).completions
+        .where(
+          (item) =>
+              item.employeeId == employeeId &&
+              item.weekId == weekId &&
+              item.listId == listId,
+        )
+        .toList();
   }
 
   Stream<List<CleaningTaskCompletionModel>> watchCompletionsForWeekLocation({
@@ -118,16 +234,26 @@ class CleaningRepository {
       );
     }
 
-    return _completionsCollection
-        .where('weekId', isEqualTo: weekId)
-        .where('location', isEqualTo: location)
-        .where('listId', isEqualTo: listId)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => CleaningTaskCompletionModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+    return Stream.fromFuture(_apiCompletionsForWeekLocation(
+      weekId: weekId,
+      location: location,
+      listId: listId,
+    ));
+  }
+
+  Future<List<CleaningTaskCompletionModel>> _apiCompletionsForWeekLocation({
+    required String weekId,
+    required String location,
+    required String listId,
+  }) async {
+    return (await _loadBundle()).completions
+        .where(
+          (item) =>
+              item.weekId == weekId &&
+              item.location == location &&
+              item.listId == listId,
+        )
+        .toList();
   }
 
   Future<void> setTaskCompletion({
@@ -153,9 +279,14 @@ class CleaningRepository {
       return;
     }
 
-    await _completionsCollection
-        .doc(completion.id)
-        .set(completion.toMap(), SetOptions(merge: true));
+    await _client.putJson(
+      '/api/cleaning/completions',
+      body: {
+        'task_id': task.id,
+        'week_id': weekId,
+        'completed': completed,
+      },
+    );
   }
 
   Future<CleaningTaskModel> addTask({
@@ -164,55 +295,68 @@ class CleaningRepository {
     required String title,
   }) async {
     final listId = CleaningListKey.listId(location, listKey);
-    final existing = await _currentTasks(listId);
-    final order = existing.isEmpty
-        ? 0
-        : existing.map((task) => task.order).reduce((a, b) => a > b ? a : b) + 1;
-
-    final task = CleaningTaskModel(
-      id: '',
-      listId: listId,
-      location: location,
-      title: title.trim(),
-      order: order,
-    );
+    final trimmed = title.trim();
 
     if (_memory != null) {
+      final existing = _sortedTasksForList(listId);
+      final order = existing.isEmpty
+          ? 0
+          : existing.map((task) => task.order).reduce((a, b) => a > b ? a : b) + 1;
       final id = 'task_${_memory!.tasks.length + 1}';
       final stored = CleaningTaskModel(
         id: id,
-        listId: task.listId,
-        location: task.location,
-        title: task.title,
-        order: task.order,
+        listId: listId,
+        location: location,
+        title: trimmed,
+        order: order,
       );
       _memory!.tasks[id] = stored;
       _memory!.notify();
       return stored;
     }
 
-    final doc = await _tasksCollection.add(task.toMap());
-    return CleaningTaskModel.fromMap(task.toMap(), doc.id);
+    final json = await _client.postJson(
+      '/api/cleaning/tasks',
+      body: {
+        'location': location,
+        'key': listKey.name,
+        'title': trimmed,
+      },
+    );
+    if (json is! Map) {
+      throw const ApiException('Expected a JSON object from POST /api/cleaning/tasks');
+    }
+    return CleaningTaskModel.fromApiJson(
+      Map<String, dynamic>.from(json),
+      flutterListId: listId,
+      locationName: location,
+    );
   }
 
   Future<void> updateTaskTitle(String taskId, String title) async {
+    final trimmed = title.trim();
     if (_memory != null) {
       final existing = _memory!.tasks[taskId];
       if (existing == null) return;
-      _memory!.tasks[taskId] = existing.copyWith(title: title.trim());
+      _memory!.tasks[taskId] = existing.copyWith(title: trimmed);
       _memory!.notify();
       return;
     }
-    await _tasksCollection.doc(taskId).update({'title': title.trim()});
+    await _client.patchJson(
+      '/api/cleaning/tasks/$taskId',
+      body: {'title': trimmed},
+    );
   }
 
   Future<void> deleteTask(String taskId) async {
     if (_memory != null) {
-      _memory!.tasks.remove(taskId);
+      final existing = _memory!.tasks[taskId];
+      if (existing == null) return;
+      _memory!.tasks[taskId] = existing.copyWith(active: false);
       _memory!.notify();
       return;
     }
-    await _tasksCollection.doc(taskId).update({'active': false});
+    await _client.delete('/api/cleaning/tasks/$taskId');
   }
 
   Future<void> reorderTasks(List<CleaningTaskModel> orderedTasks) async {
@@ -227,14 +371,13 @@ class CleaningRepository {
       return;
     }
 
-    final batch = _firestore!.batch();
-    for (var index = 0; index < orderedTasks.length; index++) {
-      batch.update(
-        _tasksCollection.doc(orderedTasks[index].id),
-        {'order': index},
-      );
-    }
-    await batch.commit();
+    if (orderedTasks.isEmpty) return;
+    await _client.putJson(
+      '/api/cleaning/tasks/reorder',
+      body: {
+        'ids': orderedTasks.map((task) => task.id).toList(),
+      },
+    );
   }
 
   List<CleaningTaskModel> _sortedTasksForList(String listId) {
@@ -257,21 +400,6 @@ class CleaningRepository {
               item.listId == listId,
         )
         .toList();
-  }
-
-  Future<List<CleaningTaskModel>> _currentTasks(String listId) async {
-    if (_memory != null) {
-      return _sortedTasksForList(listId);
-    }
-    final snapshot = await _tasksCollection
-        .where('listId', isEqualTo: listId)
-        .where('active', isEqualTo: true)
-        .get();
-    final tasks = snapshot.docs
-        .map((doc) => CleaningTaskModel.fromMap(doc.data(), doc.id))
-        .toList();
-    tasks.sort((a, b) => a.order.compareTo(b.order));
-    return tasks;
   }
 }
 

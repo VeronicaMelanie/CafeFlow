@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_datetime.dart';
 
 class ConsumptionModel {
   final String id;
@@ -17,30 +17,21 @@ class ConsumptionModel {
     this.notes,
   });
 
-  factory ConsumptionModel.fromMap(Map<String, dynamic> map, String id) {
-    try {
-      return ConsumptionModel(
-        id: id,
-        userId: map['userId']?.toString() ?? '',
-        productName: map['productName']?.toString() ?? '',
-        quantity: (map['quantity'] as num?)?.toInt() ?? 0,
-        date: map['date'] is Timestamp 
-            ? (map['date'] as Timestamp).toDate() 
-            : DateTime.now(),
-        notes: map['notes']?.toString(),
-      );
-    } catch (e) {
-      throw FormatException('Eroare la parsarea ConsumptionModel (id: $id). Detalii: $e');
-    }
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'userId': userId,
-      'productName': productName,
-      'quantity': quantity,
-      'date': Timestamp.fromDate(date),
-      if (notes != null) 'notes': notes,
-    };
+  /// Maps GET /api/consumptions JSON.
+  /// [firebaseUid] is the Firebase UID for API `user_id`.
+  /// [productName] is ProductModel.name for API `product_id`.
+  factory ConsumptionModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String firebaseUid,
+    required String productName,
+  }) {
+    return ConsumptionModel(
+      id: json['id']?.toString() ?? '',
+      userId: firebaseUid,
+      productName: productName,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      date: ApiDateTime.parseDateOnly(json['consumed_on']?.toString() ?? ''),
+      notes: json['notes']?.toString(),
+    );
   }
 }

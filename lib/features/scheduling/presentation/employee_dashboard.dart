@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import 'scheduling_providers.dart';
 import '../../cleaning/presentation/cleaning_todo_screen.dart';
 import '../../cleaning/data/cleaning_notification_helper.dart';
@@ -327,6 +328,10 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   }
 
   Widget _buildLocationSwitcher(String location) {
+    final names = watchLocationNames(ref);
+    if (names.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Container(
       height: 48,
       padding: const EdgeInsets.all(3),
@@ -341,8 +346,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       ),
       child: Row(
         children: [
-          _buildLocationItem('Gara', location == 'Gara'),
-          _buildLocationItem('Avantgarden', location == 'Avantgarden'),
+          for (final name in names)
+            _buildLocationItem(name, location == name),
         ],
       ),
     );

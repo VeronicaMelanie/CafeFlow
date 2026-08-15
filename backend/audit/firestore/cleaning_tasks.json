@@ -1,0 +1,72 @@
+[
+  {
+    "id": "EvGqu4G17EByQOKncMEg",
+    "data": {
+      "listId": "Avantgarden_closing",
+      "active": true,
+      "location": "Avantgarden",
+      "title": "a da cu matura in depozit",
+      "order": 1
+    }
+  },
+  {
+    "id": "SNY4vWLGiyiYUu0JlsBu",
+    "data": {
+      "listId": "Avantgarden_closing",
+      "active": true,
+      "location": "Avantgarden",
+      "title": "spalare LAF",
+      "order": 0
+    }
+  },
+  {
+    "id": "dSraWYvSORLz2IyI03Ns",
+    "data": {
+      "listId": "Gara_closing",
+      "active": true,
+      "location": "Gara",
+      "title": "Curatat sub siropuri",
+      "order": 1
+    }
+  },
+  {
+    "id": "j9dw8W2TYzXL0mugYu1A",
+    "data": {
+      "listId": "Gara_closing",
+      "active": true,
+      "location": "Gara",
+      "title": "udat flori",
+      "order": 3
+    }
+  },
+  {
+    "id": "pK7ugtHXV7CG2R3F6p3E",
+    "data": {
+      "listId": "Gara_closing",
+      "active": true,
+      "location": "Gara",
+      "title": "Spalare LAF",
+      "order": 0
+    }
+  },
+  {
+    "id": "pVFPKE1dDrtlFi6ciMii",
+    "data": {
+      "listId": "Gara_closing",
+      "active": true,
+      "location": "Gara",
+      "title": "mop",
+      "order": 2
+    }
+  },
+  {
+    "id": "s4NADIWIoR1dPXdbTWeZ",
+    "data": {
+      "listId": "Gara_monday",
+      "active": true,
+      "location": "Gara",
+      "title": "curatat congelator patiserie",
+      "order": 0
+    }
+  }
+]

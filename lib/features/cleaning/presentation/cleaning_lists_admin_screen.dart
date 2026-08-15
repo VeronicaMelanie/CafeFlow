@@ -7,6 +7,7 @@ import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../data/cleaning_repository.dart';
 import '../domain/cleaning_list_key.dart';
 import '../domain/cleaning_task_model.dart';
@@ -65,11 +66,20 @@ class _CleaningListsAdminScreenState
     );
     if (title == null || title.trim().isEmpty) return;
 
-    await ref.read(cleaningRepositoryProvider).addTask(
-          location: _selectedLocation,
-          listKey: _selectedListKey,
-          title: title,
-        );
+    final listId = CleaningListKey.listId(_selectedLocation, _selectedListKey);
+    try {
+      await ref.read(cleaningRepositoryProvider).addTask(
+            location: _selectedLocation,
+            listKey: _selectedListKey,
+            title: title,
+          );
+      ref.invalidate(cleaningTasksForListProvider(listId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   Future<void> _editTask(CleaningTaskModel task) async {
@@ -96,13 +106,29 @@ class _CleaningListsAdminScreenState
       ),
     );
     if (title == null || title.trim().isEmpty) return;
-    await ref
-        .read(cleaningRepositoryProvider)
-        .updateTaskTitle(task.id, title.trim());
+    try {
+      await ref
+          .read(cleaningRepositoryProvider)
+          .updateTaskTitle(task.id, title.trim());
+      ref.invalidate(cleaningTasksForListProvider(task.listId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   Future<void> _deleteTask(CleaningTaskModel task) async {
-    await ref.read(cleaningRepositoryProvider).deleteTask(task.id);
+    try {
+      await ref.read(cleaningRepositoryProvider).deleteTask(task.id);
+      ref.invalidate(cleaningTasksForListProvider(task.listId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -172,7 +198,7 @@ class _CleaningListsAdminScreenState
   }
 }
 
-class _LocationSelector extends StatelessWidget {
+class _LocationSelector extends ConsumerWidget {
   final String selectedLocation;
   final ValueChanged<String> onChanged;
 
@@ -182,8 +208,11 @@ class _LocationSelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    const locations = ['Gara', 'Avantgarden'];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locations = watchLocationNames(ref);
+    if (locations.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Row(
       children: locations.map((location) {
         final selected = location == selectedLocation;
@@ -260,9 +289,20 @@ class _ManageTasksTab extends ConsumerWidget {
                         final reordered = List<CleaningTaskModel>.from(tasks);
                         final item = reordered.removeAt(oldIndex);
                         reordered.insert(newIndex, item);
-                        await ref
-                            .read(cleaningRepositoryProvider)
-                            .reorderTasks(reordered);
+                        try {
+                          await ref
+                              .read(cleaningRepositoryProvider)
+                              .reorderTasks(reordered);
+                          ref.invalidate(cleaningTasksForListProvider(listId));
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$e'),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
                       },
                       itemBuilder: (context, index) {
                         final task = tasks[index];

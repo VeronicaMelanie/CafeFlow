@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../data/consumption_repository.dart';
 import '../domain/consumption_model.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../products/presentation/product_providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -24,14 +25,12 @@ class _ConsumptionEntryScreenState
   String? _selectedProduct;
   int _quantity = 1;
   String? _editingId;
-  final TextEditingController _productController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   String _filterPeriod = 'all';
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
-    _productController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -95,24 +94,7 @@ class _ConsumptionEntryScreenState
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
-          TextFormField(
-            controller: _productController,
-            decoration: InputDecoration(
-              labelText: 'What did you have?',
-              hintText: 'e.g. Double Espresso, Croissant',
-              prefixIcon: const Icon(
-                Icons.restaurant_menu,
-                color: AppColors.primaryPink,
-              ),
-              filled: true,
-              fillColor: AppColors.softPink.withValues(alpha: 0.3),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onChanged: (value) => setState(() => _selectedProduct = value),
-          ),
+          _buildProductDropdown(),
           const SizedBox(height: AppSpacing.xxl),
           Text(
             'Quantity',
@@ -190,6 +172,52 @@ class _ConsumptionEntryScreenState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProductDropdown() {
+    final productsAsync = ref.watch(productsProvider);
+    return productsAsync.when(
+      loading: () => const AppSkeleton(height: 56, borderRadius: AppSpacing.radiusLg),
+      error: (error, _) => const Text('Could not load products'),
+      data: (products) {
+        final names = products
+            .where((product) => product.isActive)
+            .map((product) => product.name)
+            .toList();
+        if (_selectedProduct != null && !names.contains(_selectedProduct)) {
+          names.add(_selectedProduct!);
+        }
+        return DropdownButtonFormField<String>(
+          key: const Key('product-dropdown'),
+          value: names.contains(_selectedProduct) ? _selectedProduct : null,
+          decoration: InputDecoration(
+            labelText: 'What did you have?',
+            hintText: names.isEmpty ? 'No products available' : 'Select a product',
+            prefixIcon: const Icon(
+              Icons.restaurant_menu,
+              color: AppColors.primaryPink,
+            ),
+            filled: true,
+            fillColor: AppColors.softPink.withValues(alpha: 0.3),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          items: names
+              .map(
+                (name) => DropdownMenuItem<String>(
+                  value: name,
+                  child: Text(name),
+                ),
+              )
+              .toList(),
+          onChanged: names.isEmpty
+              ? null
+              : (value) => setState(() => _selectedProduct = value),
+        );
+      },
     );
   }
 
@@ -414,14 +442,25 @@ class _ConsumptionEntryScreenState
     setState(() {
       _editingId = consumption.id;
       _selectedProduct = consumption.productName;
-      _productController.text = consumption.productName;
       _quantity = consumption.quantity;
       _notesController.text = consumption.notes ?? '';
     });
   }
 
   Future<void> _deleteConsumption(String id) async {
-    await ref.read(consumptionRepositoryProvider).deleteConsumption(id);
+    try {
+      await ref.read(consumptionRepositoryProvider).deleteConsumption(id);
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not delete: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   Future<void> _submit(String userId) async {
@@ -497,7 +536,6 @@ class _ConsumptionEntryScreenState
     setState(() {
       _editingId = null;
       _selectedProduct = null;
-      _productController.clear();
       _quantity = 1;
       _notesController.clear();
       _selectedDate = DateTime.now();

@@ -1,0 +1,346 @@
+// CafeFlow core relational schema.
+//
+// Internal FKs use users.id (UUID). Firebase UID is the external auth identity only.
+// Calendar days are DATE. Instants are TIMESTAMPTZ (stored in UTC).
+//
+// Intentionally not modeled yet (schema is designed so they can attach later):
+// recipes, recipe_versions, ingredients, inventory, suppliers, invoices,
+// expenses, RBAC, audit logs, financial accounting.
+//
+// Firestore consumption location resolution (data migration, later step):
+// 1. Unambiguous shift location for the user on consumed_on.
+// 2. Else exactly one active user_locations row applicable on that date.
+// 3. Else skip the row and report: Firestore id, Firebase UID, date, productName, reason.
+// Never invent a location.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  employee
+  admin
+
+  @@map("user_role")
+}
+
+enum ContractType {
+  full_time
+  part_time
+
+  @@map("contract_type")
+}
+
+enum AuthProvider {
+  google
+  email
+
+  @@map("auth_provider")
+}
+
+enum ShiftType {
+  FULL
+  CUSTOM
+  VACATION
+
+  @@map("shift_type")
+}
+
+enum ShiftStatus {
+  pending
+  approved
+  auto_assigned @map("auto-assigned")
+
+  @@map("shift_status")
+}
+
+enum AvailabilityShiftType {
+  full_time
+  custom_hours
+
+  @@map("availability_shift_type")
+}
+
+enum VacationStatus {
+  pending
+  approved
+  rejected
+
+  @@map("vacation_status")
+}
+
+enum CleaningListKey {
+  closing
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+
+  @@map("cleaning_list_key")
+}
+
+model User {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firebaseUid         String         @unique @map("firebase_uid")
+  email               String
+  name                String
+  role                UserRole       @default(employee)
+  contractType        ContractType?  @map("contract_type")
+  monthlyTargetHours  Int            @default(160) @map("monthly_target_hours")
+  needsContractType   Boolean        @default(false) @map("needs_contract_type")
+  employmentStartedOn DateTime?      @map("employment_started_on") @db.Date
+  fcmToken            String?        @map("fcm_token")
+  authProvider        AuthProvider?  @map("auth_provider")
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  userLocations              UserLocation[]
+  consumptions               Consumption[]
+  shifts                     Shift[]
+  availability               Availability[]
+  vacations                  Vacation[]
+  enabledSchedulingConfigs   SchedulingConfig[]
+  cleaningCompletions        CleaningCompletion[]
+  notifications              Notification[]
+
+  @@map("users")
+}
+
+model Location {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String    @unique
+  name      String
+  isActive  Boolean   @default(true) @map("is_active")
+  openedOn  DateTime? @map("opened_on") @db.Date
+  closedOn  DateTime? @map("closed_on") @db.Date
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  userLocations     UserLocation[]
+  consumptions      Consumption[]
+  shifts            Shift[]
+  schedulingConfigs SchedulingConfig[]
+  cleaningLists     CleaningList[]
+
+  @@map("locations")
+}
+
+model UserLocation {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  locationId String    @map("location_id") @db.Uuid
+  isPrimary  Boolean   @map("is_primary")
+  validFrom  DateTime  @map("valid_from") @db.Date
+  validUntil DateTime? @map("valid_until") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([userId, locationId, validFrom], map: "user_locations_user_id_location_id_valid_from_key")
+  @@index([userId, validFrom], map: "user_locations_user_id_valid_from_idx")
+  @@index([locationId, validFrom], map: "user_locations_location_id_valid_from_idx")
+  @@map("user_locations")
+}
+
+model ProductCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  sortOrder Int?     @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  products Product[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId String?  @map("category_id") @db.Uuid
+  name       String
+  sku        String?  @unique
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category     ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  consumptions Consumption[]
+
+  @@index([name], map: "products_name_idx")
+  @@index([categoryId], map: "products_category_id_idx")
+  @@map("products")
+}
+
+model Consumption {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  locationId  String   @map("location_id") @db.Uuid
+  quantity    Decimal  @db.Decimal(12, 3)
+  consumedOn  DateTime @map("consumed_on") @db.Date
+  loggedAt    DateTime @map("logged_at") @db.Timestamptz(6)
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([userId, consumedOn], map: "consumptions_user_id_consumed_on_idx")
+  @@index([locationId, consumedOn], map: "consumptions_location_id_consumed_on_idx")
+  @@index([productId, consumedOn], map: "consumptions_product_id_consumed_on_idx")
+  @@index([locationId, userId, consumedOn], map: "consumptions_location_id_user_id_consumed_on_idx")
+  @@map("consumptions")
+}
+
+model Shift {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String      @map("user_id") @db.Uuid
+  locationId String      @map("location_id") @db.Uuid
+  workDate   DateTime    @map("work_date") @db.Date
+  startAt    DateTime    @map("start_at") @db.Timestamptz(6)
+  endAt      DateTime    @map("end_at") @db.Timestamptz(6)
+  shiftType  ShiftType   @map("type")
+  status     ShiftStatus
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([userId, workDate], map: "shifts_user_id_work_date_idx")
+  @@index([locationId, workDate], map: "shifts_location_id_work_date_idx")
+  @@map("shifts")
+}
+
+model Availability {
+  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String                 @map("user_id") @db.Uuid
+  workDate        DateTime               @map("work_date") @db.Date
+  shiftType       AvailabilityShiftType  @map("shift_type")
+  customStartTime DateTime?              @map("custom_start_time") @db.Time(6)
+  customEndTime   DateTime?              @map("custom_end_time") @db.Time(6)
+  submittedAt     DateTime               @map("submitted_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([userId, workDate], map: "availability_user_id_work_date_key")
+  @@map("availability")
+}
+
+model Vacation {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  startOn      DateTime       @map("start_on") @db.Date
+  endOn        DateTime       @map("end_on") @db.Date
+  status       VacationStatus
+  adminComment String?        @map("admin_comment")
+  requestedAt  DateTime       @map("requested_at") @db.Timestamptz(6)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([userId, startOn, endOn], map: "vacations_user_id_start_on_end_on_idx")
+  @@map("vacations")
+}
+
+model SchedulingConfig {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  locationId            String?   @map("location_id") @db.Uuid
+  year                  Int
+  month                 Int
+  schedulingEnabled     Boolean   @default(false) @map("scheduling_enabled")
+  lockedMonth           Boolean   @default(false) @map("locked_month")
+  enabledAt             DateTime? @map("enabled_at") @db.Timestamptz(6)
+  enabledById           String?   @map("enabled_by") @db.Uuid
+  maxHoursPerDay        Decimal?  @map("max_hours_per_day") @db.Decimal(6, 2)
+  maxEmployeesPerShift  Int?      @map("max_employees_per_shift")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  location  Location? @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  enabledBy User?     @relation(fields: [enabledById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  // Uniqueness of (year, month, location_id) including a single global row
+  // (location_id IS NULL) is enforced in SQL with NULLS NOT DISTINCT.
+  // Prisma @@unique cannot express that correctly.
+  @@index([year, month], map: "scheduling_configs_year_month_idx")
+  @@map("scheduling_configs")
+}
+
+model CleaningList {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  locationId String          @map("location_id") @db.Uuid
+  key        CleaningListKey
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  location Location       @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  tasks    CleaningTask[]
+
+  @@unique([locationId, key], map: "cleaning_lists_location_id_key_key")
+  @@map("cleaning_lists")
+}
+
+model CleaningTask {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listId    String   @map("list_id") @db.Uuid
+  title     String
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  list        CleaningList         @relation(fields: [listId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  completions CleaningCompletion[]
+
+  @@index([listId], map: "cleaning_tasks_list_id_idx")
+  @@map("cleaning_tasks")
+}
+
+model CleaningCompletion {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  taskId      String    @map("task_id") @db.Uuid
+  weekId      String    @map("week_id")
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  task CleaningTask @relation(fields: [taskId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([userId, taskId, weekId], map: "cleaning_completions_user_id_task_id_week_id_key")
+  @@index([userId, weekId], map: "cleaning_completions_user_id_week_id_idx")
+  @@index([taskId, weekId], map: "cleaning_completions_task_id_week_id_idx")
+  @@map("cleaning_completions")
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String
+  body      String
+  isRead    Boolean  @default(false) @map("is_read")
+  payload   Json?    @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([userId, createdAt], map: "notifications_user_id_created_at_idx")
+  @@map("notifications")
+}

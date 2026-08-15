@@ -1,24 +1,48 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/api_providers.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../data/availability_repository.dart';
 import '../data/scheduling_config_repository.dart';
+import '../data/scheduling_service.dart';
 import '../data/shift_repository.dart';
 import '../domain/availability_model.dart';
 import '../domain/scheduling_config_model.dart';
 import '../domain/shift_model.dart';
 import '../utils/monthly_progress_calculator.dart';
-import '../../auth/presentation/auth_providers.dart';
 
 final shiftRepositoryProvider = Provider<ShiftRepository>((ref) {
-  return ShiftRepository();
+  return ShiftRepository(
+    apiClient: ref.watch(apiClientProvider),
+    usersRepository: ref.watch(usersRepositoryProvider),
+    locationRepository: ref.watch(locationRepositoryProvider),
+  );
 });
 
 final availabilityRepositoryProvider = Provider<AvailabilityRepository>((ref) {
-  return AvailabilityRepository();
+  return AvailabilityRepository(
+    apiClient: ref.watch(apiClientProvider),
+    usersRepository: ref.watch(usersRepositoryProvider),
+  );
 });
 
 final schedulingConfigRepositoryProvider =
     Provider<SchedulingConfigRepository>((ref) {
-  return SchedulingConfigRepository();
+  return SchedulingConfigRepository(
+    apiClient: ref.watch(apiClientProvider),
+    usersRepository: ref.watch(usersRepositoryProvider),
+    locationRepository: ref.watch(locationRepositoryProvider),
+  );
+});
+
+final schedulingServiceProvider = Provider<SchedulingService>((ref) {
+  return SchedulingService(
+    configRepository: ref.watch(schedulingConfigRepositoryProvider),
+    availabilityRepository: ref.watch(availabilityRepositoryProvider),
+    shiftRepository: ref.watch(shiftRepositoryProvider),
+    usersRepository: ref.watch(usersRepositoryProvider),
+    locationRepository: ref.watch(locationRepositoryProvider),
+  );
 });
 
 /// Month being edited on the availability calendar (defaults to next month).

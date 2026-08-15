@@ -1,0 +1,18 @@
+[
+  {
+    "id": "a98c91bf-275e-4190-94fd-ea7b1629c67a",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "location_id": "ff63f35a-ddd1-449e-9021-33ee78e2261a",
+    "is_primary": true,
+    "valid_from": "2025-06-30",
+    "valid_until": null
+  },
+  {
+    "id": "7f6442c9-4f4e-49b6-87de-ff1dc61e13ce",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "location_id": "cc643d67-081b-44e1-b4c0-c0194fbb9aab",
+    "is_primary": false,
+    "valid_from": "2025-06-30",
+    "valid_until": null
+  }
+]

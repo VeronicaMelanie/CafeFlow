@@ -1,12 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api/api_providers.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../../scheduling/presentation/scheduling_providers.dart';
 import '../data/cleaning_repository.dart';
 import '../domain/cleaning_list_key.dart';
 import '../domain/cleaning_task_model.dart';
 
 final cleaningRepositoryProvider = Provider<CleaningRepository>((ref) {
-  return CleaningRepository();
+  return CleaningRepository(
+    apiClient: ref.watch(apiClientProvider),
+    usersRepository: ref.watch(usersRepositoryProvider),
+    locationRepository: ref.watch(locationRepositoryProvider),
+  );
 });
 
 final cleaningSelectedListKeyProvider =

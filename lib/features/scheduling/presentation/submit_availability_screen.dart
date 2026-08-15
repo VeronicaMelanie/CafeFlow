@@ -108,10 +108,6 @@ class _SubmitAvailabilityScreenState
     if (profile == null) return;
 
     final repo = ref.read(availabilityRepositoryProvider);
-    final existingByDay = <DateTime, AvailabilityModel>{
-      for (final e in existingEntries)
-        _normalizeDay(e.date): e,
-    };
 
     setState(() => _isSaving = true);
     try {
@@ -123,14 +119,16 @@ class _SubmitAvailabilityScreenState
       for (final action in actions) {
         switch (action.kind) {
           case AvailabilityPersistKind.delete:
-            await repo.deleteAvailability(action.docId!);
+            final existing = existingEntries.firstWhere(
+              (entry) => entry.id == action.docId,
+            );
+            await repo.deleteForUserOnDay(profile.uid, existing.date);
           case AvailabilityPersistKind.skip:
             break;
           case AvailabilityPersistKind.create:
           case AvailabilityPersistKind.update:
             final day = action.day!;
             final draft = action.draft!;
-            final existing = existingByDay[day];
 
             DateTime? customStart;
             DateTime? customEnd;
@@ -158,7 +156,6 @@ class _SubmitAvailabilityScreenState
               shiftType: draft.shiftType,
               customStart: customStart,
               customEnd: customEnd,
-              existingDocId: existing?.id ?? draft.existingDocId,
             );
         }
       }

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/api/api_datetime.dart';
+
 class VacationModel {
   final String id;
   final String userId;
@@ -46,6 +48,28 @@ class VacationModel {
     } catch (e) {
       throw FormatException('Eroare la parsarea VacationModel (id: $id). Detalii: $e');
     }
+  }
+
+  /// Maps GET /api/vacations JSON.
+  /// [firebaseUid] is the Firebase UID for API `user_id`.
+  /// [userName] is derived from UserModel; empty when unknown — never invented.
+  factory VacationModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String firebaseUid,
+    required String userName,
+  }) {
+    return VacationModel(
+      id: json['id']?.toString() ?? '',
+      userId: firebaseUid,
+      userName: userName,
+      startDate: ApiDateTime.parseDateOnly(json['start_on']?.toString() ?? ''),
+      endDate: ApiDateTime.parseDateOnly(json['end_on']?.toString() ?? ''),
+      status: json['status']?.toString() ?? 'pending',
+      adminComment: json['admin_comment']?.toString(),
+      requestedAt: ApiDateTime.parseTimestamptz(
+        json['requested_at']?.toString() ?? '',
+      ),
+    );
   }
 
   Map<String, dynamic> toMap() {

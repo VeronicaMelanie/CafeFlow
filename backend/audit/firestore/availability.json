@@ -1,0 +1,860 @@
+[
+  {
+    "id": "0oxWGv6mErMV9LUzm1zY",
+    "data": {
+      "date": "2026-06-30T21:00:00.000Z",
+      "customEndTime": "2026-07-01T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-01T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.063Z"
+    }
+  },
+  {
+    "id": "1qC244toe5ndY1DTGg3D",
+    "data": {
+      "date": "2026-07-19T21:00:00.000Z",
+      "customEndTime": "2026-07-20T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-20T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:21.803Z"
+    }
+  },
+  {
+    "id": "4AQpUkfaR0UUow0SIc4V",
+    "data": {
+      "date": "2026-09-10T21:00:00.000Z",
+      "customEndTime": "2026-09-11T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-11T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.873Z"
+    }
+  },
+  {
+    "id": "6PqKDXaV00dFdMXAxF0u",
+    "data": {
+      "date": "2026-07-28T21:00:00.000Z",
+      "customEndTime": "2026-07-29T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-29T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:22.720Z"
+    }
+  },
+  {
+    "id": "775vdyMGfK1I2OtnKO3I",
+    "data": {
+      "date": "2026-08-27T21:00:00.000Z",
+      "customEndTime": "2026-08-28T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-28T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.948Z"
+    }
+  },
+  {
+    "id": "7GGVhwlVtFtn38rNwmeD",
+    "data": {
+      "date": "2026-07-15T21:00:00.000Z",
+      "customEndTime": "2026-07-16T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-16T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:21.450Z"
+    }
+  },
+  {
+    "id": "7pq3ScBCC5Ib7YgyoMdk",
+    "data": {
+      "date": "2026-09-23T21:00:00.000Z",
+      "customEndTime": "2026-09-24T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-24T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:26:51.884Z"
+    }
+  },
+  {
+    "id": "80RM4OQxeRa64ZYQYFwf",
+    "data": {
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "date": "2026-05-31T21:00:00.000Z",
+      "isFullDay": true,
+      "customStartTime": null,
+      "customEndTime": null
+    }
+  },
+  {
+    "id": "8s9jQjeqWkpgzLZo7xp7",
+    "data": {
+      "date": "2026-09-19T21:00:00.000Z",
+      "customEndTime": "2026-09-20T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-20T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.544Z"
+    }
+  },
+  {
+    "id": "9CsvmQL0ZHU5KgBpOcqE",
+    "data": {
+      "date": "2026-07-11T21:00:00.000Z",
+      "customEndTime": "2026-07-12T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-12T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.900Z"
+    }
+  },
+  {
+    "id": "AtdByoVSk1fJA7i2sjw4",
+    "data": {
+      "date": "2026-06-24T21:00:00.000Z",
+      "customEndTime": null,
+      "isFullDay": true,
+      "customStartTime": null,
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    }
+  },
+  {
+    "id": "DQkazCX9IAjuHunELBc3",
+    "data": {
+      "date": "2026-07-24T21:00:00.000Z",
+      "customEndTime": "2026-07-25T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-25T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:22.423Z"
+    }
+  },
+  {
+    "id": "DcEgaB22V48CLLA01H4V",
+    "data": {
+      "date": "2026-08-14T21:00:00.000Z",
+      "customEndTime": "2026-08-15T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-15T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:38.847Z"
+    }
+  },
+  {
+    "id": "Ec41A6RWFesZueWTskFt",
+    "data": {
+      "date": "2026-08-06T21:00:00.000Z",
+      "customEndTime": "2026-08-07T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-07T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:39.391Z"
+    }
+  },
+  {
+    "id": "FZLgQg3hXvtgDGI4XyQs",
+    "data": {
+      "date": "2026-06-03T21:00:00.000Z",
+      "customEndTime": "2026-06-04T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-06-04T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-05-27T10:47:20.833Z"
+    }
+  },
+  {
+    "id": "Fpx6Hk6bmYChUkvWpfVh",
+    "data": {
+      "date": "2026-09-23T21:00:00.000Z",
+      "customEndTime": "2026-09-24T10:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-24T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.801Z"
+    }
+  },
+  {
+    "id": "GRXzoQ2hANLyceIttzZ8",
+    "data": {
+      "date": "2026-08-17T21:00:00.000Z",
+      "customEndTime": "2026-08-18T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-18T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.207Z"
+    }
+  },
+  {
+    "id": "IsjMj53JSArGNDJF7ZsY",
+    "data": {
+      "date": "2026-08-28T21:00:00.000Z",
+      "customEndTime": "2026-08-29T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-29T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:41.145Z"
+    }
+  },
+  {
+    "id": "JBI15g5R2y5jEo8vf1Tv",
+    "data": {
+      "date": "2026-07-08T21:00:00.000Z",
+      "customEndTime": "2026-07-09T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-09T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.776Z"
+    }
+  },
+  {
+    "id": "KBVfmZ63XwjaIUFXptRK",
+    "data": {
+      "date": "2026-09-18T21:00:00.000Z",
+      "customEndTime": "2026-09-19T15:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-19T12:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.406Z"
+    }
+  },
+  {
+    "id": "LPWAYX6u6pPad2dylnIJ",
+    "data": {
+      "date": "2026-09-16T21:00:00.000Z",
+      "customEndTime": "2026-09-17T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-17T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:20.179Z"
+    }
+  },
+  {
+    "id": "O22DLapNbKmmM8a3v2bF",
+    "data": {
+      "date": "2026-08-24T21:00:00.000Z",
+      "customEndTime": "2026-08-25T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-25T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.846Z"
+    }
+  },
+  {
+    "id": "OCAJFlNDwlU0iufLlgnH",
+    "data": {
+      "date": "2026-08-23T21:00:00.000Z",
+      "customEndTime": "2026-08-24T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-24T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.652Z"
+    }
+  },
+  {
+    "id": "OOqPY9Ts0rKw1RjAS5QX",
+    "data": {
+      "date": "2026-06-01T21:00:00.000Z",
+      "customEndTime": "2026-06-02T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-06-02T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-05-27T10:47:20.516Z"
+    }
+  },
+  {
+    "id": "OhLs6w5cjJ3LiX706b2j",
+    "data": {
+      "date": "2026-09-08T21:00:00.000Z",
+      "customEndTime": "2026-09-09T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-09T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.287Z"
+    }
+  },
+  {
+    "id": "PTPmTlHvmIJJHPRfMehU",
+    "data": {
+      "date": "2026-08-31T21:00:00.000Z",
+      "customEndTime": "2026-09-01T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-01T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.127Z"
+    }
+  },
+  {
+    "id": "RasTooTkqR39Fpzzty4w",
+    "data": {
+      "date": "2026-09-02T21:00:00.000Z",
+      "customEndTime": "2026-09-03T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-03T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.438Z"
+    }
+  },
+  {
+    "id": "SK9xPKonFJMCWBUfj55N",
+    "data": {
+      "date": "2026-09-09T21:00:00.000Z",
+      "customEndTime": "2026-09-10T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-10T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.629Z"
+    }
+  },
+  {
+    "id": "SP3cmTefw3DkH9Pu99nw",
+    "data": {
+      "date": "2026-08-01T21:00:00.000Z",
+      "customEndTime": "2026-08-02T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-02T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:38.986Z"
+    }
+  },
+  {
+    "id": "StOHa0fCp3S3nrijqfYW",
+    "data": {
+      "date": "2026-08-13T21:00:00.000Z",
+      "customEndTime": "2026-08-14T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-14T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.003Z"
+    }
+  },
+  {
+    "id": "UHz0RPPkKyDY9kWdoo72",
+    "data": {
+      "date": "2026-09-05T21:00:00.000Z",
+      "customEndTime": "2026-09-06T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-06T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.398Z"
+    }
+  },
+  {
+    "id": "Uvusj96ocx8b6opTcuxk",
+    "data": {
+      "date": "2026-08-02T21:00:00.000Z",
+      "customEndTime": "2026-08-03T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-03T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:39.130Z"
+    }
+  },
+  {
+    "id": "V8cjmZ32luvwj7tmDHgc",
+    "data": {
+      "date": "2026-06-22T21:00:00.000Z",
+      "customEndTime": null,
+      "isFullDay": true,
+      "customStartTime": null,
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    }
+  },
+  {
+    "id": "VXbDWa8Wgs2fn75TpGoc",
+    "data": {
+      "date": "2026-08-20T21:00:00.000Z",
+      "customEndTime": "2026-08-21T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-21T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:38.623Z"
+    }
+  },
+  {
+    "id": "Vf0FQNvINQZmd0Ol6JtL",
+    "data": {
+      "date": "2026-09-18T21:00:00.000Z",
+      "customEndTime": "2026-09-19T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-19T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:20.324Z"
+    }
+  },
+  {
+    "id": "ZROaJoMa3bz4LG4d76N9",
+    "data": {
+      "date": "2026-08-09T21:00:00.000Z",
+      "customEndTime": "2026-08-10T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-10T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:39.577Z"
+    }
+  },
+  {
+    "id": "ZwfEPCr6wmakIhMB8fha",
+    "data": {
+      "date": "2026-08-31T21:00:00.000Z",
+      "customEndTime": "2026-09-01T10:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-01T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:14.886Z"
+    }
+  },
+  {
+    "id": "aSfxhmScOLpFrEIIDpn3",
+    "data": {
+      "date": "2026-07-23T21:00:00.000Z",
+      "customEndTime": "2026-07-24T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-24T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:22.313Z"
+    }
+  },
+  {
+    "id": "bMvedtuE0KaBoEmuSPvz",
+    "data": {
+      "date": "2026-09-13T21:00:00.000Z",
+      "customEndTime": "2026-09-14T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-14T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.019Z"
+    }
+  },
+  {
+    "id": "c9k61mMkE6DE8RaMcfBp",
+    "data": {
+      "date": "2026-07-07T21:00:00.000Z",
+      "customEndTime": "2026-07-08T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-08T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.590Z"
+    }
+  },
+  {
+    "id": "coLbe43PaWhYDyfYZIBW",
+    "data": {
+      "date": "2026-07-04T21:00:00.000Z",
+      "customEndTime": "2026-07-05T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-05T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.412Z"
+    }
+  },
+  {
+    "id": "cobvDcTzQ8Au63ciMsBV",
+    "data": {
+      "date": "2026-07-20T21:00:00.000Z",
+      "customEndTime": "2026-07-21T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-21T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:22.054Z"
+    }
+  },
+  {
+    "id": "crnXy8F9xBYXOnaqMzuv",
+    "data": {
+      "date": "2026-08-18T21:00:00.000Z",
+      "customEndTime": "2026-08-19T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-19T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:40.523Z"
+    }
+  },
+  {
+    "id": "d3DCkZjKFxKiEUqMV3oQ",
+    "data": {
+      "date": "2026-09-27T21:00:00.000Z",
+      "customEndTime": "2026-09-28T15:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-28T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:17.092Z"
+    }
+  },
+  {
+    "id": "dvm4n3sYS3kkiDgJHVTB",
+    "data": {
+      "date": "2026-06-17T21:00:00.000Z",
+      "customEndTime": null,
+      "isFullDay": true,
+      "customStartTime": null,
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    }
+  },
+  {
+    "id": "eedPQ9OUpevbFJJPVCwZ",
+    "data": {
+      "date": "2026-09-28T21:00:00.000Z",
+      "customEndTime": "2026-09-29T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-29T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:17.209Z"
+    }
+  },
+  {
+    "id": "f0hktLysw6qSARSuXyAe",
+    "data": {
+      "date": "2026-09-06T21:00:00.000Z",
+      "customEndTime": "2026-09-07T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-07T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.536Z"
+    }
+  },
+  {
+    "id": "fGkCiYsUHXBTvEo8bgBP",
+    "data": {
+      "date": "2026-09-17T21:00:00.000Z",
+      "customEndTime": "2026-09-18T12:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-18T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.291Z"
+    }
+  },
+  {
+    "id": "frPYTceNapo14bSrIbsJ",
+    "data": {
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "date": "2026-06-08T21:00:00.000Z",
+      "isFullDay": true,
+      "customStartTime": null,
+      "customEndTime": null
+    }
+  },
+  {
+    "id": "gRNQC81nxtpvDg3YDrH0",
+    "data": {
+      "date": "2026-09-20T21:00:00.000Z",
+      "customEndTime": "2026-09-21T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-21T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.655Z"
+    }
+  },
+  {
+    "id": "gammlDFppTOaasFWSewS",
+    "data": {
+      "date": "2026-09-19T21:00:00.000Z",
+      "customEndTime": "2026-09-20T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-20T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:20.474Z"
+    }
+  },
+  {
+    "id": "hNk3AjxoXLQPl88qXQUI",
+    "data": {
+      "date": "2026-08-05T21:00:00.000Z",
+      "customEndTime": "2026-08-06T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-06T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:39.281Z"
+    }
+  },
+  {
+    "id": "i0AyubAgo5icMY3FJjeA",
+    "data": {
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "date": "2026-06-07T21:00:00.000Z",
+      "isFullDay": true,
+      "customStartTime": null,
+      "customEndTime": null
+    }
+  },
+  {
+    "id": "k74R1Zh8rbWYkAet9efP",
+    "data": {
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "date": "2026-06-09T21:00:00.000Z",
+      "isFullDay": true,
+      "customStartTime": null,
+      "customEndTime": null
+    }
+  },
+  {
+    "id": "kEJiJyBJn1gNKKao3M2j",
+    "data": {
+      "date": "2026-06-02T21:00:00.000Z",
+      "customEndTime": "2026-06-03T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-06-03T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-05-27T10:47:20.678Z"
+    }
+  },
+  {
+    "id": "lVp1MRumiZPmHwFhRsoy",
+    "data": {
+      "date": "2026-09-21T21:00:00.000Z",
+      "customEndTime": "2026-09-22T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-22T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:26:51.716Z"
+    }
+  },
+  {
+    "id": "o2jepA5sgWB4YBTmADhy",
+    "data": {
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "date": "2026-06-10T21:00:00.000Z",
+      "isFullDay": true,
+      "customStartTime": null,
+      "customEndTime": null
+    }
+  },
+  {
+    "id": "oFZusDsRV9sEd1vikemp",
+    "data": {
+      "date": "2026-07-16T21:00:00.000Z",
+      "customEndTime": "2026-07-17T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-17T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:21.613Z"
+    }
+  },
+  {
+    "id": "qeIVgTHKHQLCmjCi14Ok",
+    "data": {
+      "date": "2026-09-11T21:00:00.000Z",
+      "customEndTime": "2026-09-12T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-12T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.747Z"
+    }
+  },
+  {
+    "id": "rBXh3wqPLlwnMXDFAAlZ",
+    "data": {
+      "date": "2026-09-24T21:00:00.000Z",
+      "customEndTime": "2026-09-25T10:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-25T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.976Z"
+    }
+  },
+  {
+    "id": "sqf0NQHrDy7Yxvq32epb",
+    "data": {
+      "date": "2026-07-12T21:00:00.000Z",
+      "customEndTime": "2026-07-13T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-13T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:21.048Z"
+    }
+  },
+  {
+    "id": "srTBGGODJyVtSSjCrYeX",
+    "data": {
+      "date": "2026-09-04T21:00:00.000Z",
+      "customEndTime": "2026-09-05T15:00:00.000Z",
+      "shiftType": "custom_hours",
+      "isFullDay": false,
+      "customStartTime": "2026-09-05T10:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.262Z"
+    }
+  },
+  {
+    "id": "stURK4cDjxQntwMQktY7",
+    "data": {
+      "date": "2026-07-27T21:00:00.000Z",
+      "customEndTime": "2026-07-28T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-28T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:22.563Z"
+    }
+  },
+  {
+    "id": "tpaRfGVRuk4Loc5d1r46",
+    "data": {
+      "date": "2026-08-10T21:00:00.000Z",
+      "customEndTime": "2026-08-11T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-08-11T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-07-16T18:52:39.837Z"
+    }
+  },
+  {
+    "id": "uqQlH14A1l0ARDTOIecI",
+    "data": {
+      "date": "2026-09-12T21:00:00.000Z",
+      "customEndTime": "2026-09-13T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-13T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.874Z"
+    }
+  },
+  {
+    "id": "vgPNJGDqCrDa8A1esfjB",
+    "data": {
+      "date": "2026-09-25T21:00:00.000Z",
+      "customEndTime": "2026-09-26T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-26T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:26:52.197Z"
+    }
+  },
+  {
+    "id": "vpryTZs5LAhwVdcXFbVA",
+    "data": {
+      "date": "2026-09-14T21:00:00.000Z",
+      "customEndTime": "2026-09-15T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-15T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:20.035Z"
+    }
+  },
+  {
+    "id": "vrQRW2NAnHxI24gwLrBb",
+    "data": {
+      "date": "2026-09-14T21:00:00.000Z",
+      "customEndTime": "2026-09-15T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-15T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:16.119Z"
+    }
+  },
+  {
+    "id": "w78RKWIlGBdfZiB0AjzL",
+    "data": {
+      "date": "2026-09-01T21:00:00.000Z",
+      "customEndTime": "2026-09-02T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-02T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-08-09T08:32:15.039Z"
+    }
+  },
+  {
+    "id": "wOoIXTwXeq9z8CU2OM0o",
+    "data": {
+      "date": "2026-06-26T21:00:00.000Z",
+      "customEndTime": null,
+      "isFullDay": true,
+      "customStartTime": null,
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    }
+  },
+  {
+    "id": "xpG14B5Z1gNNVDwKHVlr",
+    "data": {
+      "date": "2026-09-04T21:00:00.000Z",
+      "customEndTime": "2026-09-05T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-05T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:22:19.585Z"
+    }
+  },
+  {
+    "id": "yg0QVdnMivISiIr4X0wO",
+    "data": {
+      "date": "2026-07-03T21:00:00.000Z",
+      "customEndTime": "2026-07-04T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-07-04T04:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "submissionTimestamp": "2026-06-08T08:09:20.247Z"
+    }
+  },
+  {
+    "id": "ztxqJoQIIu9Hy1FSLjEr",
+    "data": {
+      "date": "2026-09-24T21:00:00.000Z",
+      "customEndTime": "2026-09-25T15:00:00.000Z",
+      "shiftType": "full_time",
+      "isFullDay": true,
+      "customStartTime": "2026-09-25T04:00:00.000Z",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "submissionTimestamp": "2026-08-09T11:26:52.047Z"
+    }
+  }
+]

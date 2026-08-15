@@ -1,3 +1,15 @@
+# Backend / local secrets — never commit credentials
+.env
+.env.*
+!.env.example
+backend/node_modules/
+backend/dist/
+backend/src/generated/
+backend/secrets/
+backend/migration-data/
+*-firebase-adminsdk-*.json
+google-credentials.json
+
 # Miscellaneous
 *.class
 *.log

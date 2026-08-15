@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_datetime.dart';
 
 /// Permanent task definition for a cleaning list.
 class CleaningTaskModel {
@@ -18,25 +18,19 @@ class CleaningTaskModel {
     this.active = true,
   });
 
-  factory CleaningTaskModel.fromMap(Map<String, dynamic> map, String id) {
+  factory CleaningTaskModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String flutterListId,
+    required String locationName,
+  }) {
     return CleaningTaskModel(
-      id: id,
-      listId: map['listId']?.toString() ?? '',
-      location: map['location']?.toString() ?? 'Gara',
-      title: map['title']?.toString() ?? '',
-      order: (map['order'] as num?)?.toInt() ?? 0,
-      active: map['active'] != false,
+      id: json['id']?.toString() ?? '',
+      listId: flutterListId,
+      location: locationName,
+      title: json['title']?.toString() ?? '',
+      order: (json['sort_order'] as num?)?.toInt() ?? 0,
+      active: json['is_active'] != false,
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'listId': listId,
-      'location': location,
-      'title': title,
-      'order': order,
-      'active': active,
-    };
   }
 
   CleaningTaskModel copyWith({
@@ -80,32 +74,25 @@ class CleaningTaskCompletionModel {
   static String docId(String employeeId, String taskId, String weekId) =>
       '${employeeId}_${taskId}_$weekId';
 
-  factory CleaningTaskCompletionModel.fromMap(Map<String, dynamic> map, String id) {
+  factory CleaningTaskCompletionModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String firebaseUid,
+    required String flutterListId,
+    required String locationName,
+  }) {
+    final completedAt = json['completed_at']?.toString();
     return CleaningTaskCompletionModel(
-      id: id,
-      employeeId: map['employeeId']?.toString() ?? '',
-      taskId: map['taskId']?.toString() ?? '',
-      listId: map['listId']?.toString() ?? '',
-      location: map['location']?.toString() ?? 'Gara',
-      weekId: map['weekId']?.toString() ?? '',
-      completed: map['completed'] == true,
-      completedAt: map['completedAt'] is Timestamp
-          ? (map['completedAt'] as Timestamp).toDate()
-          : null,
+      id: json['id']?.toString() ?? '',
+      employeeId: firebaseUid,
+      taskId: json['task_id']?.toString() ?? '',
+      listId: flutterListId,
+      location: locationName,
+      weekId: json['week_id']?.toString() ?? '',
+      completed: json['completed'] == true,
+      completedAt: completedAt == null || completedAt.isEmpty
+          ? null
+          : ApiDateTime.parseTimestamptz(completedAt),
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'employeeId': employeeId,
-      'taskId': taskId,
-      'listId': listId,
-      'location': location,
-      'weekId': weekId,
-      'completed': completed,
-      if (completedAt != null)
-        'completedAt': Timestamp.fromDate(completedAt!),
-    };
   }
 }
 

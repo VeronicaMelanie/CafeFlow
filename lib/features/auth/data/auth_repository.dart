@@ -3,18 +3,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import '../domain/user_model.dart';
+import 'users_repository.dart';
 
 class AuthRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+  final UsersRepository? _usersRepository;
   late final GoogleSignIn _googleSignIn;
 
-  AuthRepository() {
-    _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb
-          ? '925861994797-80vrot56p4iimj07ho21h51khr8p21sm.apps.googleusercontent.com'
-          : null,
-    );
+  AuthRepository({
+    UsersRepository? usersRepository,
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  })  : _usersRepository = usersRepository,
+        _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance {
+    _googleSignIn = googleSignIn ??
+        GoogleSignIn(
+          clientId: kIsWeb
+              ? '925861994797-80vrot56p4iimj07ho21h51khr8p21sm.apps.googleusercontent.com'
+              : null,
+        );
   }
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -95,11 +105,19 @@ class AuthRepository {
     final displayName = (name ?? user.displayName ?? '').trim();
     final mergedName = displayName.isNotEmpty ? displayName : 'Employee';
 
+    final usersRepository = _usersRepository;
+    UserModel? fromApi;
+    if (usersRepository != null) {
+      fromApi = await usersRepository.ensureCurrentUser(name: mergedName);
+    }
+
     await _ensureUserProfileDocument(
       user: user,
       name: mergedName,
       workType: workType,
     );
+
+    if (fromApi != null) return fromApi;
 
     final docRef = _firestore.collection('users').doc(user.uid);
     final docSnap = await docRef.get();
@@ -119,14 +137,24 @@ class AuthRepository {
 
   Future<UserModel?> getCurrentUserModel() async {
     final user = _auth.currentUser;
-    if (user != null) {
-      final docSnap = await _firestore.collection('users').doc(user.uid).get();
-      if (docSnap.exists) {
-        return UserModel.fromMap(
-          docSnap.data() as Map<String, dynamic>,
-          docSnap.id,
-        );
-      }
+    if (user == null) return null;
+
+    final usersRepository = _usersRepository;
+    if (usersRepository != null) {
+      final fromApi = await usersRepository.findByFirebaseUid(user.uid);
+      if (fromApi != null) return fromApi;
+      final displayName = (user.displayName ?? '').trim();
+      return usersRepository.ensureCurrentUser(
+        name: displayName.isNotEmpty ? displayName : null,
+      );
+    }
+
+    final docSnap = await _firestore.collection('users').doc(user.uid).get();
+    if (docSnap.exists) {
+      return UserModel.fromMap(
+        docSnap.data() as Map<String, dynamic>,
+        docSnap.id,
+      );
     }
     return null;
   }
@@ -150,13 +178,21 @@ class AuthRepository {
     required String uid,
     required String contractType, // 'full_time' | 'part_time'
   }) async {
-    await _firestore.collection('users').doc(uid).set({
-      'contractType': contractType,
-      'needsContractType': false,
-    }, SetOptions(merge: true));
+    final usersRepository = _usersRepository;
+    if (usersRepository == null) {
+      throw Exception('Users repository is required for contract type');
+    }
+    await usersRepository.setContractType(
+      firebaseUid: uid,
+      contractType: contractType,
+    );
   }
 
   Stream<List<UserModel>> getAllEmployees() {
+    final usersRepository = _usersRepository;
+    if (usersRepository != null) {
+      return Stream.fromFuture(usersRepository.getEmployees());
+    }
     return _firestore
         .collection('users')
         .where('role', isEqualTo: 'employee')
@@ -166,6 +202,17 @@ class AuthRepository {
               .map((doc) => UserModel.fromMap(doc.data(), doc.id))
               .toList();
         });
+  }
+
+  Future<List<UserModel>> getAllUsers() async {
+    final usersRepository = _usersRepository;
+    if (usersRepository != null) {
+      return usersRepository.getUsers();
+    }
+    final snapshot = await _firestore.collection('users').get();
+    return snapshot.docs
+        .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+        .toList();
   }
 
   Future<void> sendNotificationToAllEmployees({

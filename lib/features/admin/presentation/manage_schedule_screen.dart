@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/utils/location_color_utils.dart';
 import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../scheduling/data/scheduling_service.dart';
 import '../../scheduling/domain/shift_model.dart';
+import '../../scheduling/presentation/scheduling_providers.dart';
 
 class ManageScheduleScreen extends ConsumerStatefulWidget {
   const ManageScheduleScreen({Key? key}) : super(key: key);
@@ -18,10 +20,12 @@ class ManageScheduleScreen extends ConsumerStatefulWidget {
 }
 
 class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
-  final SchedulingService _schedulingService = SchedulingService();
   List<ShiftModel> _draftShifts = [];
   bool _isGenerating = false;
   DateTime _selectedMonth = DateTime.now().add(const Duration(days: 15));
+
+  SchedulingService get _schedulingService =>
+      ref.read(schedulingServiceProvider);
 
   Future<void> _generateDraft() async {
     setState(() => _isGenerating = true);
@@ -43,6 +47,8 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
     setState(() => _isGenerating = true);
     try {
       await _schedulingService.publishSchedule(_draftShifts);
+      ref.invalidate(shiftsForMonthProvider);
+      ref.invalidate(userShiftsProvider);
       setState(() {
         _draftShifts = [];
         _isGenerating = false;
@@ -143,7 +149,6 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
       itemCount: _draftShifts.length,
       itemBuilder: (context, index) {
         final shift = _draftShifts[index];
-        final isGara = shift.location == 'Gara';
         
         return Container(
           margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -160,12 +165,16 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                 width: 45,
                 height: 45,
                 decoration: BoxDecoration(
-                  color: (isGara ? AppColors.softGreen : AppColors.softYellow).withValues(alpha: 0.4),
+                  color: LocationColorUtils.backgroundFor(shift.location)
+                      .withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Center(
                   child: Text(shift.location[0], 
-                  style: TextStyle(fontWeight: FontWeight.bold, color: isGara ? Colors.green : Colors.orange)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: LocationColorUtils.foregroundFor(shift.location),
+                  )),
                 ),
               ),
               const SizedBox(width: 16),

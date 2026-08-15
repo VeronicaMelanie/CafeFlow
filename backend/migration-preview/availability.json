@@ -1,0 +1,578 @@
+[
+  {
+    "id": "3a62f64e-e5ac-4663-8285-82dd2366843b",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-06-30",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.063Z"
+  },
+  {
+    "id": "dbc9f9cb-557d-479b-911c-e9e3693b9446",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-19",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:21.803Z"
+  },
+  {
+    "id": "e446eabf-595c-4c85-92cb-247e9db5935d",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-10",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:15.873Z"
+  },
+  {
+    "id": "e49500f2-2c04-4885-b496-8912cb7de727",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-28",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:22.720Z"
+  },
+  {
+    "id": "28280926-73cd-4df9-9094-3f0866b55b55",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-27",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.948Z"
+  },
+  {
+    "id": "9ff91924-36ce-4f02-89c9-96a1e84eb84e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-15",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:21.450Z"
+  },
+  {
+    "id": "136c88e8-0e61-46c1-8339-c71c76b59859",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-23",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:26:51.884Z"
+  },
+  {
+    "id": "daab55d3-9827-4f9e-a440-8c9ed1874c7e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-19",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:16.544Z"
+  },
+  {
+    "id": "38377848-e471-412d-b71b-10dae86aa05e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-11",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.900Z"
+  },
+  {
+    "id": "2332855e-638e-45a7-889e-b86ecc799d35",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-24",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:22.423Z"
+  },
+  {
+    "id": "02818793-ff13-4b4b-9053-9b69921adf3d",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-14",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:38.847Z"
+  },
+  {
+    "id": "7fcb1472-d489-421d-a845-437e0b3be842",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-06",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:39.391Z"
+  },
+  {
+    "id": "18aad32a-67c5-4ace-80cd-73f068f8111b",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-06-03",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-05-27T10:47:20.833Z"
+  },
+  {
+    "id": "c448b93d-4d8c-4415-84a2-5a3caafc44c8",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-23",
+    "shift_type": "custom_hours",
+    "custom_start_time": "04:00:00.000",
+    "custom_end_time": "10:00:00.000",
+    "submitted_at": "2026-08-09T08:32:16.801Z"
+  },
+  {
+    "id": "c2a60701-ae9f-4ef4-9df1-dfdfe3ac3e23",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-17",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.207Z"
+  },
+  {
+    "id": "bc57558a-5fa1-4d84-897d-512f51882bef",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-28",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:41.145Z"
+  },
+  {
+    "id": "96385be2-2bae-4028-baa0-8b357efb716d",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-08",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.776Z"
+  },
+  {
+    "id": "34bd6589-50b0-446d-be43-693183d8d596",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-18",
+    "shift_type": "custom_hours",
+    "custom_start_time": "12:00:00.000",
+    "custom_end_time": "15:00:00.000",
+    "submitted_at": "2026-08-09T08:32:16.406Z"
+  },
+  {
+    "id": "2f1d99ee-b04e-4e71-a922-4c7f1c4af20e",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-16",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:20.179Z"
+  },
+  {
+    "id": "1f20fd90-7e5a-4278-931f-e638a206e6e6",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-24",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.846Z"
+  },
+  {
+    "id": "80122810-1c18-4b44-8c0c-31130daca331",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-23",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.652Z"
+  },
+  {
+    "id": "b4362dc3-2183-49bf-9ef8-d113e5639f9e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-06-01",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-05-27T10:47:20.516Z"
+  },
+  {
+    "id": "12813492-ea28-4bf8-b4c7-373df9c6eeb9",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-08",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.287Z"
+  },
+  {
+    "id": "9092cee3-31ab-4ec4-a9d6-bd236493da60",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-08-31",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.127Z"
+  },
+  {
+    "id": "d986ea67-f322-431c-aa7d-a40f93c2aadd",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-02",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.438Z"
+  },
+  {
+    "id": "56a7d2c1-107b-4288-bc37-e99e03e43e60",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-09",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:15.629Z"
+  },
+  {
+    "id": "31252dd0-1bde-4459-988b-89e2373ee16e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-01",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:38.986Z"
+  },
+  {
+    "id": "646a558a-f301-4316-91e5-991714c93521",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-13",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.003Z"
+  },
+  {
+    "id": "5f5bf711-7994-4484-b64d-bc85d5277306",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-05",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:15.398Z"
+  },
+  {
+    "id": "27286b27-a3bd-4ede-9274-92dc74240ac6",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-02",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:39.130Z"
+  },
+  {
+    "id": "eea71729-388e-4458-ae74-648c0a006ca2",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-20",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:38.623Z"
+  },
+  {
+    "id": "f7601a0f-1c16-421d-b102-78b9d66a2213",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-18",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:20.324Z"
+  },
+  {
+    "id": "e21770c5-7dd3-48a3-b217-ee1fae8698d9",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-09",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:39.577Z"
+  },
+  {
+    "id": "48046cde-216a-4a97-84fe-2eaf96e4bb01",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-31",
+    "shift_type": "custom_hours",
+    "custom_start_time": "04:00:00.000",
+    "custom_end_time": "10:00:00.000",
+    "submitted_at": "2026-08-09T08:32:14.886Z"
+  },
+  {
+    "id": "a57b16a6-9dcd-4064-a057-d9d45adc495a",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-23",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:22.313Z"
+  },
+  {
+    "id": "d492ad19-7427-4fa4-be80-81531a1f00eb",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-13",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:16.019Z"
+  },
+  {
+    "id": "fe292817-43df-415a-8c64-5395ee99dd40",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-07",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.590Z"
+  },
+  {
+    "id": "829ccf7f-bac6-4ee4-9571-38c04303020f",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-04",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.412Z"
+  },
+  {
+    "id": "fb94b8cb-867d-467a-ab22-6126db465a1e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-20",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:22.054Z"
+  },
+  {
+    "id": "7fb6ee6c-5d50-46a5-8762-ddbad31ae62a",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-18",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:40.523Z"
+  },
+  {
+    "id": "6182e3b7-5753-457b-84db-79e178a55c9c",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-27",
+    "shift_type": "custom_hours",
+    "custom_start_time": "04:00:00.000",
+    "custom_end_time": "15:00:00.000",
+    "submitted_at": "2026-08-09T08:32:17.092Z"
+  },
+  {
+    "id": "3f4a7060-88a6-4c3d-bfaf-b05712096459",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-28",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:17.209Z"
+  },
+  {
+    "id": "40ed3d1b-485f-4aa3-9062-a7bd2fb0a2cf",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-06",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:15.536Z"
+  },
+  {
+    "id": "3e1e2625-1f52-46cc-8658-c0d9b11dda5c",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-17",
+    "shift_type": "custom_hours",
+    "custom_start_time": "04:00:00.000",
+    "custom_end_time": "12:00:00.000",
+    "submitted_at": "2026-08-09T08:32:16.291Z"
+  },
+  {
+    "id": "c90eb7c8-6efc-436d-8ed9-ef36b904fd02",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-20",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:16.655Z"
+  },
+  {
+    "id": "56999047-7d2b-47e4-a8da-0b2e9a0308de",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-19",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:20.474Z"
+  },
+  {
+    "id": "a37056b2-5e55-405f-b342-bf5e4527ed4f",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-05",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:39.281Z"
+  },
+  {
+    "id": "0b7fae25-b5fc-4648-96ab-e0ca3ecf22b4",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-06-02",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-05-27T10:47:20.678Z"
+  },
+  {
+    "id": "9e720ecc-e155-4763-9122-5fbfece30019",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-21",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:26:51.716Z"
+  },
+  {
+    "id": "e4d7ff87-8cc7-4ef3-a58f-023185a93f0e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-16",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:21.613Z"
+  },
+  {
+    "id": "522128eb-27c7-4c11-b98b-f8fbcc285ae3",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-11",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.747Z"
+  },
+  {
+    "id": "727ef4c4-f96b-44a6-bdf4-94e55f5f83cd",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-24",
+    "shift_type": "custom_hours",
+    "custom_start_time": "04:00:00.000",
+    "custom_end_time": "10:00:00.000",
+    "submitted_at": "2026-08-09T08:32:16.976Z"
+  },
+  {
+    "id": "592e34ff-d6aa-4f1e-befa-2f59e6c6be9a",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-12",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:21.048Z"
+  },
+  {
+    "id": "35cc94ba-2c25-457f-9c01-6a6073c42ffa",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-04",
+    "shift_type": "custom_hours",
+    "custom_start_time": "10:00:00.000",
+    "custom_end_time": "15:00:00.000",
+    "submitted_at": "2026-08-09T08:32:15.262Z"
+  },
+  {
+    "id": "dfa08cb1-253d-4369-af01-87c9f53e11f0",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-27",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:22.563Z"
+  },
+  {
+    "id": "c068f54f-7af5-497c-b23a-ea9e5c159f8b",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-08-10",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-07-16T18:52:39.837Z"
+  },
+  {
+    "id": "ffc04dbb-8e7e-49f2-bda7-b55954eed031",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-12",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.874Z"
+  },
+  {
+    "id": "27b72a8a-7e8b-4ba8-865c-3c48668232d0",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-25",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:26:52.197Z"
+  },
+  {
+    "id": "a8ef88ee-91ab-4056-ac34-1af0d6954806",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-14",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:20.035Z"
+  },
+  {
+    "id": "5a5ed0ad-cfb3-40af-9b16-cbc316b309cf",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-14",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:16.119Z"
+  },
+  {
+    "id": "87bc42e6-6782-4e02-8d36-7e896dba58c8",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-09-01",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T08:32:15.039Z"
+  },
+  {
+    "id": "9ab0b1c5-e246-401c-9a35-46a749c9d17a",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-04",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:22:19.585Z"
+  },
+  {
+    "id": "753cd34c-d6ca-40c6-8449-9972475faf7f",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "work_date": "2026-07-03",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-06-08T08:09:20.247Z"
+  },
+  {
+    "id": "998abf7a-2c2f-4225-873f-2d831ade97b6",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "work_date": "2026-09-24",
+    "shift_type": "full_time",
+    "custom_start_time": null,
+    "custom_end_time": null,
+    "submitted_at": "2026-08-09T11:26:52.047Z"
+  }
+]

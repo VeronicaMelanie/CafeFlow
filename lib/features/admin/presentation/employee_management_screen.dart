@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -7,16 +7,19 @@ import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/domain/user_model.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 
-class EmployeeManagementScreen extends StatefulWidget {
+class EmployeeManagementScreen extends ConsumerStatefulWidget {
   const EmployeeManagementScreen({Key? key}) : super(key: key);
 
   @override
-  State<EmployeeManagementScreen> createState() =>
+  ConsumerState<EmployeeManagementScreen> createState() =>
       _EmployeeManagementScreenState();
 }
 
-class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
+class _EmployeeManagementScreenState
+    extends ConsumerState<EmployeeManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return AdminGuard(
@@ -29,25 +32,11 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError)
-                    return const Center(child: Text('Error loading employees'));
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    return const AppLoadingIndicator();
-
-                  final users = snapshot.data!.docs
-                      .map(
-                        (doc) => UserModel.fromMap(
-                          doc.data() as Map<String, dynamic>,
-                          doc.id,
-                        ),
-                      )
-                      .toList();
-
+              child: ref.watch(allUsersProvider).when(
+                loading: () => const AppLoadingIndicator(),
+                error: (error, _) =>
+                    const Center(child: Text('Error loading employees')),
+                data: (users) {
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xl,
@@ -294,16 +283,26 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedLocation,
-                decoration: const InputDecoration(
-                  labelText: 'Primary Location',
-                ),
-                items: const ['Gara', 'Avantgarden'].map((loc) {
-                  return DropdownMenuItem(value: loc, child: Text(loc));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) selectedLocation = value;
+              Builder(
+                builder: (context) {
+                  final locationNames = watchLocationNames(ref);
+                  final value = locationNames.contains(selectedLocation)
+                      ? selectedLocation
+                      : (locationNames.isNotEmpty
+                          ? locationNames.first
+                          : selectedLocation);
+                  return DropdownButtonFormField<String>(
+                    value: locationNames.contains(value) ? value : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Primary Location',
+                    ),
+                    items: locationNames.map((loc) {
+                      return DropdownMenuItem(value: loc, child: Text(loc));
+                    }).toList(),
+                    onChanged: (newValue) {
+                      if (newValue != null) selectedLocation = newValue;
+                    },
+                  );
                 },
               ),
             ],
@@ -316,24 +315,23 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              final updateData = <String, dynamic>{
-                'name': nameController.text,
-                'monthlyTargetHours':
-                    int.tryParse(targetController.text) ??
-                    user.monthlyTargetHours,
-                'workType': selectedWorkType,
-                'primaryLocation': selectedLocation,
-              };
-              if (selectedEmploymentDate == null) {
-                updateData['employmentDate'] = FieldValue.delete();
-              } else {
-                updateData['employmentDate'] =
-                    Timestamp.fromDate(selectedEmploymentDate!);
+              final postgresId = user.postgresId;
+              if (postgresId == null || postgresId.isEmpty) {
+                throw Exception('PostgreSQL user id is missing');
               }
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(user.uid)
-                  .update(updateData);
+              await ref.read(usersRepositoryProvider).updateUser(
+                    postgresId: postgresId,
+                    name: nameController.text,
+                    monthlyTargetHours:
+                        int.tryParse(targetController.text) ??
+                            user.monthlyTargetHours,
+                    contractType: selectedWorkType == 'Part-time'
+                        ? 'part_time'
+                        : 'full_time',
+                    employmentDate: selectedEmploymentDate,
+                    clearEmploymentDate: selectedEmploymentDate == null,
+                  );
+              ref.invalidate(allUsersProvider);
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Save'),

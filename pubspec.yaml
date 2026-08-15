@@ -50,6 +50,7 @@ dependencies:
   path_provider: ^2.1.1
   shared_preferences: ^2.2.23
   connectivity_plus: ^6.1.4
+  http: ^1.2.2
 
 
 dev_dependencies:

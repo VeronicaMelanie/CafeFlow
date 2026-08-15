@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_datetime.dart';
 
 /// Admin-controlled gate for employee availability submission per month.
 class SchedulingConfigModel {
@@ -9,9 +9,12 @@ class SchedulingConfigModel {
   final bool schedulingEnabled;
   final bool lockedMonth;
   final DateTime? enabledAt;
+  /// Firebase UID when mapped from API `enabled_by` UUID.
   final String? enabledBy;
-  final double maxHoursPerDay;
-  final int maxEmployeesPerShift;
+  /// Null when the API omits a limit. Do not treat null as 22.
+  final double? maxHoursPerDay;
+  /// Null when the API omits a limit. Do not treat null as 2.
+  final int? maxEmployeesPerShift;
 
   const SchedulingConfigModel({
     required this.id,
@@ -30,34 +33,28 @@ class SchedulingConfigModel {
 
   bool get isGlobal => location == null || location!.isEmpty;
 
-  factory SchedulingConfigModel.fromMap(Map<String, dynamic> map, String id) {
+  /// Maps GET /api/scheduling JSON.
+  /// [locationName] is LocationModel.name for [location_id], or null if global.
+  /// [enabledByFirebaseUid] is the Firebase UID for [enabled_by], or null.
+  factory SchedulingConfigModel.fromApiJson(
+    Map<String, dynamic> json, {
+    String? locationName,
+    String? enabledByFirebaseUid,
+  }) {
+    final enabledAt = json['enabled_at']?.toString();
     return SchedulingConfigModel(
-      id: id,
-      year: (map['year'] as num?)?.toInt() ?? 0,
-      month: (map['month'] as num?)?.toInt() ?? 0,
-      location: map['location'] as String?,
-      schedulingEnabled: map['schedulingEnabled'] as bool? ?? false,
-      lockedMonth: map['lockedMonth'] as bool? ?? false,
-      enabledAt: map['enabledAt'] != null
-          ? (map['enabledAt'] as Timestamp).toDate()
-          : null,
-      enabledBy: map['enabledBy'] as String?,
-      maxHoursPerDay: (map['maxHoursPerDay'] as num?)?.toDouble() ?? 22.0,
-      maxEmployeesPerShift: (map['maxEmployeesPerShift'] as num?)?.toInt() ?? 2,
+      id: json['id']?.toString() ?? '',
+      year: (json['year'] as num?)?.toInt() ?? 0,
+      month: (json['month'] as num?)?.toInt() ?? 0,
+      location: locationName,
+      schedulingEnabled: json['scheduling_enabled'] == true,
+      lockedMonth: json['locked_month'] == true,
+      enabledAt: enabledAt == null || enabledAt.isEmpty
+          ? null
+          : ApiDateTime.parseTimestamptz(enabledAt),
+      enabledBy: enabledByFirebaseUid,
+      maxHoursPerDay: (json['max_hours_per_day'] as num?)?.toDouble(),
+      maxEmployeesPerShift: (json['max_employees_per_shift'] as num?)?.toInt(),
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'year': year,
-      'month': month,
-      if (location != null && location!.isNotEmpty) 'location': location,
-      'schedulingEnabled': schedulingEnabled,
-      'lockedMonth': lockedMonth,
-      if (enabledAt != null) 'enabledAt': Timestamp.fromDate(enabledAt!),
-      if (enabledBy != null) 'enabledBy': enabledBy,
-      'maxHoursPerDay': maxHoursPerDay,
-      'maxEmployeesPerShift': maxEmployeesPerShift,
-    };
   }
 }

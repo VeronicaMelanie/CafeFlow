@@ -1,43 +1,96 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/api/api_datetime.dart';
+import '../../../core/api/api_exception.dart';
+import '../../auth/data/users_repository.dart';
 import '../domain/availability_model.dart';
 import '../domain/shift_type.dart';
 import '../utils/scheduling_month_utils.dart';
 
 class AvailabilityRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  AvailabilityRepository({
+    ApiClient? apiClient,
+    UsersRepository? usersRepository,
+  })  : _api = apiClient,
+        _users = usersRepository;
 
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('availability');
+  final ApiClient? _api;
+  final UsersRepository? _users;
+
+  ApiClient get _client {
+    final api = _api;
+    if (api == null) {
+      throw const ApiException('Availability API client is not configured');
+    }
+    return api;
+  }
+
+  UsersRepository get _usersRepo {
+    final users = _users;
+    if (users == null) {
+      throw const ApiException('Availability users repository is not configured');
+    }
+    return users;
+  }
+
+  /// GET /api/availability returns all rows; filter user/month/day client-side.
+  Future<List<AvailabilityModel>> getAllAvailability() async {
+    final json = await _client.getJson('/api/availability');
+    if (json is! List) {
+      throw const ApiException('Expected a JSON array from /api/availability');
+    }
+
+    final usersByPostgresId = await _usersRepo.byPostgresId();
+    final result = <AvailabilityModel>[];
+    for (final item in json) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final postgresUserId = map['user_id']?.toString() ?? '';
+      final user = usersByPostgresId[postgresUserId];
+      if (user == null) continue;
+      result.add(AvailabilityModel.fromApiJson(map, firebaseUid: user.uid));
+    }
+    return result;
+  }
 
   Stream<List<AvailabilityModel>> watchUserAvailabilityForMonth(
     String userId,
     DateTime month,
   ) {
-    final start = SchedulingMonthUtils.monthStart(month);
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+    return Stream.fromFuture(getUserAvailabilityForMonth(userId, month));
+  }
 
-    return _collection
-        .where('userId', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
-        .snapshots()
-        .map(
-          (snap) => snap.docs
-              .map((d) => AvailabilityModel.fromMap(d.data(), d.id))
-              .toList(),
-        );
+  Future<List<AvailabilityModel>> getUserAvailabilityForMonth(
+    String userId,
+    DateTime month,
+  ) async {
+    final all = await getAllAvailability();
+    return all
+        .where(
+          (entry) =>
+              entry.userId == userId &&
+              SchedulingMonthUtils.isDateInMonth(entry.date, month),
+        )
+        .toList();
+  }
+
+  Future<List<AvailabilityModel>> getAvailabilityForMonth(DateTime month) async {
+    final all = await getAllAvailability();
+    return all
+        .where((entry) => SchedulingMonthUtils.isDateInMonth(entry.date, month))
+        .toList();
   }
 
   Future<AvailabilityModel?> getForUserOnDay(String userId, DateTime day) async {
     final normalized = DateTime(day.year, day.month, day.day);
-    final snap = await _collection
-        .where('userId', isEqualTo: userId)
-        .where('date', isEqualTo: Timestamp.fromDate(normalized))
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    final doc = snap.docs.first;
-    return AvailabilityModel.fromMap(doc.data(), doc.id);
+    final all = await getAllAvailability();
+    for (final entry in all) {
+      if (entry.userId == userId &&
+          entry.date.year == normalized.year &&
+          entry.date.month == normalized.month &&
+          entry.date.day == normalized.day) {
+        return entry;
+      }
+    }
+    return null;
   }
 
   Future<String?> validatePartTimeHours({
@@ -74,13 +127,35 @@ class AvailabilityRepository {
     return null;
   }
 
+  Map<String, dynamic> _writePayload({
+    required DateTime day,
+    required AvailabilityShiftType shiftType,
+    DateTime? customStart,
+    DateTime? customEnd,
+  }) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    final isCustom = shiftType == AvailabilityShiftType.customHours;
+    return {
+      'work_date': ApiDateTime.formatDateOnly(normalized),
+      'shift_type': shiftType.firestoreValue,
+      'custom_start_time':
+          isCustom && customStart != null
+              ? ApiDateTime.formatTimeOnly(customStart)
+              : null,
+      'custom_end_time':
+          isCustom && customEnd != null
+              ? ApiDateTime.formatTimeOnly(customEnd)
+              : null,
+    };
+  }
+
+  /// POST create or PATCH update. Owner is the Firebase token, not [userId].
   Future<void> saveAvailability({
     required String userId,
     required DateTime day,
     required AvailabilityShiftType shiftType,
     DateTime? customStart,
     DateTime? customEnd,
-    String? existingDocId,
   }) async {
     final normalized = DateTime(day.year, day.month, day.day);
 
@@ -91,26 +166,28 @@ class AvailabilityRepository {
       end = customEnd;
     }
 
-    final model = AvailabilityModel(
-      id: existingDocId ?? '',
-      userId: userId,
-      date: normalized,
+    final payload = _writePayload(
+      day: normalized,
       shiftType: shiftType,
-      customStartTime: start,
-      customEndTime: end,
+      customStart: start,
+      customEnd: end,
     );
+    final existing = await getForUserOnDay(userId, normalized);
 
-    final data = model.toMap(useServerTimestamp: existingDocId == null);
-
-    if (existingDocId != null) {
-      await _collection.doc(existingDocId).set(data, SetOptions(merge: true));
-    } else {
-      await _collection.add(data);
+    if (existing != null && existing.id.isNotEmpty) {
+      await _client.patchJson(
+        '/api/availability/${existing.id}',
+        body: payload,
+      );
+      return;
     }
+
+    await _client.postJson('/api/availability', body: payload);
   }
 
   Future<void> deleteAvailability(String docId) async {
-    await _collection.doc(docId).delete();
+    if (docId.isEmpty) return;
+    await _client.delete('/api/availability/$docId');
   }
 
   Future<void> deleteForUserOnDay(String userId, DateTime day) async {

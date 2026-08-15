@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'shift_type.dart';
+
+import '../../../core/api/api_datetime.dart';
 import '../utils/scheduling_month_utils.dart';
+import 'shift_type.dart';
 
 class AvailabilityModel {
   final String id;
@@ -54,6 +56,36 @@ class AvailabilityModel {
     } catch (e) {
       throw FormatException('Eroare la parsarea AvailabilityModel (id: $id). Detalii: $e');
     }
+  }
+
+  /// Maps GET /api/availability JSON.
+  /// [firebaseUid] is the Firebase UID for API `user_id` (PostgreSQL UUID).
+  factory AvailabilityModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String firebaseUid,
+  }) {
+    final workDate = ApiDateTime.parseDateOnly(
+      json['work_date']?.toString() ?? '',
+    );
+    return AvailabilityModel(
+      id: json['id']?.toString() ?? '',
+      userId: firebaseUid,
+      date: workDate,
+      shiftType: AvailabilityShiftType.fromFirestore(
+        json['shift_type']?.toString(),
+      ),
+      customStartTime: ApiDateTime.combineDateAndTime(
+        workDate,
+        json['custom_start_time']?.toString(),
+      ),
+      customEndTime: ApiDateTime.combineDateAndTime(
+        workDate,
+        json['custom_end_time']?.toString(),
+      ),
+      submissionTimestamp: json['submitted_at'] == null
+          ? null
+          : ApiDateTime.parseTimestamptz(json['submitted_at'].toString()),
+    );
   }
 
   Map<String, dynamic> toMap({bool useServerTimestamp = false}) {

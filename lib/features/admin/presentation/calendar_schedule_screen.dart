@@ -9,6 +9,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../scheduling/domain/shift_model.dart';
 import '../../scheduling/presentation/scheduling_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 
 class CalendarScheduleScreen extends ConsumerStatefulWidget {
   const CalendarScheduleScreen({Key? key}) : super(key: key);
@@ -44,6 +45,7 @@ class _CalendarScheduleScreenState
   }
 
   Widget _buildLocationSelector() {
+    final names = watchLocationNames(ref);
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
@@ -63,8 +65,7 @@ class _CalendarScheduleScreenState
         ),
         child: Row(
           children: [
-            _buildLocationItem('Gara'),
-            _buildLocationItem('Avantgarden'),
+            for (final name in names) _buildLocationItem(name),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_datetime.dart';
 
 class ShiftModel {
   final String id;
@@ -27,40 +27,29 @@ class ShiftModel {
     return endTime.difference(startTime).inMinutes / 60.0;
   }
 
-  factory ShiftModel.fromMap(Map<String, dynamic> map, String id) {
-    try {
-      return ShiftModel(
-        id: id,
-        userId: map['userId']?.toString() ?? '',
-        userName: map['userName']?.toString() ?? '',
-        date: map['date'] is Timestamp 
-            ? (map['date'] as Timestamp).toDate() 
-            : DateTime.now(),
-        startTime: map['startTime'] is Timestamp 
-            ? (map['startTime'] as Timestamp).toDate() 
-            : DateTime.now(),
-        endTime: map['endTime'] is Timestamp 
-            ? (map['endTime'] as Timestamp).toDate() 
-            : DateTime.now().add(const Duration(hours: 8)),
-        type: map['type']?.toString() ?? 'FULL',
-        location: map['location']?.toString() ?? 'Gara',
-        status: map['status']?.toString() ?? 'pending',
-      );
-    } catch (e) {
-      throw FormatException('Eroare la parsarea ShiftModel (id: $id). Detalii: $e');
-    }
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'userId': userId,
-      'userName': userName,
-      'date': Timestamp.fromDate(date),
-      'startTime': Timestamp.fromDate(startTime),
-      'endTime': Timestamp.fromDate(endTime),
-      'type': type,
-      'location': location,
-      'status': status,
-    };
+  /// Maps GET /api/shifts JSON.
+  /// [firebaseUid] is the Firebase UID for API `user_id`.
+  /// [locationName] is LocationModel.name for API `location_id`.
+  /// [userName] is derived from UserModel; empty when unknown — never invented.
+  factory ShiftModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String firebaseUid,
+    required String locationName,
+    required String userName,
+  }) {
+    final workDate = ApiDateTime.parseDateOnly(
+      json['work_date']?.toString() ?? '',
+    );
+    return ShiftModel(
+      id: json['id']?.toString() ?? '',
+      userId: firebaseUid,
+      userName: userName,
+      date: workDate,
+      startTime: ApiDateTime.parseTimestamptz(json['start_at']?.toString() ?? ''),
+      endTime: ApiDateTime.parseTimestamptz(json['end_at']?.toString() ?? ''),
+      type: json['type']?.toString() ?? 'FULL',
+      location: locationName,
+      status: json['status']?.toString() ?? 'pending',
+    );
   }
 }

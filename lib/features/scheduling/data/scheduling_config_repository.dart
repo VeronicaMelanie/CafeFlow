@@ -1,52 +1,118 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/api/api_exception.dart';
+import '../../auth/data/users_repository.dart';
+import '../../locations/data/location_repository.dart';
+import '../../locations/utils/location_catalog.dart';
 import '../domain/scheduling_config_model.dart';
 import '../utils/scheduling_month_utils.dart';
 
 class SchedulingConfigRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  SchedulingConfigRepository({
+    ApiClient? apiClient,
+    UsersRepository? usersRepository,
+    LocationRepository? locationRepository,
+  })  : _api = apiClient,
+        _users = usersRepository,
+        _locations = locationRepository;
 
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('scheduling_config');
+  final ApiClient? _api;
+  final UsersRepository? _users;
+  final LocationRepository? _locations;
 
+  ApiClient get _client {
+    final api = _api;
+    if (api == null) {
+      throw const ApiException('Scheduling config API client is not configured');
+    }
+    return api;
+  }
+
+  /// Client-side year/month/location filter: GET /api/scheduling returns all rows.
   Stream<SchedulingConfigModel?> watchConfigForMonth(
     DateTime month, {
     String? location,
   }) {
+    return Stream.fromFuture(getConfigForMonth(month, location: location));
+  }
+
+  Future<SchedulingConfigModel?> getConfigForMonth(
+    DateTime month, {
+    String? location,
+  }) async {
+    final configs = await listConfigs();
     final year = month.year;
     final monthNum = month.month;
+    final forMonth = configs
+        .where((config) => config.year == year && config.month == monthNum)
+        .toList();
 
     if (location != null && location.isNotEmpty) {
-      final locId = SchedulingMonthUtils.locationConfigDocId(
-        year,
-        monthNum,
-        location,
-      );
-      final globalId =
-          SchedulingMonthUtils.globalConfigDocId(year, monthNum);
+      for (final config in forMonth) {
+        if (config.location == location) return config;
+      }
+    }
+    for (final config in forMonth) {
+      if (config.isGlobal) return config;
+    }
+    return null;
+  }
 
-      return _collection.doc(locId).snapshots().asyncExpand((locSnap) async* {
-        if (locSnap.exists) {
-          yield SchedulingConfigModel.fromMap(locSnap.data()!, locSnap.id);
-          return;
-        }
-        await for (final globalSnap in _collection.doc(globalId).snapshots()) {
-          if (globalSnap.exists) {
-            yield SchedulingConfigModel.fromMap(
-              globalSnap.data()!,
-              globalSnap.id,
-            );
-          } else {
-            yield null;
-          }
-        }
-      });
+  /// Exact year+month+location match. Does not fall back to a global row.
+  Future<SchedulingConfigModel?> findExactConfig({
+    required int year,
+    required int month,
+    String? location,
+  }) async {
+    final configs = await listConfigs();
+    final locationName = location != null && location.isNotEmpty ? location : null;
+    for (final config in configs) {
+      if (config.year != year || config.month != month) continue;
+      if (locationName == null) {
+        if (config.isGlobal) return config;
+      } else if (config.location == locationName) {
+        return config;
+      }
+    }
+    return null;
+  }
+
+  Future<List<SchedulingConfigModel>> listConfigs() async {
+    final users = _users;
+    final locations = _locations;
+    if (users == null || locations == null) {
+      throw const ApiException('Scheduling config API client is not configured');
     }
 
-    final globalId = SchedulingMonthUtils.globalConfigDocId(year, monthNum);
-    return _collection.doc(globalId).snapshots().map((snap) {
-      if (!snap.exists) return null;
-      return SchedulingConfigModel.fromMap(snap.data()!, snap.id);
-    });
+    final json = await _client.getJson('/api/scheduling');
+    if (json is! List) {
+      throw const ApiException('Expected a JSON array from /api/scheduling');
+    }
+
+    final catalog = await locations.getLocations();
+    final usersByPostgresId = await users.byPostgresId();
+
+    final result = <SchedulingConfigModel>[];
+    for (final item in json) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final locationId = map['location_id']?.toString();
+      String? locationName;
+      if (locationId != null && locationId.isNotEmpty) {
+        locationName = LocationCatalog.byId(catalog, locationId)?.name;
+        // Unmapped location_id must not be treated as a global (null) config.
+        if (locationName == null) continue;
+      }
+      final enabledById = map['enabled_by']?.toString();
+      result.add(
+        SchedulingConfigModel.fromApiJson(
+          map,
+          locationName: locationName,
+          enabledByFirebaseUid: enabledById == null || enabledById.isEmpty
+              ? null
+              : usersByPostgresId[enabledById]?.uid,
+        ),
+      );
+    }
+    return result;
   }
 
   Future<void> setSchedulingEnabled({
@@ -56,19 +122,18 @@ class SchedulingConfigRepository {
     required bool enabled,
     required String adminUid,
   }) async {
-    final docId = location != null && location.isNotEmpty
-        ? SchedulingMonthUtils.locationConfigDocId(year, month, location)
-        : SchedulingMonthUtils.globalConfigDocId(year, month);
-
-    await _collection.doc(docId).set({
-      'year': year,
-      'month': month,
-      if (location != null && location.isNotEmpty) 'location': location,
-      'schedulingEnabled': enabled,
-      'lockedMonth': false,
-      'enabledAt': FieldValue.serverTimestamp(),
-      'enabledBy': adminUid,
-    }, SetOptions(merge: true));
+    if (adminUid.isEmpty) {
+      throw const ApiException('Admin user is required');
+    }
+    await _upsertConfig(
+      year: year,
+      month: month,
+      location: location,
+      payload: {
+        'scheduling_enabled': enabled,
+        'locked_month': false,
+      },
+    );
   }
 
   Future<void> setMonthLocked({
@@ -77,23 +142,47 @@ class SchedulingConfigRepository {
     required bool locked,
     String? location,
   }) async {
-    final docId = location != null && location.isNotEmpty
-        ? SchedulingMonthUtils.locationConfigDocId(year, month, location)
-        : SchedulingMonthUtils.globalConfigDocId(year, month);
+    await _upsertConfig(
+      year: year,
+      month: month,
+      location: location,
+      payload: {'locked_month': locked},
+    );
+  }
 
-    await _collection.doc(docId).set({
-      'year': year,
-      'month': month,
-      if (location != null && location.isNotEmpty) 'location': location,
-      'lockedMonth': locked,
-    }, SetOptions(merge: true));
+  Future<void> _upsertConfig({
+    required int year,
+    required int month,
+    String? location,
+    required Map<String, dynamic> payload,
+  }) async {
+    final existing = await findExactConfig(
+      year: year,
+      month: month,
+      location: location,
+    );
+    if (existing != null) {
+      await _client.patchJson(
+        '/api/scheduling/${existing.id}',
+        body: payload,
+      );
+      return;
+    }
+
+    await _client.postJson(
+      '/api/scheduling',
+      body: {
+        'year': year,
+        'month': month,
+        if (location != null && location.isNotEmpty) 'location': location,
+        ...payload,
+      },
+    );
   }
 
   Future<List<SchedulingConfigModel>> listConfigsForYear(int year) async {
-    final snap = await _collection.where('year', isEqualTo: year).get();
-    return snap.docs
-        .map((d) => SchedulingConfigModel.fromMap(d.data(), d.id))
-        .toList();
+    final configs = await listConfigs();
+    return configs.where((config) => config.year == year).toList();
   }
 }
 

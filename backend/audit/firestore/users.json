@@ -1,0 +1,185 @@
+[
+  {
+    "id": "7jGyc7QaztZy1URq1UkzdHqm27o2",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "email",
+      "primaryLocation": "Gara",
+      "name": "Verotest2",
+      "workType": "Full-time",
+      "fcmToken": null,
+      "email": "vero@gmail.com",
+      "createdAt": "2026-08-11T19:37:08.487Z",
+      "needsContractType": false,
+      "contractType": "full_time"
+    }
+  },
+  {
+    "id": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+    "data": {
+      "email": "dragneveronicamelanie@gmail.com",
+      "name": "vero",
+      "role": "employee",
+      "monthlyTargetHours": 160,
+      "primaryLocation": "Gara",
+      "secondaryLocation": "Avantgarden",
+      "fcmToken": null,
+      "availability": null,
+      "workType": "Full-time"
+    }
+  },
+  {
+    "id": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "name": "Veronica-Melanie Dragne",
+      "workType": "Full-time",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "email": "veronica.melanievd@gmail.com",
+      "primaryLocation": "Gara",
+      "fcmToken": "damT8kSbSkKhyQ7iD9UWWa:APA91bGcT2CrJGI2u_rpA8OERTAZ6S3P5qON0rdIZfRu-90pXTOPpxAtLRyOl2I34LaCmU8gnigVvl3d3lZI9fSaBn9RWNw_Da_bnT65syJnFJGelAPaJBk",
+      "employmentDate": "2025-06-30T21:00:00.000Z"
+    }
+  },
+  {
+    "id": "Tk3pbjMOSrYmpJcHMRZAAmX5fNn1",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "google",
+      "primaryLocation": "Gara",
+      "name": "Gabriel",
+      "workType": "Full-time",
+      "fcmToken": null,
+      "email": "g50484537@gmail.com",
+      "createdAt": "2026-08-13T20:17:17.761Z",
+      "contractType": "full_time",
+      "needsContractType": false
+    }
+  },
+  {
+    "id": "Y1lBMXjKlLTwpCfSAfR5JmGyILf2",
+    "data": {
+      "role": "admin",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "email",
+      "primaryLocation": "Gara",
+      "name": "Malina",
+      "workType": "Full-time",
+      "email": "malinaion@gmail.com",
+      "createdAt": "2026-05-27T10:23:03.705Z",
+      "needsContractType": false,
+      "contractType": "full_time",
+      "fcmToken": "damT8kSbSkKhyQ7iD9UWWa:APA91bGcT2CrJGI2u_rpA8OERTAZ6S3P5qON0rdIZfRu-90pXTOPpxAtLRyOl2I34LaCmU8gnigVvl3d3lZI9fSaBn9RWNw_Da_bnT65syJnFJGelAPaJBk"
+    }
+  },
+  {
+    "id": "YkwKVLudNBRUtk2bMKfV6PaG6Eo2",
+    "data": {
+      "role": "employee",
+      "primaryLocation": "Gara",
+      "secondaryLocation": "Avantgarden",
+      "name": "gabi",
+      "workType": "Full-time",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "fcmToken": null,
+      "email": "gabifcsb29@yahoo.com"
+    }
+  },
+  {
+    "id": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "google",
+      "primaryLocation": "Gara",
+      "name": "Gabriel Simion",
+      "workType": "Full-time",
+      "email": "simiongabriel998@gmail.com",
+      "createdAt": "2026-08-09T11:14:30.524Z",
+      "contractType": "full_time",
+      "needsContractType": false,
+      "fcmToken": "eclrH5FVSqqEM1tRcWeegx:APA91bFNajizN-LbJQOr604UsGat3ZZ7gPPyeNXe70ODuO0q7xr7ZnG4W5LBGlOI-JOyo12hErGPHEXufA7Hjd7NtxtVvW7Qvz7eqbYeEluT0CpEgRBGQfY"
+    }
+  },
+  {
+    "id": "oupFl8qcfJe5OkVonjUK7YVBc8w1",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "google",
+      "primaryLocation": "Gara",
+      "name": "Gabriel Simion",
+      "workType": "Full-time",
+      "fcmToken": null,
+      "email": "gabisimion29@yahoo.com",
+      "createdAt": "2026-08-13T20:16:33.909Z",
+      "contractType": "full_time",
+      "needsContractType": false
+    }
+  },
+  {
+    "id": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "google",
+      "name": "Gabriel Simion",
+      "workType": "Full-time",
+      "email": "gabrielsimion585@gmail.com",
+      "createdAt": "2026-08-09T11:20:41.589Z",
+      "contractType": "full_time",
+      "needsContractType": false,
+      "fcmToken": "eclrH5FVSqqEM1tRcWeegx:APA91bFNajizN-LbJQOr604UsGat3ZZ7gPPyeNXe70ODuO0q7xr7ZnG4W5LBGlOI-JOyo12hErGPHEXufA7Hjd7NtxtVvW7Qvz7eqbYeEluT0CpEgRBGQfY",
+      "primaryLocation": "Gara"
+    }
+  },
+  {
+    "id": "u0Yy1FcKVnXriI7AyFObk2K7SQA2",
+    "data": {
+      "email": "dragneveronica@yahoo.com",
+      "name": "verotest",
+      "role": "employee",
+      "workType": "Part-time",
+      "monthlyTargetHours": 80,
+      "primaryLocation": "Gara",
+      "secondaryLocation": "Avantgarden",
+      "fcmToken": null,
+      "availability": null
+    }
+  },
+  {
+    "id": "viftgZ8cDhOcGmpfcYQudEZiVs52",
+    "data": {
+      "role": "employee",
+      "secondaryLocation": "Avantgarden",
+      "contractType": null,
+      "needsContractType": true,
+      "monthlyTargetHours": 160,
+      "availability": null,
+      "authProvider": "email",
+      "primaryLocation": "Gara",
+      "name": "Gabriel",
+      "workType": "Full-time",
+      "fcmToken": null,
+      "email": "gabi29@gmail.com",
+      "createdAt": "2026-08-09T11:10:30.434Z"
+    }
+  }
+]

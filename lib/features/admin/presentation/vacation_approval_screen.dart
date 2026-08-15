@@ -35,7 +35,7 @@ class VacationApprovalScreen extends ConsumerWidget {
                     itemCount: vacations.length,
                     itemBuilder: (context, index) {
                       final vacation = vacations[index];
-                      return _buildVacationCard(ref, vacation);
+                      return _buildVacationCard(context, ref, vacation);
                     },
                   );
                 },
@@ -49,7 +49,11 @@ class VacationApprovalScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildVacationCard(WidgetRef ref, VacationModel vacation) {
+  Widget _buildVacationCard(
+    BuildContext context,
+    WidgetRef ref,
+    VacationModel vacation,
+  ) {
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,9 +87,9 @@ class VacationApprovalScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _buildActionBtn('Reject', Colors.redAccent, () => _handleStatus(ref, vacation.id, 'rejected'))),
+              Expanded(child: _buildActionBtn('Reject', Colors.redAccent, () => _handleStatus(context, ref, vacation, 'rejected'))),
               const SizedBox(width: 16),
-              Expanded(child: _buildActionBtn('Approve', Colors.green, () => _handleStatus(ref, vacation.id, 'approved'))),
+              Expanded(child: _buildActionBtn('Approve', Colors.green, () => _handleStatus(context, ref, vacation, 'approved'))),
             ],
           ),
         ],
@@ -130,8 +134,24 @@ class VacationApprovalScreen extends ConsumerWidget {
     );
   }
 
-  void _handleStatus(WidgetRef ref, String id, String status) {
-    ref.read(vacationRepositoryProvider).updateVacationStatus(id, status);
+  Future<void> _handleStatus(
+    BuildContext context,
+    WidgetRef ref,
+    VacationModel vacation,
+    String status,
+  ) async {
+    try {
+      await ref
+          .read(vacationRepositoryProvider)
+          .updateVacationStatus(vacation, status);
+      ref.invalidate(pendingVacationsProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
   }
 }
 

@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/pwa/pwa_responsive.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/location_color_utils.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/employee_bottom_nav_bar.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../domain/shift_model.dart';
 import '../data/vacation_repository.dart';
 import '../utils/monthly_progress_calculator.dart';
@@ -201,14 +203,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               }
 
               final shifts = snapshot.data!;
-              final garaHours = shifts.where((s) => s.location == 'Gara').fold(0.0, (sum, s) => sum + s.durationInHours);
-              final avantgardenHours = shifts.where((s) => s.location == 'Avantgarden').fold(0.0, (sum, s) => sum + s.durationInHours);
-
+              final names = watchLocationNames(ref);
               return Column(
                 children: [
-                  _buildLocationRow('Gara', garaHours, AppColors.softGreen),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildLocationRow('Avantgarden', avantgardenHours, AppColors.softYellow),
+                  for (var i = 0; i < names.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.md),
+                    _buildLocationRow(
+                      names[i],
+                      shifts
+                          .where((s) => s.location == names[i])
+                          .fold(0.0, (sum, s) => sum + s.durationInHours),
+                      LocationColorUtils.backgroundFor(names[i]),
+                    ),
+                  ],
                 ],
               );
             },
@@ -291,13 +298,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: shift.location == 'Gara' ? AppColors.softGreen : AppColors.softYellow,
+              color: LocationColorUtils.backgroundFor(shift.location),
               borderRadius: BorderRadius.circular(AppSpacing.sm),
             ),
             child: Icon(
               Icons.store_outlined,
               size: 16,
-              color: shift.location == 'Gara' ? Colors.green : Colors.orange,
+              color: LocationColorUtils.foregroundFor(shift.location),
             ),
           ),
           const SizedBox(width: AppSpacing.md),

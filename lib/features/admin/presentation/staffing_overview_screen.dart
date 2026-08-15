@@ -7,7 +7,9 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/screen_header.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../../scheduling/data/scheduling_service.dart';
+import '../../scheduling/presentation/scheduling_providers.dart';
 
 /// Admin view: daily occupancy, underbooked and fully occupied days per location.
 class StaffingOverviewScreen extends ConsumerStatefulWidget {
@@ -19,13 +21,14 @@ class StaffingOverviewScreen extends ConsumerStatefulWidget {
 }
 
 class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen> {
-  final SchedulingService _scheduling = SchedulingService();
   String _location = 'Gara';
   DateTime _month = DateTime.now();
   bool _loading = true;
   List<DateTime> _underbooked = [];
   List<DateTime> _full = [];
   Map<int, double> _dailyHours = {};
+
+  SchedulingService get _scheduling => ref.read(schedulingServiceProvider);
 
   @override
   void initState() {
@@ -102,22 +105,28 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
   }
 
   Widget _buildControls() {
+    final names = watchLocationNames(ref);
+    final selected = names.contains(_location)
+        ? _location
+        : (names.isNotEmpty ? names.first : _location);
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           Expanded(
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'Gara', label: Text('Gara')),
-                ButtonSegment(value: 'Avantgarden', label: Text('Avantgarden')),
-              ],
-              selected: {_location},
-              onSelectionChanged: (s) {
-                setState(() => _location = s.first);
-                _load();
-              },
-            ),
+            child: names.isEmpty
+                ? const SizedBox.shrink()
+                : SegmentedButton<String>(
+                    segments: [
+                      for (final name in names)
+                        ButtonSegment(value: name, label: Text(name)),
+                    ],
+                    selected: {selected},
+                    onSelectionChanged: (s) {
+                      setState(() => _location = s.first);
+                      _load();
+                    },
+                  ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_left),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/pwa/pwa_responsive.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -9,6 +8,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/domain/user_model.dart';
+import '../../auth/presentation/auth_providers.dart';
 
 class TeamScreen extends ConsumerWidget {
   const TeamScreen({Key? key}) : super(key: key);
@@ -24,27 +24,20 @@ class TeamScreen extends ConsumerWidget {
             topPadding: PwaResponsive.topSafePadding(context) + AppSpacing.lg,
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .where('role', isEqualTo: 'employee')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    itemCount: 5,
-                    itemBuilder: (_, __) => const Padding(
-                      padding: EdgeInsets.only(bottom: AppSpacing.lg),
-                      child: AppSkeleton(height: 80, borderRadius: AppSpacing.radiusLg),
-                    ),
-                  );
-                }
-
-                final employees = snapshot.data!.docs
-                    .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-                    .toList();
-
+            child: ref.watch(allEmployeesProvider).when(
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                itemCount: 5,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.lg),
+                  child: AppSkeleton(height: 80, borderRadius: AppSpacing.radiusLg),
+                ),
+              ),
+              error: (error, _) => const EmptyState(
+                icon: Icons.people_outline,
+                title: 'No team members found',
+              ),
+              data: (employees) {
                 if (employees.isEmpty) {
                   return const EmptyState(
                     icon: Icons.people_outline,

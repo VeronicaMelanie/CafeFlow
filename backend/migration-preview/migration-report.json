@@ -1,0 +1,314 @@
+{
+  "generatedAt": "2026-08-15T12:17:42.754Z",
+  "mode": "PREVIEW_ONLY",
+  "postgresqlWrites": false,
+  "unresolved": [
+    {
+      "type": "USER_WITHOUT_AUTH",
+      "firebaseUid": "u0Yy1FcKVnXriI7AyFObk2K7SQA2"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "7jGyc7QaztZy1URq1UkzdHqm27o2",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "7jGyc7QaztZy1URq1UkzdHqm27o2",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "Tk3pbjMOSrYmpJcHMRZAAmX5fNn1",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "Tk3pbjMOSrYmpJcHMRZAAmX5fNn1",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "Y1lBMXjKlLTwpCfSAfR5JmGyILf2",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "Y1lBMXjKlLTwpCfSAfR5JmGyILf2",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "YkwKVLudNBRUtk2bMKfV6PaG6Eo2",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "YkwKVLudNBRUtk2bMKfV6PaG6Eo2",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "oupFl8qcfJe5OkVonjUK7YVBc8w1",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "oupFl8qcfJe5OkVonjUK7YVBc8w1",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "viftgZ8cDhOcGmpfcYQudEZiVs52",
+      "location": "Gara",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "USER_LOCATION_VALID_FROM_UNRESOLVED",
+      "userId": "viftgZ8cDhOcGmpfcYQudEZiVs52",
+      "location": "Avantgarden",
+      "reason": "NO_EMPLOYMENT_DATE_OR_ASSIGNMENT_DATE"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "80RM4OQxeRa64ZYQYFwf",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "AtdByoVSk1fJA7i2sjw4",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "V8cjmZ32luvwj7tmDHgc",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "dvm4n3sYS3kkiDgJHVTB",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "frPYTceNapo14bSrIbsJ",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "i0AyubAgo5icMY3FJjeA",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "k74R1Zh8rbWYkAet9efP",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "o2jepA5sgWB4YBTmADhy",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "AVAILABILITY_SUBMITTED_AT_UNRESOLVED",
+      "id": "wOoIXTwXeq9z8CU2OM0o",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2"
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_UNRESOLVED",
+      "id": "92No1IsE04B6PfGpM9Nh",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "productName": "MR big",
+      "date": "2026-05-22T10:09:13.244Z",
+      "reason": "NO_SHIFT_AND_NO_APPLICABLE_USER_LOCATION"
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_UNRESOLVED",
+      "id": "9f1KhwjWESRCAl8EMxaB",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "productName": "espresso dublu",
+      "date": "2026-08-09T11:21:31.424Z",
+      "reason": "NO_SHIFT_AND_NO_APPLICABLE_USER_LOCATION"
+    },
+    {
+      "type": "CONSUMPTION_USER_NOT_FOUND",
+      "id": "L0feFbSHs1Q9fA5UeBz7",
+      "userId": "u0Yy1FcKVnXriI7AyFObk2K7SQA2"
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_UNRESOLVED",
+      "id": "fRXllneMhn9KiR9uKzjS",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "productName": "Croissant cu sunca de curcan",
+      "date": "2026-05-22T10:09:21.408Z",
+      "reason": "NO_SHIFT_AND_NO_APPLICABLE_USER_LOCATION"
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_UNRESOLVED",
+      "id": "vjCNAk2kVpuyRo6747xs",
+      "userId": "EELeOAfpHxYjwRSLFCLvmr5yMaH2",
+      "productName": "espresso lung cu lapte",
+      "date": "2026-05-25T07:55:35.190Z",
+      "reason": "NO_SHIFT_AND_NO_APPLICABLE_USER_LOCATION"
+    }
+  ],
+  "ambiguous": [
+    {
+      "type": "PRODUCT_NAME_VARIANT",
+      "canonical_key": "croissant cu sunca de curcan",
+      "variants": [
+        "Croissant cu sunca de curcan",
+        "croissant cu sunca de curcan"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "5VzQdUcX4EwPAXpX7zDr",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "briosa cu ciocolata",
+      "date": "2026-08-14T07:52:30.474Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "IZlNNyW6plEYyyXcDSQa",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "redbull",
+      "date": "2026-06-08T08:06:49.950Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "MxuPzM3L7GbyBf9mRsPy",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "latte",
+      "date": "2026-05-30T14:40:59.938Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "Q5EjDQYAvkUozCY4sDns",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "espresso lung",
+      "date": "2026-08-09T08:33:22.380Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "jMahyp4LynbPBVl5yN7I",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "espresso lung",
+      "date": "2026-08-14T07:35:21.513Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "lYav3HRycMQzEwOVbzbI",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "latte",
+      "date": "2026-05-27T09:51:47.600Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "r5Q4E0vm2UIzKw8e2k1Q",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "espresso lung cu lapte",
+      "date": "2026-08-09T08:47:16.621Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    },
+    {
+      "type": "CONSUMPTION_LOCATION_AMBIGUOUS",
+      "id": "zwMZJPqKt20M2bL3tGIB",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "productName": "croissant cu sunca de curcan",
+      "date": "2026-08-09T08:33:04.765Z",
+      "locations": [
+        "Avantgarden",
+        "Gara"
+      ]
+    }
+  ],
+  "warnings": [],
+  "counts": {
+    "users": 10,
+    "locations": 2,
+    "products": 8,
+    "user_locations": 2,
+    "shifts": 1,
+    "availability": 64,
+    "vacations": 9,
+    "consumptions": 0,
+    "cleaning_lists": 3,
+    "cleaning_tasks": 7,
+    "cleaning_completions": 7,
+    "scheduling_config": 4
+  }
+}

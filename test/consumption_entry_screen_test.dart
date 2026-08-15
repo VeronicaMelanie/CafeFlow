@@ -5,6 +5,8 @@ import 'package:fivetogo_scheduler/features/auth/presentation/auth_providers.dar
 import 'package:fivetogo_scheduler/features/consumption/data/consumption_repository.dart';
 import 'package:fivetogo_scheduler/features/consumption/domain/consumption_model.dart';
 import 'package:fivetogo_scheduler/features/consumption/presentation/consumption_entry_screen.dart';
+import 'package:fivetogo_scheduler/features/products/domain/product_model.dart';
+import 'package:fivetogo_scheduler/features/products/presentation/product_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,14 +87,30 @@ void main() {
       overrides: [
         currentUserProvider.overrideWith((ref) async => testUser),
         consumptionRepositoryProvider.overrideWith((ref) => repository),
+        productsProvider.overrideWith(
+          (ref) async => const [
+            ProductModel(
+              id: 'p1',
+              name: 'espresso lung',
+              isActive: true,
+            ),
+            ProductModel(
+              id: 'p2',
+              name: 'latte',
+              isActive: true,
+            ),
+          ],
+        ),
       ],
       child: const MaterialApp(home: ConsumptionEntryScreen()),
     );
   }
 
-  Future<void> enterProduct(WidgetTester tester, String product) async {
-    await tester.enterText(find.byType(TextFormField), product);
-    await tester.pump();
+  Future<void> selectProduct(WidgetTester tester, String product) async {
+    await tester.tap(find.byKey(const Key('product-dropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(product).last);
+    await tester.pumpAndSettle();
   }
 
   Future<void> submitConsumption(WidgetTester tester) async {
@@ -116,13 +134,11 @@ void main() {
   testWidgets('clears product field after successful save', (tester) async {
     await prepareScreen(tester);
 
-    await enterProduct(tester, 'espresso lung');
+    await selectProduct(tester, 'espresso lung');
     await submitConsumption(tester);
 
     expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
-
-    final field = tester.widget<TextFormField>(find.byType(TextFormField));
-    expect(field.controller?.text, isEmpty);
+    expect(find.byKey(const Key('product-dropdown')), findsOneWidget);
     expect(find.text('espresso lung'), findsOneWidget);
   });
 
@@ -130,32 +146,26 @@ void main() {
       (tester) async {
     await prepareScreen(tester);
 
-    await enterProduct(tester, 'espresso lung');
+    await selectProduct(tester, 'espresso lung');
     await submitConsumption(tester);
 
-    await enterProduct(tester, 'cappuccino');
+    await selectProduct(tester, 'latte');
     await submitConsumption(tester);
 
     expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
     expect(repository.items, hasLength(2));
-    expect(repository.items[0].productName, 'cappuccino');
+    expect(repository.items[0].productName, 'latte');
     expect(repository.items[1].productName, 'espresso lung');
-
-    final field = tester.widget<TextFormField>(find.byType(TextFormField));
-    expect(field.controller?.text, isEmpty);
   });
 
   testWidgets('preserves product input when save fails', (tester) async {
     await prepareScreen(tester);
 
     repository.failOnAdd = true;
-    await enterProduct(tester, 'espresso lung');
+    await selectProduct(tester, 'espresso lung');
     await submitConsumption(tester);
 
     expect(find.text('Could not save: Exception: save failed'), findsOneWidget);
-    expect(find.text('espresso lung'), findsOneWidget);
-
-    final field = tester.widget<TextFormField>(find.byType(TextFormField));
-    expect(field.controller?.text, 'espresso lung');
+    expect(find.text('espresso lung'), findsWidgets);
   });
 }

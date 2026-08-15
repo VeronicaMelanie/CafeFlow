@@ -1,0 +1,12 @@
+[
+  {
+    "id": "33ac4f49-7d6b-4624-8156-f010f86813eb",
+    "user_id": "de3180fa-77c6-4dd5-a6dc-95052760acd9",
+    "location_id": "ff63f35a-ddd1-449e-9021-33ee78e2261a",
+    "work_date": "2026-05-17",
+    "start_at": "2026-05-17T04:00:00.000Z",
+    "end_at": "2026-05-17T15:00:00.000Z",
+    "type": "CUSTOM",
+    "status": "pending"
+  }
+]

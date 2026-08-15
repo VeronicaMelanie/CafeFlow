@@ -1,0 +1,17 @@
+[
+  {
+    "id": "33f8d5ad-1a9e-4fa5-acce-be4de52d5ebe",
+    "location_id": "cc643d67-081b-44e1-b4c0-c0194fbb9aab",
+    "key": "closing"
+  },
+  {
+    "id": "ed5b2c13-53d4-47a5-afea-b7f421798f78",
+    "location_id": "ff63f35a-ddd1-449e-9021-33ee78e2261a",
+    "key": "closing"
+  },
+  {
+    "id": "07e93de7-8977-4158-a520-fd60289a2278",
+    "location_id": "ff63f35a-ddd1-449e-9021-33ee78e2261a",
+    "key": "monday"
+  }
+]

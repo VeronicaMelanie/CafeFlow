@@ -1,0 +1,83 @@
+[
+  {
+    "id": "6ade611d-dc45-432e-9d95-73c6eec3eb3b",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-08-26",
+    "end_on": "2026-08-29",
+    "status": "approved",
+    "requested_at": "2026-07-16T15:00:33.092Z",
+    "admin_comment": null
+  },
+  {
+    "id": "825397b2-8179-492c-b5c3-8a76e85b40f3",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-09-16",
+    "end_on": "2026-09-21",
+    "status": "rejected",
+    "requested_at": "2026-08-14T07:26:15.347Z",
+    "admin_comment": null
+  },
+  {
+    "id": "c818e2fd-6464-4584-8cbf-906921445335",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-06-17",
+    "end_on": "2026-06-18",
+    "status": "rejected",
+    "requested_at": "2026-05-27T10:32:52.450Z",
+    "admin_comment": null
+  },
+  {
+    "id": "62541b7c-f121-4af5-8cab-a7287e83c4db",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-06-16",
+    "end_on": "2026-06-22",
+    "status": "rejected",
+    "requested_at": "2026-05-30T14:41:43.814Z",
+    "admin_comment": null
+  },
+  {
+    "id": "d231c819-9821-4acb-a4f9-d94c616e0357",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-09-23",
+    "end_on": "2026-09-26",
+    "status": "rejected",
+    "requested_at": "2026-08-15T10:41:28.109Z",
+    "admin_comment": null
+  },
+  {
+    "id": "7bb72447-a230-4abc-ad35-d3127e4d3dae",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "start_on": "2026-09-05",
+    "end_on": "2026-09-08",
+    "status": "rejected",
+    "requested_at": "2026-08-13T21:04:40.512Z",
+    "admin_comment": null
+  },
+  {
+    "id": "6d50c1d5-121f-4f5d-b955-057729f92e49",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-08-03",
+    "end_on": "2026-08-07",
+    "status": "rejected",
+    "requested_at": "2026-07-29T04:01:18.398Z",
+    "admin_comment": null
+  },
+  {
+    "id": "3903c184-61d2-44d8-b80f-ec314c74385e",
+    "user_id": "edc7498b-e4de-4c60-af34-d6b32b6cc0cf",
+    "start_on": "2026-06-04",
+    "end_on": "2026-06-12",
+    "status": "approved",
+    "requested_at": "2026-05-27T09:03:31.156Z",
+    "admin_comment": null
+  },
+  {
+    "id": "470da403-2574-4492-83a2-4dff0b744a04",
+    "user_id": "ce8d8b48-df8e-4edc-851b-40c93dfd4e82",
+    "start_on": "2026-09-22",
+    "end_on": "2026-09-26",
+    "status": "approved",
+    "requested_at": "2026-08-09T11:22:55.533Z",
+    "admin_comment": null
+  }
+]

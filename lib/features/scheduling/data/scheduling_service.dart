@@ -1,66 +1,72 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../auth/domain/user_model.dart';
-import '../domain/shift_model.dart';
-import '../domain/availability_model.dart';
-import '../domain/shift_type.dart';
+﻿import '../../auth/data/users_repository.dart';
+import '../../locations/data/location_repository.dart';
+import '../../locations/utils/location_catalog.dart';
 import '../domain/scheduling_config_model.dart';
+import '../domain/shift_model.dart';
+import '../domain/shift_type.dart';
 import '../utils/scheduling_month_utils.dart';
+import 'availability_repository.dart';
+import 'scheduling_config_repository.dart';
+import 'shift_repository.dart';
 
 class SchedulingService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  SchedulingService({
+    required SchedulingConfigRepository configRepository,
+    required AvailabilityRepository availabilityRepository,
+    required ShiftRepository shiftRepository,
+    required UsersRepository usersRepository,
+    required LocationRepository locationRepository,
+  })  : _configRepository = configRepository,
+        _availabilityRepository = availabilityRepository,
+        _shiftRepository = shiftRepository,
+        _usersRepository = usersRepository,
+        _locationRepository = locationRepository;
+
+  final SchedulingConfigRepository _configRepository;
+  final AvailabilityRepository _availabilityRepository;
+  final ShiftRepository _shiftRepository;
+  final UsersRepository _usersRepository;
+  final LocationRepository _locationRepository;
+
+  /// Operational fallback when the API omits a limit. Not an invented API value.
+  double _maxHoursPerDay(SchedulingConfigModel config) =>
+      config.maxHoursPerDay ?? 22.0;
+
+  /// Operational fallback when the API omits a limit. Not an invented API value.
+  int _maxEmployeesPerShift(SchedulingConfigModel config) =>
+      config.maxEmployeesPerShift ?? 2;
 
   Future<SchedulingConfigModel> getConfig(DateTime month, String location) async {
-    final collection = _firestore.collection('scheduling_config');
-    final locationDocId = SchedulingMonthUtils.locationConfigDocId(
-      month.year,
-      month.month,
-      location,
+    final config = await _configRepository.getConfigForMonth(
+      month,
+      location: location,
     );
-    final globalDocId = SchedulingMonthUtils.globalConfigDocId(
-      month.year,
-      month.month,
-    );
-
-    final locationSnap = await collection.doc(locationDocId).get();
-    if (locationSnap.exists) {
-      return SchedulingConfigModel.fromMap(locationSnap.data()!, locationSnap.id);
-    }
-
-    final globalSnap = await collection.doc(globalDocId).get();
-    if (globalSnap.exists) {
-      return SchedulingConfigModel.fromMap(globalSnap.data()!, globalSnap.id);
-    }
+    if (config != null) return config;
 
     return SchedulingConfigModel(
-      id: locationDocId,
+      id: SchedulingMonthUtils.locationConfigDocId(
+        month.year,
+        month.month,
+        location,
+      ),
       year: month.year,
       month: month.month,
       location: location,
     );
   }
 
-  /// Get real-time capacity for a specific date and location
+  /// Get capacity for a specific date and location.
   Future<Map<String, dynamic>> getCapacityInfo(
     DateTime date,
     String location,
   ) async {
     final config = await getConfig(date, location);
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    final shiftsSnap = await _firestore
-        .collection('shifts')
-        .where('location', isEqualTo: location)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-        .where('status', whereIn: ['approved', 'pending'])
-        .get();
-
-    final shifts = shiftsSnap.docs
-        .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final shifts = await _shiftRepository.getShiftsForDay(
+      date: date,
+      location: location,
+    );
     final totalHours = shifts.fold(0.0, (sum, s) => sum + s.durationInHours);
-    final remainingHours = config.maxHoursPerDay - totalHours;
+    final remainingHours = _maxHoursPerDay(config) - totalHours;
     final employeeCount = shifts.length;
 
     return {
@@ -69,7 +75,7 @@ class SchedulingService {
       'employeeCount': employeeCount,
       'isFull': remainingHours <= 0,
       'isAlmostFull': remainingHours > 0 && remainingHours < 4,
-      'maxEmployees': employeeCount >= config.maxEmployeesPerShift,
+      'maxEmployees': employeeCount >= _maxEmployeesPerShift(config),
     };
   }
 
@@ -83,32 +89,10 @@ class SchedulingService {
     }
 
     if (capacity['maxEmployees'] == true) {
-      // Check if the new shift overlaps with existing shifts
-      final startOfDay = DateTime(
-        shift.date.year,
-        shift.date.month,
-        shift.date.day,
+      final shifts = await _shiftRepository.getShiftsForDay(
+        date: shift.date,
+        location: shift.location,
       );
-      final endOfDay = DateTime(
-        shift.date.year,
-        shift.date.month,
-        shift.date.day,
-        23,
-        59,
-        59,
-      );
-
-      final shiftsSnap = await _firestore
-          .collection('shifts')
-          .where('location', isEqualTo: shift.location)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-          .where('status', whereIn: ['approved', 'pending'])
-          .get();
-
-      final shifts = shiftsSnap.docs
-          .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-          .toList();
       int concurrentEmployees = 0;
 
       for (var existingShift in shifts) {
@@ -118,8 +102,8 @@ class SchedulingService {
         }
       }
 
-      if (concurrentEmployees >= config.maxEmployeesPerShift) {
-        return 'This time slot is full (max ${config.maxEmployeesPerShift} employees).';
+      if (concurrentEmployees >= _maxEmployeesPerShift(config)) {
+        return 'This time slot is full (max ${_maxEmployeesPerShift(config)} employees).';
       }
     }
 
@@ -133,29 +117,21 @@ class SchedulingService {
 
   /// Generates a draft schedule for a specific month
   Future<List<ShiftModel>> generateDraftSchedule(DateTime month) async {
-    final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0);
 
     // 1. Fetch all employees
-    final employeesSnap = await _firestore
-        .collection('users')
-        .where('role', isEqualTo: 'employee')
-        .get();
-    final employees = employeesSnap.docs
-        .map((doc) => UserModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final employees = await _usersRepository.getEmployees();
 
-    // 2. Fetch all availability for the month
-    final availabilitySnap = await _firestore
-        .collection('availability')
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-        .get();
-
-    final allAvailability = availabilitySnap.docs
-        .map((doc) => AvailabilityModel.fromMap(doc.data(), doc.id))
-        .where((a) => employees.any((e) => e.uid == a.userId)) // Filter valid userIds
-        .where((a) => a.shiftType == AvailabilityShiftType.fullTime || a.isFullDay || (a.customStartTime != null && a.customEndTime != null)) // Filter valid custom times
+    // 2. Fetch all availability for the month (API read, client-side month filter)
+    final allAvailability = (await _availabilityRepository
+            .getAvailabilityForMonth(month))
+        .where((a) => employees.any((e) => e.uid == a.userId))
+        .where(
+          (a) =>
+              a.shiftType == AvailabilityShiftType.fullTime ||
+              a.isFullDay ||
+              (a.customStartTime != null && a.customEndTime != null),
+        )
         .toList();
 
     // 3. Keep track of assigned hours per employee
@@ -163,6 +139,9 @@ class SchedulingService {
 
     // 4. Draft shifts list
     List<ShiftModel> draftShifts = [];
+    final locations = LocationCatalog.names(
+      await _locationRepository.getLocations(),
+    );
 
     // 5. Iterate through each day of the month
     for (int day = 1; day <= endOfMonth.day; day++) {
@@ -178,14 +157,13 @@ class SchedulingService {
           )
           .toList();
 
-      // Locations to fill
-      final locations = ['Gara', 'Avantgarden'];
-
       for (var location in locations) {
         double currentTotalHoursInLocation = 0.0;
         int employeesInLocation = 0;
-        
+
         final config = await getConfig(month, location);
+        final maxHours = _maxHoursPerDay(config);
+        final maxEmployees = _maxEmployeesPerShift(config);
 
         // Sort availability for this location:
         dailyAvailability.sort((a, b) {
@@ -207,8 +185,8 @@ class SchedulingService {
         });
 
         for (var avail in dailyAvailability) {
-          if (employeesInLocation >= config.maxEmployeesPerShift) break; 
-          if (currentTotalHoursInLocation >= config.maxHoursPerDay) break; 
+          if (employeesInLocation >= maxEmployees) break;
+          if (currentTotalHoursInLocation >= maxHours) break;
 
           final emp = employees.where((e) => e.uid == avail.userId).firstOrNull;
           if (emp == null) continue;
@@ -226,8 +204,8 @@ class SchedulingService {
           double shiftDuration = avail.durationInHours;
 
           // Ensure we don't exceed max limit for location
-          if (currentTotalHoursInLocation + shiftDuration > config.maxHoursPerDay) {
-            shiftDuration = config.maxHoursPerDay - currentTotalHoursInLocation;
+          if (currentTotalHoursInLocation + shiftDuration > maxHours) {
+            shiftDuration = maxHours - currentTotalHoursInLocation;
           }
 
           if (shiftDuration <= 0) continue;
@@ -273,14 +251,9 @@ class SchedulingService {
     return draftShifts;
   }
 
-  /// Saves the draft shifts to Firestore as 'approved'
+  /// Saves the draft shifts through the shifts API as 'approved'.
   Future<void> publishSchedule(List<ShiftModel> shifts) async {
-    final batch = _firestore.batch();
-    for (var shift in shifts) {
-      final docRef = _firestore.collection('shifts').doc();
-      batch.set(docRef, shift.toMap()..['status'] = 'approved');
-    }
-    await batch.commit();
+    await _shiftRepository.publishShifts(shifts);
   }
 
   /// Get underbooked days for a month (days with < 18 hours booked)
@@ -288,24 +261,16 @@ class SchedulingService {
     DateTime month,
     String location,
   ) async {
-    final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0);
-
-    final shiftsSnap = await _firestore
-        .collection('shifts')
-        .where('location', isEqualTo: location)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-        .where('status', whereIn: ['approved', 'pending'])
-        .get();
-
-    final shifts = shiftsSnap.docs
-        .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final shifts = await _shiftRepository.getShiftsForMonthLocation(
+      month: month,
+      location: location,
+    );
 
     final Map<int, double> dailyHours = {};
     for (var shift in shifts) {
-      dailyHours[shift.date.day] = (dailyHours[shift.date.day] ?? 0.0) + shift.durationInHours;
+      dailyHours[shift.date.day] =
+          (dailyHours[shift.date.day] ?? 0.0) + shift.durationInHours;
     }
 
     final underbookedDays = <DateTime>[];
@@ -327,8 +292,11 @@ class SchedulingService {
     final remaining = primary['remainingHours'] as double;
     if (remaining >= 4) return null;
 
-    final secondary =
-        primaryLocation == 'Gara' ? 'Avantgarden' : 'Gara';
+    final secondary = LocationCatalog.otherName(
+      await _locationRepository.getLocations(),
+      primaryLocation,
+    );
+    if (secondary == null) return null;
     final secondaryCapacity = await getCapacityInfo(date, secondary);
     final secondaryRemaining =
         secondaryCapacity['remainingHours'] as double;
@@ -336,35 +304,12 @@ class SchedulingService {
     return null;
   }
 
-  /// Stream capacity for real-time calendar updates.
+  /// One-shot capacity for calendar chips. API has no Firestore realtime.
   Stream<Map<String, dynamic>> watchCapacityInfo(
     DateTime date,
     String location,
   ) {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    return _firestore
-        .collection('shifts')
-        .where('location', isEqualTo: location)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-        .where('status', whereIn: ['approved', 'pending'])
-        .snapshots()
-        .asyncMap((snapshot) async {
-      final config = await getConfig(date, location);
-      final shifts = snapshot.docs
-          .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-          .toList();
-      final totalHours = shifts.fold(0.0, (sum, s) => sum + s.durationInHours);
-      final remainingHours = config.maxHoursPerDay - totalHours;
-      return {
-        'totalHours': totalHours,
-        'remainingHours': remainingHours,
-        'isFull': remainingHours <= 0,
-        'isAlmostFull': remainingHours > 0 && remainingHours < 4,
-      };
-    });
+    return Stream.fromFuture(getCapacityInfo(date, location));
   }
 
   /// Get fully occupied days for a month (days with max hours booked)
@@ -372,31 +317,23 @@ class SchedulingService {
     DateTime month,
     String location,
   ) async {
-    final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0);
-
     final config = await getConfig(month, location);
-
-    final shiftsSnap = await _firestore
-        .collection('shifts')
-        .where('location', isEqualTo: location)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-        .where('status', whereIn: ['approved', 'pending'])
-        .get();
-
-    final shifts = shiftsSnap.docs
-        .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-        .toList();
+    final maxHours = _maxHoursPerDay(config);
+    final shifts = await _shiftRepository.getShiftsForMonthLocation(
+      month: month,
+      location: location,
+    );
 
     final Map<int, double> dailyHours = {};
     for (var shift in shifts) {
-      dailyHours[shift.date.day] = (dailyHours[shift.date.day] ?? 0.0) + shift.durationInHours;
+      dailyHours[shift.date.day] =
+          (dailyHours[shift.date.day] ?? 0.0) + shift.durationInHours;
     }
 
     final fullyOccupiedDays = <DateTime>[];
     for (int day = 1; day <= endOfMonth.day; day++) {
-      if ((dailyHours[day] ?? 0.0) >= config.maxHoursPerDay) {
+      if ((dailyHours[day] ?? 0.0) >= maxHours) {
         fullyOccupiedDays.add(DateTime(month.year, month.month, day));
       }
     }

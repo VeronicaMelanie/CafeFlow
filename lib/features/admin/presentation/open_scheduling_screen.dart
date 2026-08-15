@@ -8,6 +8,7 @@ import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/domain/user_model.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
 import '../../scheduling/domain/scheduling_config_model.dart';
 import '../../scheduling/presentation/scheduling_providers.dart';
 import '../../scheduling/utils/scheduling_month_utils.dart';
@@ -35,8 +36,6 @@ class _OpenSchedulingScreenState extends ConsumerState<OpenSchedulingScreen> {
   String? _selectedLocation;
   bool _isSaving = false;
 
-  static const _locations = ['Gara', 'Avantgarden'];
-
   @override
   void initState() {
     super.initState();
@@ -62,6 +61,8 @@ class _OpenSchedulingScreenState extends ConsumerState<OpenSchedulingScreen> {
             enabled: enabled,
             adminUid: admin.uid,
           );
+      ref.invalidate(_adminSchedulingConfigProvider);
+      ref.invalidate(schedulingConfigForMonthProvider);
 
       if (enabled) {
         await ref
@@ -185,6 +186,7 @@ class _OpenSchedulingScreenState extends ConsumerState<OpenSchedulingScreen> {
   }
 
   Widget _buildLocationPicker() {
+    final locations = watchLocationNames(ref);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -210,7 +212,7 @@ class _OpenSchedulingScreenState extends ConsumerState<OpenSchedulingScreen> {
             value: null,
             child: Text('All locations'),
           ),
-          ..._locations.map(
+          ...locations.map(
             (loc) => DropdownMenuItem(value: loc, child: Text(loc)),
           ),
         ],
@@ -342,19 +344,10 @@ class _OpenSchedulingScreenState extends ConsumerState<OpenSchedulingScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        StreamBuilder<List<UserModel>>(
-          stream: ref.read(authRepositoryProvider).getAllEmployees(),
-          builder: (context, employeesSnapshot) {
-            if (employeesSnapshot.hasError) {
-              return Center(child: Text('Error: ${employeesSnapshot.error}'));
-            }
-            if (!employeesSnapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final employees = employeesSnapshot.data!;
-            return _buildCalendarGrid(employees);
-          },
+        ref.watch(allEmployeesProvider).when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(child: Text('Error: $error')),
+          data: (employees) => _buildCalendarGrid(employees),
         ),
       ],
     );

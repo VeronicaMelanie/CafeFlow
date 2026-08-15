@@ -1,0 +1,42 @@
+[
+  {
+    "id": "bb8ba13f-2b20-498d-ae13-3aa6533edc63",
+    "year": 2026,
+    "month": 6,
+    "location_id": null,
+    "scheduling_enabled": true,
+    "locked_month": false,
+    "enabled_by": "2583717c-1d7a-4901-8788-a8096cfdf8e3",
+    "enabled_at": "2026-05-27T10:31:53.119Z"
+  },
+  {
+    "id": "cbe45985-5b2e-46fa-8eac-c2ab8f0a961b",
+    "year": 2026,
+    "month": 7,
+    "location_id": null,
+    "scheduling_enabled": true,
+    "locked_month": false,
+    "enabled_by": "2583717c-1d7a-4901-8788-a8096cfdf8e3",
+    "enabled_at": "2026-06-08T08:08:46.222Z"
+  },
+  {
+    "id": "0bd676fb-5a7d-4c8c-84a8-b3e8638acfb5",
+    "year": 2026,
+    "month": 8,
+    "location_id": null,
+    "scheduling_enabled": true,
+    "locked_month": false,
+    "enabled_by": "2583717c-1d7a-4901-8788-a8096cfdf8e3",
+    "enabled_at": "2026-08-09T11:25:57.786Z"
+  },
+  {
+    "id": "132d2af3-3642-4881-9fa5-80265066ac84",
+    "year": 2026,
+    "month": 9,
+    "location_id": null,
+    "scheduling_enabled": true,
+    "locked_month": false,
+    "enabled_by": "2583717c-1d7a-4901-8788-a8096cfdf8e3",
+    "enabled_at": "2026-08-14T07:28:02.526Z"
+  }
+]

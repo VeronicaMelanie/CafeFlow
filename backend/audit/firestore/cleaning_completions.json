@@ -1,0 +1,86 @@
+[
+  {
+    "id": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2_dSraWYvSORLz2IyI03Ns_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "employeeId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "location": "Gara",
+      "taskId": "dSraWYvSORLz2IyI03Ns",
+      "completedAt": "2026-08-14T15:45:06.295Z",
+      "completed": false
+    }
+  },
+  {
+    "id": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2_j9dw8W2TYzXL0mugYu1A_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "completedAt": "2026-08-15T10:41:34.695Z",
+      "employeeId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "location": "Gara",
+      "taskId": "j9dw8W2TYzXL0mugYu1A",
+      "completed": false
+    }
+  },
+  {
+    "id": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2_pK7ugtHXV7CG2R3F6p3E_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "employeeId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "location": "Gara",
+      "taskId": "pK7ugtHXV7CG2R3F6p3E",
+      "completedAt": "2026-08-14T15:45:03.499Z",
+      "completed": false
+    }
+  },
+  {
+    "id": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2_pVFPKE1dDrtlFi6ciMii_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "employeeId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "location": "Gara",
+      "taskId": "pVFPKE1dDrtlFi6ciMii",
+      "completedAt": "2026-08-14T07:55:52.561Z",
+      "completed": false
+    }
+  },
+  {
+    "id": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1_dSraWYvSORLz2IyI03Ns_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "completedAt": "2026-08-13T21:10:43.362Z",
+      "location": "Gara",
+      "employeeId": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+      "completed": true,
+      "taskId": "dSraWYvSORLz2IyI03Ns"
+    }
+  },
+  {
+    "id": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1_pK7ugtHXV7CG2R3F6p3E_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "completedAt": "2026-08-13T21:10:41.703Z",
+      "location": "Gara",
+      "employeeId": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+      "completed": true,
+      "taskId": "pK7ugtHXV7CG2R3F6p3E"
+    }
+  },
+  {
+    "id": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1_pVFPKE1dDrtlFi6ciMii_2026-W32",
+    "data": {
+      "listId": "Gara_closing",
+      "weekId": "2026-W32",
+      "completedAt": "2026-08-13T21:10:44.441Z",
+      "location": "Gara",
+      "employeeId": "b1Hh76VvvbgQgfhg2LD2GaFSBMq1",
+      "completed": true,
+      "taskId": "pVFPKE1dDrtlFi6ciMii"
+    }
+  }
+]

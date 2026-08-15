@@ -63,12 +63,31 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
     );
     final nextCompleted = !current.completed;
 
-    await repository.setTaskCompletion(
-      employeeId: user.uid,
-      task: task,
-      weekId: weekId,
-      completed: nextCompleted,
-    );
+    try {
+      await repository.setTaskCompletion(
+        employeeId: user.uid,
+        task: task,
+        weekId: weekId,
+        completed: nextCompleted,
+      );
+      ref.invalidate(cleaningTaskViewsProvider(query));
+      ref.invalidate(
+        cleaningAdminCompletionsProvider(
+          CleaningListQuery(
+            listId: query.listId,
+            location: location,
+            employeeId: '',
+            weekId: weekId,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+      );
+      return;
+    }
 
     if (!nextCompleted) return;
 

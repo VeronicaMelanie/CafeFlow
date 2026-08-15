@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,9 +6,10 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../auth/presentation/auth_providers.dart';
-import '../data/scheduling_service.dart';
-import '../domain/availability_model.dart';
+import '../../locations/presentation/location_providers.dart';
+import '../../locations/utils/location_catalog.dart';
 import '../domain/shift_type.dart';
+import 'scheduling_providers.dart';
 
 /// Edit selected availability days: FULL (07–18) or CUSTOM hours.
 class AvailabilityDaysEditorScreen extends ConsumerStatefulWidget {
@@ -40,16 +40,11 @@ class _AvailabilityDaysEditorScreenState
   Future<void> _loadExisting() async {
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
+    final repo = ref.read(availabilityRepositoryProvider);
 
     for (final day in _configs.keys.toList()) {
-      final snap = await FirebaseFirestore.instance
-          .collection('availability')
-          .where('userId', isEqualTo: user.uid)
-          .where('date', isEqualTo: Timestamp.fromDate(day))
-          .limit(1)
-          .get();
-      if (snap.docs.isNotEmpty) {
-        final model = AvailabilityModel.fromMap(snap.docs.first.data(), snap.docs.first.id);
+      final model = await repo.getForUserOnDay(user.uid, day);
+      if (model != null) {
         _configs[day] = _DayConfig(
           shiftType: model.shiftType,
           start: model.customStartTime != null
@@ -58,7 +53,6 @@ class _AvailabilityDaysEditorScreenState
           end: model.customEndTime != null
               ? TimeOfDay.fromDateTime(model.customEndTime!)
               : const TimeOfDay(hour: 18, minute: 0),
-          docId: snap.docs.first.id,
         );
       }
     }
@@ -68,6 +62,7 @@ class _AvailabilityDaysEditorScreenState
   Future<void> _save() async {
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
+    final repo = ref.read(availabilityRepositoryProvider);
 
     setState(() => _isSaving = true);
     try {
@@ -91,25 +86,13 @@ class _AvailabilityDaysEditorScreenState
           }
         }
 
-        final model = AvailabilityModel(
-          id: config.docId ?? '',
+        await repo.saveAvailability(
           userId: user.uid,
-          date: day,
+          day: day,
           shiftType: config.shiftType,
-          customStartTime: customStart,
-          customEndTime: customEnd,
+          customStart: customStart,
+          customEnd: customEnd,
         );
-
-        if (config.docId != null) {
-          await FirebaseFirestore.instance
-              .collection('availability')
-              .doc(config.docId)
-              .set(model.toMap());
-        } else {
-          await FirebaseFirestore.instance
-              .collection('availability')
-              .add(model.toMap());
-        }
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -131,7 +114,10 @@ class _AvailabilityDaysEditorScreenState
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).value;
-    final location = user?.primaryLocation ?? 'Gara';
+    final location = user?.primaryLocation ??
+        LocationCatalog.preferredName(
+          ref.watch(locationsProvider).valueOrNull ?? const [],
+        );
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
@@ -243,25 +229,23 @@ class _DayConfig {
   AvailabilityShiftType shiftType;
   TimeOfDay start;
   TimeOfDay end;
-  String? docId;
 
   _DayConfig({
     required this.shiftType,
     this.start = const TimeOfDay(hour: 7, minute: 0),
     this.end = const TimeOfDay(hour: 18, minute: 0),
-    this.docId,
   });
 }
 
-class _CapacityChip extends StatelessWidget {
+class _CapacityChip extends ConsumerWidget {
   final DateTime date;
   final String location;
 
   const _CapacityChip({required this.date, required this.location});
 
   @override
-  Widget build(BuildContext context) {
-    final scheduling = SchedulingService();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheduling = ref.read(schedulingServiceProvider);
     return StreamBuilder<Map<String, dynamic>>(
       stream: scheduling.watchCapacityInfo(date, location),
       builder: (context, snapshot) {

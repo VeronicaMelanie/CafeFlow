@@ -1,0 +1,110 @@
+[
+  {
+    "id": "3HZDxINcyuJhm500DcIk",
+    "data": {
+      "endDate": "2026-08-29T00:00:00.000Z",
+      "requestedAt": "2026-07-16T15:00:33.092Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-08-26T00:00:00.000Z",
+      "status": "approved"
+    }
+  },
+  {
+    "id": "9pK64oBQg5TTtOc2rNQQ",
+    "data": {
+      "endDate": "2026-09-21T00:00:00.000Z",
+      "requestedAt": "2026-08-14T07:26:15.347Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-09-16T00:00:00.000Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "IM4Iop2JNd4RvykePsfI",
+    "data": {
+      "endDate": "2026-06-18T00:00:00.000Z",
+      "requestedAt": "2026-05-27T10:32:52.450Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-06-17T00:00:00.000Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "KTXDdDOE2Z0419oWSQZe",
+    "data": {
+      "endDate": "2026-06-22T00:00:00.000Z",
+      "requestedAt": "2026-05-30T14:41:43.814Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-06-16T00:00:00.000Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "TQPp6fr6Whc7VD4YV8na",
+    "data": {
+      "endDate": "2026-09-26T00:00:00.000Z",
+      "requestedAt": "2026-08-15T10:41:28.109Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-09-23T00:00:00.000Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "aiwMMQhMUQxBm12bfMhV",
+    "data": {
+      "endDate": "2026-09-08T00:00:00.000Z",
+      "requestedAt": "2026-08-13T21:04:40.512Z",
+      "adminComment": null,
+      "userName": "Gabriel Simion",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "startDate": "2026-09-05T00:00:00.000Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "gArlzBbKOTg6or9hiak4",
+    "data": {
+      "endDate": "2026-08-07T00:00:00.000Z",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-08-03T00:00:00.000Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "requestedAt": "2026-07-29T04:01:18.398Z",
+      "status": "rejected"
+    }
+  },
+  {
+    "id": "jlR9UKX8yi7Ln3XHNhje",
+    "data": {
+      "endDate": "2026-06-12T00:00:00.000Z",
+      "requestedAt": "2026-05-27T09:03:31.156Z",
+      "adminComment": null,
+      "userName": "Veronica-Melanie Dragne",
+      "userId": "Ffyd4xjUgRWo52N7LRWXR4yYXSc2",
+      "startDate": "2026-06-04T00:00:00.000Z",
+      "status": "approved"
+    }
+  },
+  {
+    "id": "uUMv77DeHmRLkMFGEsAj",
+    "data": {
+      "endDate": "2026-09-26T00:00:00.000Z",
+      "requestedAt": "2026-08-09T11:22:55.533Z",
+      "adminComment": null,
+      "userName": "Gabriel Simion",
+      "userId": "sQ5I8uyG27aU8TcpjhnwkIGjEgG3",
+      "startDate": "2026-09-22T00:00:00.000Z",
+      "status": "approved"
+    }
+  }
+]

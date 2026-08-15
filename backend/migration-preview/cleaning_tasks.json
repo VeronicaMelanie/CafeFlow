@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1e3bf3bd-268b-49ef-ab5d-a88d27b2ba38",
+    "list_id": "33f8d5ad-1a9e-4fa5-acce-be4de52d5ebe",
+    "title": "a da cu matura in depozit",
+    "sort_order": 1,
+    "is_active": true
+  },
+  {
+    "id": "30f9d154-647e-45a8-bcda-c793ed36001b",
+    "list_id": "33f8d5ad-1a9e-4fa5-acce-be4de52d5ebe",
+    "title": "spalare LAF",
+    "sort_order": 0,
+    "is_active": true
+  },
+  {
+    "id": "c39c1634-8ef4-4750-9363-dec2210d46f9",
+    "list_id": "ed5b2c13-53d4-47a5-afea-b7f421798f78",
+    "title": "Curatat sub siropuri",
+    "sort_order": 1,
+    "is_active": true
+  },
+  {
+    "id": "e14a7146-a3b3-4a4c-b8ea-8675f9e45423",
+    "list_id": "ed5b2c13-53d4-47a5-afea-b7f421798f78",
+    "title": "udat flori",
+    "sort_order": 3,
+    "is_active": true
+  },
+  {
+    "id": "429db2f4-2ecd-4c95-a92d-ad5474339d34",
+    "list_id": "ed5b2c13-53d4-47a5-afea-b7f421798f78",
+    "title": "Spalare LAF",
+    "sort_order": 0,
+    "is_active": true
+  },
+  {
+    "id": "3f1b805c-b504-4d9e-9140-1a82c3d31041",
+    "list_id": "ed5b2c13-53d4-47a5-afea-b7f421798f78",
+    "title": "mop",
+    "sort_order": 2,
+    "is_active": true
+  },
+  {
+    "id": "2a15ee4f-8bf4-4db8-9405-a625b49e2675",
+    "list_id": "07e93de7-8977-4158-a520-fd60289a2278",
+    "title": "curatat congelator patiserie",
+    "sort_order": 0,
+    "is_active": true
+  }
+]

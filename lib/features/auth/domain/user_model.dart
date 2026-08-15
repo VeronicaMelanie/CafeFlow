@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
+  /// Firebase UID — the authentication identity. Never replace this with the
+  /// PostgreSQL UUID.
   final String uid;
+  /// PostgreSQL `users.id`. Mapping only; not used for Firebase Auth.
+  final String? postgresId;
   final String email;
   final String name;
   final String role; // 'employee' or 'admin'
@@ -18,6 +22,7 @@ class UserModel {
 
   UserModel({
     required this.uid,
+    this.postgresId,
     required this.email,
     required this.name,
     required this.role,
@@ -58,6 +63,47 @@ class UserModel {
     } catch (e) {
       throw FormatException('Eroare la parsarea UserModel (id: $id). Detalii: $e');
     }
+  }
+
+  /// Maps GET /api/users JSON. [uid] is `firebase_uid`, [postgresId] is `id`.
+  factory UserModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required String primaryLocation,
+    required String secondaryLocation,
+  }) {
+    final firebaseUid = json['firebase_uid']?.toString() ?? '';
+    if (firebaseUid.isEmpty) {
+      throw FormatException('API user missing firebase_uid: $json');
+    }
+    final contractType = json['contract_type']?.toString();
+    final employment = json['employment_started_on']?.toString();
+    return UserModel(
+      uid: firebaseUid,
+      postgresId: json['id']?.toString(),
+      email: json['email']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'employee',
+      workType: _workTypeFromContract(contractType),
+      monthlyTargetHours:
+          (json['monthly_target_hours'] as num?)?.toInt() ?? 160,
+      primaryLocation: primaryLocation,
+      secondaryLocation: secondaryLocation,
+      employmentDate: _parseDateOnly(employment),
+      contractType: contractType,
+      needsContractType: json['needs_contract_type'] == true,
+      authProvider: json['auth_provider']?.toString(),
+    );
+  }
+
+  static String _workTypeFromContract(String? contractType) {
+    if (contractType == 'part_time') return 'Part-time';
+    if (contractType == 'full_time') return 'Full-time';
+    return 'Full-time';
+  }
+
+  static DateTime? _parseDateOnly(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 
   Map<String, dynamic> toMap() {
