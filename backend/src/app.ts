@@ -811,7 +811,7 @@ async function resolveConsumptionLocation(
       },
       select: { locationId: true },
     });
-    return assigned?.locationId ?? null;
+    if (assigned) return assigned.locationId;
   }
 
   const shifts = await prisma.shift.findMany({
@@ -820,7 +820,14 @@ async function resolveConsumptionLocation(
   });
   const shiftLocations = [...new Set(shifts.map((row) => row.locationId))];
   if (shiftLocations.length === 1) return shiftLocations[0];
-  if (shiftLocations.length > 1) return null;
+  if (
+    shiftLocations.length > 1 &&
+    requestedLocationId &&
+    shiftLocations.includes(requestedLocationId)
+  ) {
+    return requestedLocationId;
+  }
+  if (shiftLocations.length > 1 && !requestedLocationId) return null;
 
   const assignments = await prisma.userLocation.findMany({
     where: {
@@ -838,7 +845,12 @@ async function resolveConsumptionLocation(
     ),
   ];
   if (primary.length === 1) return primary[0];
-  return null;
+  if (requestedLocationId && unique.includes(requestedLocationId)) {
+    return requestedLocationId;
+  }
+  const preferred =
+    assignments.find((row) => row.isPrimary) ?? assignments[0];
+  return preferred?.locationId ?? null;
 }
 
 const schedulingConfigSelect = {

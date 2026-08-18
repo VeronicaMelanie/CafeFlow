@@ -4,7 +4,12 @@ import 'package:intl/intl.dart';
 import '../data/consumption_repository.dart';
 import '../domain/consumption_model.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../locations/presentation/location_providers.dart';
+import '../../locations/utils/location_catalog.dart';
+import '../../products/domain/product_model.dart';
 import '../../products/presentation/product_providers.dart';
+import '../../scheduling/presentation/scheduling_providers.dart';
+import '../../../core/api/api_exception.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -22,15 +27,17 @@ class ConsumptionEntryScreen extends ConsumerStatefulWidget {
 
 class _ConsumptionEntryScreenState
     extends ConsumerState<ConsumptionEntryScreen> {
-  String? _selectedProduct;
+  ProductModel? _selectedProduct;
   int _quantity = 1;
   String? _editingId;
+  final TextEditingController _productQueryController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   String _filterPeriod = 'all';
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
+    _productQueryController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -38,6 +45,7 @@ class _ConsumptionEntryScreenState
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).value;
+    ref.watch(locationsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
@@ -94,7 +102,7 @@ class _ConsumptionEntryScreenState
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
-          _buildProductDropdown(),
+          _buildProductSearch(),
           const SizedBox(height: AppSpacing.xxl),
           Text(
             'Quantity',
@@ -175,50 +183,144 @@ class _ConsumptionEntryScreenState
     );
   }
 
-  Widget _buildProductDropdown() {
+  Widget _buildProductSearch() {
     final productsAsync = ref.watch(productsProvider);
     return productsAsync.when(
       loading: () => const AppSkeleton(height: 56, borderRadius: AppSpacing.radiusLg),
       error: (error, _) => const Text('Could not load products'),
       data: (products) {
-        final names = products
-            .where((product) => product.isActive)
-            .map((product) => product.name)
-            .toList();
-        if (_selectedProduct != null && !names.contains(_selectedProduct)) {
-          names.add(_selectedProduct!);
-        }
-        return DropdownButtonFormField<String>(
-          key: const Key('product-dropdown'),
-          value: names.contains(_selectedProduct) ? _selectedProduct : null,
-          decoration: InputDecoration(
-            labelText: 'What did you have?',
-            hintText: names.isEmpty ? 'No products available' : 'Select a product',
-            prefixIcon: const Icon(
-              Icons.restaurant_menu,
-              color: AppColors.primaryPink,
-            ),
-            filled: true,
-            fillColor: AppColors.softPink.withValues(alpha: 0.3),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          items: names
-              .map(
-                (name) => DropdownMenuItem<String>(
-                  value: name,
-                  child: Text(name),
+        final query = _productQueryController.text.trim();
+        final suggestions = _productSuggestions(products, query);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              key: const Key('product-search'),
+              controller: _productQueryController,
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {
+                final text = _productQueryController.text.trim().toLowerCase();
+                if (_selectedProduct != null &&
+                    _selectedProduct!.name.toLowerCase() != text) {
+                  _selectedProduct = null;
+                }
+              }),
+              decoration: InputDecoration(
+                labelText: 'What did you have?',
+                hintText: products.isEmpty
+                    ? 'No products available'
+                    : 'Type to search, e.g. latte',
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.primaryPink,
                 ),
-              )
-              .toList(),
-          onChanged: names.isEmpty
-              ? null
-              : (value) => setState(() => _selectedProduct = value),
+                filled: true,
+                fillColor: AppColors.softPink.withValues(alpha: 0.3),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            if (query.isNotEmpty &&
+                suggestions.isNotEmpty &&
+                (_selectedProduct == null ||
+                    _selectedProduct!.name.toLowerCase() !=
+                        query.toLowerCase())) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ...suggestions.map(
+                (product) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Material(
+                    color: AppColors.pureWhite,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    child: InkWell(
+                      key: Key('product-suggestion-${product.id}'),
+                      onTap: () => setState(() {
+                        _selectedProduct = product;
+                        _productQueryController.text = product.name;
+                        _productQueryController.selection =
+                            TextSelection.collapsed(
+                          offset: product.name.length,
+                        );
+                      }),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.local_cafe_outlined,
+                              size: 18,
+                              color: AppColors.primaryPink,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(child: Text(product.name)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ] else if (query.isNotEmpty &&
+                _resolveProduct(products) == null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'No matching product. Keep typing or pick from the list.',
+                style: TextStyle(fontSize: 12, color: AppColors.textLight),
+              ),
+            ],
+          ],
         );
       },
     );
+  }
+
+  List<ProductModel> _productSuggestions(
+    List<ProductModel> products,
+    String query,
+  ) {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return const [];
+    final matches = products
+        .where(
+          (product) =>
+              product.isActive &&
+              product.name.toLowerCase().contains(needle),
+        )
+        .toList()
+      ..sort((a, b) {
+        final aExact = a.name.toLowerCase() == needle;
+        final bExact = b.name.toLowerCase() == needle;
+        if (aExact != bExact) return aExact ? -1 : 1;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+    return matches.take(8).toList();
+  }
+
+  ProductModel? _resolveProduct(List<ProductModel> products) {
+    final needle = _productQueryController.text.trim().toLowerCase();
+    if (needle.isEmpty) return null;
+    if (_selectedProduct != null &&
+        _selectedProduct!.name.toLowerCase() == needle) {
+      return _selectedProduct;
+    }
+    final exact = [
+      for (final product in products)
+        if (product.isActive && product.name.toLowerCase() == needle) product,
+    ];
+    if (exact.length == 1) return exact.first;
+    final partial = [
+      for (final product in products)
+        if (product.isActive && product.name.toLowerCase().contains(needle))
+          product,
+    ];
+    if (partial.length == 1) return partial.first;
+    return null;
   }
 
   Widget _buildQtyBtn(IconData icon, VoidCallback? onTap) {
@@ -242,9 +344,7 @@ class _ConsumptionEntryScreenState
 
   Widget _buildPrimaryCTA(String? userId) {
     final bool isValid =
-        _selectedProduct != null &&
-        _selectedProduct!.isNotEmpty &&
-        userId != null;
+        _productQueryController.text.trim().isNotEmpty && userId != null;
     return Container(
       width: double.infinity,
       height: 60,
@@ -441,7 +541,12 @@ class _ConsumptionEntryScreenState
   void _editConsumption(ConsumptionModel consumption) {
     setState(() {
       _editingId = consumption.id;
-      _selectedProduct = consumption.productName;
+      _selectedProduct = ProductModel(
+        id: consumption.id,
+        name: consumption.productName,
+        isActive: true,
+      );
+      _productQueryController.text = consumption.productName;
       _quantity = consumption.quantity;
       _notesController.text = consumption.notes ?? '';
     });
@@ -465,6 +570,23 @@ class _ConsumptionEntryScreenState
 
   Future<void> _submit(String userId) async {
     final wasEditing = _editingId != null;
+    final products = ref.read(productsProvider).valueOrNull ?? [];
+    final product = _resolveProduct(products);
+    if (product == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Type a product name and pick it from the suggestions.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final locationName = ref.read(selectedLocationProvider);
+    final locations = ref.read(locationsProvider).valueOrNull ?? [];
+    final locationId = LocationCatalog.byName(locations, locationName)?.id;
 
     try {
       if (wasEditing) {
@@ -472,7 +594,7 @@ class _ConsumptionEntryScreenState
             .read(consumptionRepositoryProvider)
             .updateConsumption(
               _editingId!,
-              _selectedProduct!,
+              product.name,
               _quantity,
               _notesController.text,
             );
@@ -480,20 +602,21 @@ class _ConsumptionEntryScreenState
         final consumption = ConsumptionModel(
           id: '',
           userId: userId,
-          productName: _selectedProduct!,
+          productName: product.name,
           quantity: _quantity,
           date: _selectedDate,
           notes: _notesController.text,
         );
-        await ref
-            .read(consumptionRepositoryProvider)
-            .addConsumption(consumption);
+        await ref.read(consumptionRepositoryProvider).addConsumption(
+              consumption,
+              locationId: locationId,
+            );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not save: $e'),
+            content: Text('Could not save: ${_humanizeSaveError(e)}'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.redAccent,
           ),
@@ -536,9 +659,17 @@ class _ConsumptionEntryScreenState
     setState(() {
       _editingId = null;
       _selectedProduct = null;
+      _productQueryController.clear();
       _quantity = 1;
       _notesController.clear();
       _selectedDate = DateTime.now();
     });
+  }
+
+  String _humanizeSaveError(Object error) {
+    if (error is ApiHttpException && error.message == 'invalid_consumption') {
+      return 'could not match this product or location. Try another product name.';
+    }
+    return '$error';
   }
 }

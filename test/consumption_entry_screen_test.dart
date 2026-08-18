@@ -5,6 +5,7 @@ import 'package:fivetogo_scheduler/features/auth/presentation/auth_providers.dar
 import 'package:fivetogo_scheduler/features/consumption/data/consumption_repository.dart';
 import 'package:fivetogo_scheduler/features/consumption/domain/consumption_model.dart';
 import 'package:fivetogo_scheduler/features/consumption/presentation/consumption_entry_screen.dart';
+import 'package:fivetogo_scheduler/features/locations/presentation/location_providers.dart';
 import 'package:fivetogo_scheduler/features/products/domain/product_model.dart';
 import 'package:fivetogo_scheduler/features/products/presentation/product_providers.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,10 @@ class TestConsumptionRepository extends ConsumptionRepository {
   void _emit() => _controller.add(List.unmodifiable(items));
 
   @override
-  Future<void> addConsumption(ConsumptionModel consumption) async {
+  Future<void> addConsumption(
+    ConsumptionModel consumption, {
+    String? locationId,
+  }) async {
     if (failOnAdd) {
       throw Exception('save failed');
     }
@@ -87,6 +91,7 @@ void main() {
       overrides: [
         currentUserProvider.overrideWith((ref) async => testUser),
         consumptionRepositoryProvider.overrideWith((ref) => repository),
+        locationsProvider.overrideWith((ref) async => const []),
         productsProvider.overrideWith(
           (ref) async => const [
             ProductModel(
@@ -107,10 +112,10 @@ void main() {
   }
 
   Future<void> selectProduct(WidgetTester tester, String product) async {
-    await tester.tap(find.byKey(const Key('product-dropdown')));
-    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('product-search')), product);
+    await tester.pump();
     await tester.tap(find.text(product).last);
-    await tester.pumpAndSettle();
+    await tester.pump();
   }
 
   Future<void> submitConsumption(WidgetTester tester) async {
@@ -138,7 +143,7 @@ void main() {
     await submitConsumption(tester);
 
     expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
-    expect(find.byKey(const Key('product-dropdown')), findsOneWidget);
+    expect(find.byKey(const Key('product-search')), findsOneWidget);
     expect(find.text('espresso lung'), findsOneWidget);
   });
 

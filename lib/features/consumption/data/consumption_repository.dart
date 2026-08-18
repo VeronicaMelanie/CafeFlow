@@ -128,7 +128,10 @@ class ConsumptionRepository {
     return items;
   }
 
-  Future<void> addConsumption(ConsumptionModel consumption) async {
+  Future<void> addConsumption(
+    ConsumptionModel consumption, {
+    String? locationId,
+  }) async {
     if (_testMode) return;
     final productId = await _productIdForName(consumption.productName);
     await _client.postJson(
@@ -137,6 +140,7 @@ class ConsumptionRepository {
         'product_id': productId,
         'consumed_on': ApiDateTime.formatDateOnly(consumption.date),
         'quantity': consumption.quantity,
+        if (locationId != null && locationId.isNotEmpty) 'location_id': locationId,
         if (consumption.notes != null && consumption.notes!.trim().isNotEmpty)
           'notes': consumption.notes!.trim(),
       },
@@ -167,14 +171,23 @@ class ConsumptionRepository {
   }
 
   Future<String> _productIdForName(String name) async {
+    final needle = name.trim().toLowerCase();
     final products = await _productRepo.getProducts();
-    ProductModel? match;
+    ProductModel? exact;
+    ProductModel? partial;
+    var partialCount = 0;
     for (final product in products) {
-      if (product.name == name) {
-        match = product;
+      final productName = product.name.trim().toLowerCase();
+      if (productName == needle) {
+        exact = product;
         break;
       }
+      if (product.isActive && productName.contains(needle) && needle.isNotEmpty) {
+        partialCount += 1;
+        partial = product;
+      }
     }
+    final match = exact ?? (partialCount == 1 ? partial : null);
     if (match == null) {
       throw ApiException('Unknown product: $name');
     }
