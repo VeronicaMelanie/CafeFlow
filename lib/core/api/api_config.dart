@@ -2,7 +2,12 @@ import 'package:flutter/foundation.dart';
 
 /// Central API base URL. Never hardcode this in repositories.
 ///
-/// Override for any platform / environment:
+/// Production (Android, iOS, web release) — HTTPS only:
+/// `flutter build apk --release --dart-define=API_BASE_URL=https://YOUR_API_HOST`
+/// `flutter build ios --release --dart-define=API_BASE_URL=https://YOUR_API_HOST`
+/// `flutter build web --release --dart-define=API_BASE_URL=https://YOUR_API_HOST`
+///
+/// Local development:
 /// `flutter run --dart-define=API_BASE_URL=http://192.168.1.10:3000`
 ///
 /// Debug defaults (never used in release):
@@ -21,12 +26,12 @@ class ApiConfig {
   static String get baseUrl {
     final override = debugOverride?.trim();
     if (override != null && override.isNotEmpty) {
-      return stripTrailingSlash(override);
+      return _productionUrl(stripTrailingSlash(override));
     }
     if (fromEnvironment.trim().isNotEmpty) {
-      return stripTrailingSlash(fromEnvironment.trim());
+      return _productionUrl(stripTrailingSlash(fromEnvironment.trim()));
     }
-    return stripTrailingSlash(_debugPlatformDefault());
+    return _productionUrl(stripTrailingSlash(_debugPlatformDefault()));
   }
 
   static bool get isConfigured => baseUrl.isNotEmpty;
@@ -36,6 +41,20 @@ class ApiConfig {
       return url.substring(0, url.length - 1);
     }
     return url;
+  }
+
+  /// Release builds must use HTTPS. HTTP localhost is debug-only.
+  static bool isHttpsApiUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null &&
+        uri.scheme == 'https' &&
+        uri.host.isNotEmpty &&
+        !uri.host.contains(' ');
+  }
+
+  static String _productionUrl(String url) {
+    if (!kReleaseMode || url.isEmpty) return url;
+    return isHttpsApiUrl(url) ? url : '';
   }
 
   static String _debugPlatformDefault() {

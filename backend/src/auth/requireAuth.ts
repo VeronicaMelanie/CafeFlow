@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import type { TokenVerifier } from './verifyToken';
+import type { TokenVerifier } from './verifyToken.js';
 
 function unauthorized(res: Parameters<RequestHandler>[1]) {
   res.status(401).json({ error: 'unauthorized' });

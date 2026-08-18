@@ -1,14 +1,15 @@
 import 'dotenv/config';
-import { prisma } from './db';
-import { createApp } from './app';
-import { getFirebaseAuth } from './firebase';
-import { createFirebaseTokenVerifier } from './auth/verifyToken';
+import { prisma } from './db.js';
+import { createApp } from './app.js';
+import { getFirebaseAuth } from './firebase.js';
+import { createFirebaseTokenVerifier } from './auth/verifyToken.js';
 
 const port = Number(process.env.PORT) || 3000;
+const host = process.env.HOST || '0.0.0.0';
 const app = createApp(createFirebaseTokenVerifier(getFirebaseAuth()));
 
-const server = app.listen(port, () => {
-  console.log(`CafeFlow API listening on http://127.0.0.1:${port}`);
+const server = app.listen(port, host, () => {
+  console.log(`CafeFlow API listening on http://${host}:${port}`);
 });
 
 async function shutdown() {

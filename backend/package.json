@@ -9,11 +9,12 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc --noEmit",
-    "start": "tsx src/index.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
-    "test": "tsx --test test/auth.test.ts test/firebase-admin.integration.test.ts test/users.test.ts test/locations.test.ts test/shifts.test.ts test/availability.test.ts test/vacations.test.ts test/cleaning.test.ts test/scheduling.test.ts test/consumptions.test.ts test/products.test.ts test/audit.test.ts"
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "test": "tsx --test test/auth.test.ts test/import-preview-url.test.ts test/firebase-admin.integration.test.ts test/users.test.ts test/locations.test.ts test/shifts.test.ts test/availability.test.ts test/vacations.test.ts test/cleaning.test.ts test/scheduling.test.ts test/consumptions.test.ts test/products.test.ts test/audit.test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -21,14 +22,14 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase-admin": "^14.2.0",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "prisma": "^7.9.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.21.0",
     "@types/supertest": "^7.2.1",
-    "prisma": "^7.9.1",
     "supertest": "^7.2.2",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"

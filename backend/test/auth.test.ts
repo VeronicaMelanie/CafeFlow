@@ -2,7 +2,7 @@ import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import request from 'supertest';
-import { createApp } from '../src/app';
+import { createApp, corsAllowlist } from '../src/app';
 import type { AuthenticatedUser } from '../src/auth/types';
 import type { TokenVerifier } from '../src/auth/verifyToken';
 
@@ -26,6 +26,22 @@ const validUser: AuthenticatedUser = {
   name: 'Test Employee',
   authProvider: 'google.com',
 };
+
+describe('GET /health', () => {
+  it('is unauthenticated and does not expose connection details', async () => {
+    const app = createApp(mockVerifier(async () => validUser));
+    const res = await request(app).get('/health');
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, 'ok');
+    assert.equal(res.body.database, 'connected');
+    assert.equal(res.body.postgres, undefined);
+    const body = JSON.stringify(res.body);
+    assert.equal(body.includes('DATABASE_URL'), false);
+    assert.equal(body.includes('postgresql://'), false);
+    assert.equal(body.includes('password'), false);
+  });
+});
 
 describe('GET /api/auth/me', () => {
   it('returns 401 when Authorization header is missing', async () => {
@@ -91,7 +107,7 @@ describe('GET /api/auth/me', () => {
   });
 });
 
-describe('local Flutter web CORS', () => {
+describe('Flutter web CORS', () => {
   it('allows OPTIONS preflight from http://127.0.0.1:8765', async () => {
     const app = createApp(mockVerifier(async () => validUser));
     const res = await request(app)
@@ -104,6 +120,40 @@ describe('local Flutter web CORS', () => {
     assert.equal(res.headers['access-control-allow-origin'], 'http://127.0.0.1:8765');
     assert.match(res.headers['access-control-allow-headers'] ?? '', /authorization/i);
     assert.match(res.headers['access-control-allow-methods'] ?? '', /GET/);
+  });
+
+  it('allows the production PWA origin', async () => {
+    const app = createApp(mockVerifier(async () => validUser));
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Origin', 'https://cafeflow-5tg.web.app')
+      .set('Authorization', 'Bearer valid-id-token');
+
+    assert.equal(res.status, 200);
+    assert.equal(
+      res.headers['access-control-allow-origin'],
+      'https://cafeflow-5tg.web.app',
+    );
+  });
+
+  it('keeps localhost only outside production NODE_ENV', () => {
+    const production = corsAllowlist({ NODE_ENV: 'production' });
+    assert.equal(production.has('https://cafeflow-5tg.web.app'), true);
+    assert.equal(production.has('http://127.0.0.1:8765'), false);
+    assert.equal(production.has('http://localhost:8765'), false);
+
+    const local = corsAllowlist({ NODE_ENV: 'development' });
+    assert.equal(local.has('http://127.0.0.1:8765'), true);
+    assert.equal(local.has('https://cafeflow-5tg.web.app'), true);
+  });
+
+  it('allows extra HTTPS origins from CORS_ORIGINS in production', () => {
+    const allowlist = corsAllowlist({
+      NODE_ENV: 'production',
+      CORS_ORIGINS: 'https://preview.example',
+    });
+    assert.equal(allowlist.has('https://preview.example'), true);
+    assert.equal(allowlist.has('http://127.0.0.1:8765'), false);
   });
 
   it('does not allow a foreign Origin', async () => {

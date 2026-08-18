@@ -1,5 +1,5 @@
 import type { Auth } from 'firebase-admin/auth';
-import type { AuthenticatedUser } from './types';
+import type { AuthenticatedUser } from './types.js';
 
 export type TokenVerifier = (idToken: string) => Promise<AuthenticatedUser>;
 

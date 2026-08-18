@@ -14,6 +14,7 @@ const PREVIEW_DIR = path.join(BACKEND_ROOT, 'migration-preview');
 
 function loadEnv() {
   const envPath = path.join(BACKEND_ROOT, '.env');
+  if (!fs.existsSync(envPath)) return;
   const text = fs.readFileSync(envPath, 'utf8');
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -30,6 +31,41 @@ function loadEnv() {
     }
     if (process.env[key] === undefined) process.env[key] = value;
   }
+}
+
+function isLocalHostname(hostname) {
+  return hostname === '127.0.0.1' || hostname === 'localhost';
+}
+
+function assertImportDatabaseUrl(databaseUrl) {
+  let parsed;
+  try {
+    parsed = new URL(databaseUrl);
+  } catch {
+    throw new Error('DATABASE_URL is not a valid URL');
+  }
+  if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') {
+    throw new Error('DATABASE_URL must use the postgresql:// scheme');
+  }
+  if (!parsed.hostname) {
+    throw new Error('DATABASE_URL must include a hostname');
+  }
+  if (isLocalHostname(parsed.hostname)) {
+    return parsed;
+  }
+  const sslmode = (parsed.searchParams.get('sslmode') || '').toLowerCase();
+  const ssl = (parsed.searchParams.get('ssl') || '').toLowerCase();
+  if (
+    sslmode !== 'require' &&
+    sslmode !== 'verify-full' &&
+    sslmode !== 'verify-ca' &&
+    ssl !== 'true'
+  ) {
+    throw new Error(
+      'Remote DATABASE_URL must include sslmode=require (or verify-full)',
+    );
+  }
+  return parsed;
 }
 
 function readJson(name) {
@@ -65,17 +101,9 @@ async function main() {
     throw new Error('DATABASE_URL is not set');
   }
 
-  const parsed = new URL(databaseUrl);
-  if (parsed.hostname !== '127.0.0.1' && parsed.hostname !== 'localhost') {
-    throw new Error(`Refusing non-local host: ${parsed.hostname}`);
-  }
-  if (parsed.port !== '5432') {
-    throw new Error(`Refusing non-CafeFlow port: ${parsed.port}`);
-  }
-  const dbName = parsed.pathname.replace(/^\//, '');
-  if (dbName !== 'cafeflow') {
-    throw new Error(`Refusing non-CafeFlow database: ${dbName}`);
-  }
+  const parsed = assertImportDatabaseUrl(databaseUrl);
+  const dbName = parsed.pathname.replace(/^\//, '').replace(/\/$/, '');
+  console.log(`DATABASE_URL host=${parsed.hostname} db=${dbName || '(default)'}`);
 
   const preview = {
     users: readJson('users.json'),
@@ -116,13 +144,6 @@ async function main() {
     console.log('TARGET DATABASE');
     console.log('===============');
     console.log(`db=${t.db} addr=${t.addr} port=${t.port} version=${t.version}`);
-
-    if (t.db !== 'cafeflow') {
-      throw new Error(`Connected database is not cafeflow: ${t.db}`);
-    }
-    if (String(t.port) !== '5432') {
-      throw new Error(`Connected port is not 5432: ${t.port}`);
-    }
 
     const schema = await client.query(`
       SELECT table_name
@@ -718,7 +739,14 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err && err.stack ? err.stack : String(err));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err && err.stack ? err.stack : String(err));
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  assertImportDatabaseUrl,
+  isLocalHostname,
+};

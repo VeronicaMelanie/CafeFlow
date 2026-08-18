@@ -1,12 +1,7 @@
 import express from 'express';
-import { prisma } from './db';
-import { requireAuth } from './auth/requireAuth';
-import type { TokenVerifier } from './auth/verifyToken';
-
-function sanitizePostgresVersion(raw: string): string {
-  const match = raw.match(/PostgreSQL\s+([\d.]+)/i);
-  return match ? match[1] : 'unknown';
-}
+import { prisma } from './db.js';
+import { requireAuth } from './auth/requireAuth.js';
+import type { TokenVerifier } from './auth/verifyToken.js';
 
 function formatDateOnly(value: Date | null): string | null {
   if (!value) return null;
@@ -1260,18 +1255,54 @@ async function resolveShiftLocationId(parsed: {
   return { error: 'invalid_shift' };
 }
 
-const LOCAL_WEB_ORIGINS = new Set([
+const LOCAL_WEB_ORIGINS = [
   'http://127.0.0.1:8765',
   'http://localhost:8765',
-]);
+] as const;
 
-function applyLocalWebCors(
+const PRODUCTION_WEB_ORIGINS = [
+  'https://cafeflow-5tg.web.app',
+] as const;
+
+function extraCorsOrigins(env: NodeJS.ProcessEnv): string[] {
+  const raw = env.CORS_ORIGINS ?? '';
+  const requireHttps = env.NODE_ENV === 'production';
+  const origins: string[] = [];
+  for (const part of raw.split(',')) {
+    const origin = part.trim();
+    if (!origin) continue;
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      continue;
+    }
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') continue;
+    if (requireHttps && url.protocol !== 'https:') continue;
+    if (origin !== `${url.protocol}//${url.host}`) continue;
+    origins.push(origin);
+  }
+  return origins;
+}
+
+export function corsAllowlist(
+  env: NodeJS.ProcessEnv = process.env,
+): Set<string> {
+  const origins = new Set<string>(PRODUCTION_WEB_ORIGINS);
+  if (env.NODE_ENV !== 'production') {
+    for (const origin of LOCAL_WEB_ORIGINS) origins.add(origin);
+  }
+  for (const origin of extraCorsOrigins(env)) origins.add(origin);
+  return origins;
+}
+
+function applyWebCors(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction,
 ) {
   const origin = req.headers.origin;
-  if (typeof origin === 'string' && LOCAL_WEB_ORIGINS.has(origin)) {
+  if (typeof origin === 'string' && corsAllowlist().has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader(
@@ -1294,25 +1325,18 @@ function applyLocalWebCors(
 export function createApp(verifyIdToken: TokenVerifier) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(applyLocalWebCors);
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+  app.use(applyWebCors);
   app.use(express.json({ limit: '256kb' }));
 
   app.get('/health', async (_req, res) => {
     try {
-      const rows = await prisma.$queryRaw<Array<{ version: string }>>`
-        SELECT version()
-      `;
-      const version = sanitizePostgresVersion(rows[0]?.version ?? '');
-
+      await prisma.$queryRaw`SELECT 1`;
       res.json({
         status: 'ok',
         database: 'connected',
-        postgres: {
-          version,
-          host: '127.0.0.1',
-          port: 5432,
-          name: 'cafeflow',
-        },
       });
     } catch {
       res.status(503).json({
