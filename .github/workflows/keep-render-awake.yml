@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping CafeFlow API health
-        run: curl -fsS --max-time 90 https://cafeflow-hdmg.onrender.com/health
+        run: curl -fsS --max-time 90 https://cafeflow-1.onrender.com/health
