@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../data/scheduling_config_repository.dart';
@@ -11,7 +12,7 @@ class SchedulingStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final message = access.bannerMessage;
+    final message = access.bannerMessageFor(L10n.of(context));
     if (message == null) return const SizedBox.shrink();
 
     final isLocked = access.calendarMonthLocked || access.adminLockedMonth;

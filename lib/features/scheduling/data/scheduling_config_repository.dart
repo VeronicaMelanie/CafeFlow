@@ -1,5 +1,6 @@
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../auth/data/users_repository.dart';
 import '../../locations/data/location_repository.dart';
 import '../../locations/utils/location_catalog.dart';
@@ -11,9 +12,9 @@ class SchedulingConfigRepository {
     ApiClient? apiClient,
     UsersRepository? usersRepository,
     LocationRepository? locationRepository,
-  })  : _api = apiClient,
-        _users = usersRepository,
-        _locations = locationRepository;
+  }) : _api = apiClient,
+       _users = usersRepository,
+       _locations = locationRepository;
 
   final ApiClient? _api;
   final UsersRepository? _users;
@@ -22,7 +23,9 @@ class SchedulingConfigRepository {
   ApiClient get _client {
     final api = _api;
     if (api == null) {
-      throw const ApiException('Scheduling config API client is not configured');
+      throw const ApiException(
+        'Scheduling config API client is not configured',
+      );
     }
     return api;
   }
@@ -64,7 +67,9 @@ class SchedulingConfigRepository {
     String? location,
   }) async {
     final configs = await listConfigs();
-    final locationName = location != null && location.isNotEmpty ? location : null;
+    final locationName = location != null && location.isNotEmpty
+        ? location
+        : null;
     for (final config in configs) {
       if (config.year != year || config.month != month) continue;
       if (locationName == null) {
@@ -80,7 +85,9 @@ class SchedulingConfigRepository {
     final users = _users;
     final locations = _locations;
     if (users == null || locations == null) {
-      throw const ApiException('Scheduling config API client is not configured');
+      throw const ApiException(
+        'Scheduling config API client is not configured',
+      );
     }
 
     final json = await _client.getJson('/api/scheduling');
@@ -129,10 +136,7 @@ class SchedulingConfigRepository {
       year: year,
       month: month,
       location: location,
-      payload: {
-        'scheduling_enabled': enabled,
-        'locked_month': false,
-      },
+      payload: {'scheduling_enabled': enabled, 'locked_month': false},
     );
   }
 
@@ -162,10 +166,7 @@ class SchedulingConfigRepository {
       location: location,
     );
     if (existing != null) {
-      await _client.patchJson(
-        '/api/scheduling/${existing.id}',
-        body: payload,
-      );
+      await _client.patchJson('/api/scheduling/${existing.id}', body: payload);
       return;
     }
 
@@ -192,20 +193,87 @@ class MonthSchedulingAccess {
   final bool adminLockedMonth;
   final bool schedulingEnabled;
   final bool canEdit;
+  final bool windowOpen;
+  final bool windowUpcoming;
+  final DateTime? windowStart;
+  final DateTime? windowEnd;
 
   const MonthSchedulingAccess({
     required this.calendarMonthLocked,
     required this.adminLockedMonth,
     required this.schedulingEnabled,
     required this.canEdit,
+    this.windowOpen = false,
+    this.windowUpcoming = false,
+    this.windowStart,
+    this.windowEnd,
   });
 
-  String? get bannerMessage {
+  static const _months = [
+    'ian',
+    'feb',
+    'mar',
+    'apr',
+    'mai',
+    'iun',
+    'iul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
+  ];
+
+  static const _monthsEn = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  static String _shortDate(DateTime date, L10n l10n) =>
+      '${date.day} ${l10n.isRo ? _months[date.month - 1] : _monthsEn[date.month - 1]}';
+
+  String? get bannerMessage => bannerMessageFor(L10n.fallback);
+
+  String? bannerMessageFor(L10n l10n) {
     if (calendarMonthLocked || adminLockedMonth) {
-      return 'Scheduling for this month is locked.';
+      return l10n.pick(
+        'Scheduling for this month is locked.',
+        'Programarea pentru luna aceasta este blocată.',
+      );
+    }
+    if (!windowOpen) {
+      if (windowUpcoming && windowStart != null && windowEnd != null) {
+        return l10n.pick(
+          'Availability opens ${_shortDate(windowStart!, l10n)}–${_shortDate(windowEnd!, l10n)}.',
+          'Disponibilitatea se deschide ${_shortDate(windowStart!, l10n)}–${_shortDate(windowEnd!, l10n)}.',
+        );
+      }
+      if (windowEnd != null) {
+        return l10n.pick(
+          'The availability window closed on ${_shortDate(windowEnd!, l10n)}. Wait for the published schedule.',
+          'Fereastra de disponibilitate s-a închis pe ${_shortDate(windowEnd!, l10n)}. Așteaptă programul publicat.',
+        );
+      }
+      return l10n.pick(
+        'The availability window is closed.',
+        'Fereastra de disponibilitate este închisă.',
+      );
     }
     if (!schedulingEnabled) {
-      return 'Scheduling has not been opened yet. Please wait for your manager.';
+      return l10n.pick(
+        'Scheduling was closed by a manager.',
+        'Programarea a fost închisă de manager.',
+      );
     }
     return null;
   }
@@ -216,15 +284,30 @@ MonthSchedulingAccess resolveMonthAccess({
   SchedulingConfigModel? config,
   DateTime? now,
 }) {
-  final calendarLocked =
-      !SchedulingMonthUtils.isMonthEditable(scheduleMonth, now);
-  final adminOpen = config?.schedulingEnabled ?? false;
+  final today = now ?? DateTime.now();
+  final todayDate = SchedulingMonthUtils.dateOnly(today);
+  final calendarLocked = !SchedulingMonthUtils.isMonthEditable(
+    scheduleMonth,
+    today,
+  );
+  final window = SchedulingMonthUtils.availabilityWindowFor(scheduleMonth);
+  final windowOpen = SchedulingMonthUtils.isAvailabilityWindowOpen(
+    scheduleMonth,
+    today,
+  );
+  final windowUpcoming = !calendarLocked && todayDate.isBefore(window.start);
+  // No config row: open automatically during 20–30. Admin Close still blocks.
+  final adminOpen = config?.schedulingEnabled ?? true;
   final adminLocked = config?.lockedMonth ?? false;
 
   return MonthSchedulingAccess(
     calendarMonthLocked: calendarLocked,
     adminLockedMonth: adminLocked,
     schedulingEnabled: adminOpen,
-    canEdit: !calendarLocked && !adminLocked && adminOpen,
+    windowOpen: windowOpen,
+    windowUpcoming: windowUpcoming,
+    windowStart: window.start,
+    windowEnd: window.end,
+    canEdit: windowOpen && !calendarLocked && !adminLocked && adminOpen,
   );
 }

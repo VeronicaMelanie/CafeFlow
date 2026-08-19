@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/interactive_scale.dart';
@@ -20,8 +21,9 @@ class ContractTypeOnboardingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = L10n.of(context);
     final displayName =
-        user.name.isNotEmpty ? user.name : 'Employee';
+        user.name.isNotEmpty ? user.name : l10n.roleLabel('employee');
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
@@ -33,26 +35,32 @@ class ContractTypeOnboardingScreen extends ConsumerWidget {
             children: [
               const Spacer(),
               Text(
-                'Welcome, $displayName',
+                l10n.pick('Welcome, $displayName', 'Bine ai venit, $displayName'),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'What type of contract do you have?',
+                l10n.pick('What type of contract do you have?', 'Ce tip de contract ai?'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: AppSpacing.xl),
               ContractTypeOptionTile(
-                title: 'Full-Time',
-                subtitle: 'Standard monthly target (160h)',
+                title: l10n.workTypeLabel('full_time'),
+                subtitle: l10n.pick(
+                  'Standard monthly target (160h)',
+                  'Țintă lunară standard (160h)',
+                ),
                 accent: AppColors.brandGreen,
                 icon: Icons.calendar_today_rounded,
                 onTap: () => _save(context, ref, 'full_time'),
               ),
               const SizedBox(height: AppSpacing.md),
               ContractTypeOptionTile(
-                title: 'Part-Time',
-                subtitle: 'Reduced monthly target (80h)',
+                title: l10n.workTypeLabel('part_time'),
+                subtitle: l10n.pick(
+                  'Reduced monthly target (80h)',
+                  'Țintă lunară redusă (80h)',
+                ),
                 accent: AppColors.brandMustard,
                 icon: Icons.schedule_rounded,
                 onTap: () => _save(context, ref, 'part_time'),

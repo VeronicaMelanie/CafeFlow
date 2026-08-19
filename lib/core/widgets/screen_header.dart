@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../l10n/language_switch.dart';
 
 /// Standard gradient screen header with optional back button and actions.
 class ScreenHeader extends StatelessWidget {
@@ -50,6 +51,8 @@ class ScreenHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -72,6 +75,7 @@ class ScreenHeader extends StatelessWidget {
             ),
           ),
           if (actions != null) ...actions!,
+          const SizedBox(width: kLanguageSwitchReserve),
         ],
       ),
     );

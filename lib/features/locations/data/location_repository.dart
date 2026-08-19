@@ -13,6 +13,8 @@ class LocationRepository {
     return _cache.getOrLoad(_fetchLocations);
   }
 
+  void invalidateCache() => _cache.invalidate();
+
   Future<List<LocationModel>> _fetchLocations() async {
     final json = await _api.getJson('/api/locations');
     if (json is! List) {

@@ -31,15 +31,56 @@ class SchedulingMonthUtils {
     final rangeStart = dateOnly(vacationStart);
     final rangeEnd = dateOnly(vacationEnd);
 
-    final overlapStart =
-        rangeStart.isAfter(monthFirst) ? rangeStart : monthFirst;
+    final overlapStart = rangeStart.isAfter(monthFirst)
+        ? rangeStart
+        : monthFirst;
     final overlapEnd = rangeEnd.isBefore(monthLast) ? rangeEnd : monthLast;
 
     if (overlapStart.isAfter(overlapEnd)) return 0;
     return overlapEnd.difference(overlapStart).inDays + 1;
   }
 
-  /// True when employees may still add/remove/edit availability for [scheduleMonth].
+  /// Employees submit availability from the 20th through the 30th of the
+  /// previous month. February ends on the 28th or 29th, so the window ends
+  /// on that last day instead of the 30th.
+  static const int availabilityWindowStartDay = 20;
+  static const int availabilityWindowEndDay = 30;
+
+  /// Inclusive start/end dates of the submission window for [scheduleMonth].
+  static ({DateTime start, DateTime end}) availabilityWindowFor(
+    DateTime scheduleMonth,
+  ) {
+    final previous = DateTime(scheduleMonth.year, scheduleMonth.month - 1, 1);
+    final lastDayOfPrevious = DateTime(
+      previous.year,
+      previous.month + 1,
+      0,
+    ).day;
+    final endDay = lastDayOfPrevious < availabilityWindowEndDay
+        ? lastDayOfPrevious
+        : availabilityWindowEndDay;
+    return (
+      start: DateTime(
+        previous.year,
+        previous.month,
+        availabilityWindowStartDay,
+      ),
+      end: DateTime(previous.year, previous.month, endDay),
+    );
+  }
+
+  /// True when today falls inside the 20–30 (or February last-day) window
+  /// for submitting availability for [scheduleMonth].
+  static bool isAvailabilityWindowOpen(
+    DateTime scheduleMonth, [
+    DateTime? now,
+  ]) {
+    final today = dateOnly(now ?? DateTime.now());
+    final window = availabilityWindowFor(scheduleMonth);
+    return !today.isBefore(window.start) && !today.isAfter(window.end);
+  }
+
+  /// True when [scheduleMonth] has not started yet (admin may still generate).
   ///
   /// Locked from the first calendar day of that month onward.
   static bool isMonthEditable(DateTime scheduleMonth, [DateTime? now]) {

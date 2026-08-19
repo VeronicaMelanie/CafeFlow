@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../pwa_install_service.dart';
 
 /// Step-by-step guide for installing CafeFlow on iPhone via Safari.
@@ -38,6 +39,7 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return Material(
       color: Colors.black54,
       child: SafeArea(
@@ -73,9 +75,14 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
                           _InstallStep(
                             step: 1,
                             icon: Icons.ios_share_rounded,
-                            title: 'Tap Share in Safari',
-                            subtitle:
-                                'Use the share icon at the bottom of the screen.',
+                            title: l10n.pick(
+                              'Tap Share in Safari',
+                              'Apasă Share în Safari',
+                            ),
+                            subtitle: l10n.pick(
+                              'Use the share icon at the bottom of the screen.',
+                              'Folosește pictograma de partajare din partea de jos a ecranului.',
+                            ),
                             delay: 0,
                             controller: _controller,
                           ),
@@ -83,9 +90,14 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
                           _InstallStep(
                             step: 2,
                             icon: Icons.add_box_outlined,
-                            title: 'Add to Home Screen',
-                            subtitle:
-                                'Scroll the menu and tap “Add to Home Screen”.',
+                            title: l10n.pick(
+                              'Add to Home Screen',
+                              'Adaugă pe ecranul de pornire',
+                            ),
+                            subtitle: l10n.pick(
+                              'Scroll the menu and tap “Add to Home Screen”.',
+                              'Derulează meniul și apasă „Adaugă pe ecranul de pornire”.',
+                            ),
                             delay: 0.15,
                             controller: _controller,
                           ),
@@ -93,9 +105,14 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
                           _InstallStep(
                             step: 3,
                             icon: Icons.apps_rounded,
-                            title: 'Open from Home Screen',
-                            subtitle:
-                                'Launch CafeFlow like a native app — fullscreen, no browser bar.',
+                            title: l10n.pick(
+                              'Open from the home screen',
+                              'Deschide de pe ecranul de pornire',
+                            ),
+                            subtitle: l10n.pick(
+                              'Open CafeFlow like a native app — full screen, no browser bar.',
+                              'Deschide CafeFlow ca o aplicație nativă — pe tot ecranul, fără bara browserului.',
+                            ),
                             delay: 0.3,
                             controller: _controller,
                           ),
@@ -114,6 +131,7 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
   }
 
   Widget _buildHeader() {
+    final l10n = L10n.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
@@ -132,10 +150,13 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
             child: const Icon(Icons.phone_iphone, color: Colors.white, size: 36),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Install CafeFlow on iPhone',
+          Text(
+            l10n.pick(
+              'Install CafeFlow on iPhone',
+              'Instalează CafeFlow pe iPhone',
+            ),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -143,7 +164,10 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
           ),
           const SizedBox(height: 8),
           Text(
-            'No App Store needed — private install for your team.',
+            l10n.pick(
+              'No App Store needed — private install for the team.',
+              'Nu e nevoie de App Store — instalare privată pentru echipă.',
+            ),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
@@ -156,6 +180,7 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
   }
 
   Widget _buildFooter() {
+    final l10n = L10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       child: Column(
@@ -172,10 +197,13 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
                 ),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "Don't show again",
-                  style: TextStyle(fontSize: 13, color: AppColors.textLight),
+                  l10n.pick("Don't show again", 'Nu mai afișa'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textLight,
+                  ),
                 ),
               ),
             ],
@@ -190,7 +218,7 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
                 }
                 widget.onDismiss();
               },
-              child: const Text('Got it'),
+              child: Text(l10n.pick('Got it', 'Am înțeles')),
             ),
           ),
           TextButton(
@@ -198,9 +226,9 @@ class _PwaInstallTutorialState extends State<PwaInstallTutorial>
               await PwaInstallService().dismissInstallTutorial();
               widget.onDismiss();
             },
-            child: const Text(
-              'Continue in browser',
-              style: TextStyle(color: AppColors.textLight),
+            child: Text(
+              l10n.pick('Continue in browser', 'Continuă în browser'),
+              style: const TextStyle(color: AppColors.textLight),
             ),
           ),
         ],

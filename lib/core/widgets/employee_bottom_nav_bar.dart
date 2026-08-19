@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import '../l10n/l10n.dart';
 import '../pwa/pwa_responsive.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shadows.dart';
@@ -12,18 +13,31 @@ import '../theme/app_spacing.dart';
 enum EmployeeNavTab {
   schedule(
     Icons.calendar_today_rounded,
-    'Schedule',
     AppColors.brandMustard,
   ),
-  team(Icons.people_rounded, 'Team', AppColors.brandTurquoise),
-  stats(Icons.bar_chart_rounded, 'Stats', AppColors.brandGreen),
-  profile(Icons.person_rounded, 'Profile', AppColors.brandPurple);
+  team(Icons.people_rounded, AppColors.brandTurquoise),
+  stats(Icons.bar_chart_rounded, AppColors.brandGreen),
+  profile(Icons.person_rounded, AppColors.brandPurple);
 
-  const EmployeeNavTab(this.icon, this.label, this.accentColor);
+  const EmployeeNavTab(this.icon, this.accentColor);
 
   final IconData icon;
-  final String label;
   final Color accentColor;
+
+  String get label => labelFor(L10n.fallback);
+
+  String labelFor(L10n l10n) {
+    switch (this) {
+      case EmployeeNavTab.schedule:
+        return l10n.pick('Schedule', 'Program');
+      case EmployeeNavTab.team:
+        return l10n.pick('Team', 'Echipă');
+      case EmployeeNavTab.stats:
+        return l10n.pick('Stats', 'Statistici');
+      case EmployeeNavTab.profile:
+        return l10n.pick('Profile', 'Profil');
+    }
+  }
 
   static EmployeeNavTab fromIndex(int index) =>
       EmployeeNavTab.values[index.clamp(0, EmployeeNavTab.values.length - 1)];
@@ -188,8 +202,9 @@ class _ActivePillContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
+    final l10n = L10n.of(context);
     final showLabel = EmployeeBottomNavLayout.activeLabelFits(
-      tab.label,
+      tab.labelFor(l10n),
       contentWidth,
       textScaler: textScaler,
     );
@@ -209,7 +224,7 @@ class _ActivePillContent extends StatelessWidget {
           if (showLabel) ...[
             const SizedBox(width: AppSpacing.sm),
             Text(
-              tab.label,
+              tab.labelFor(l10n),
               maxLines: 1,
               softWrap: false,
               style: labelStyle,

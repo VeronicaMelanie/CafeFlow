@@ -49,19 +49,21 @@ void main() {
   }
 
   Future<void> tapDay(WidgetTester tester, String dayLabel) async {
-    await tester.tap(find.text(dayLabel).first);
+    final finder = find.text(dayLabel).first;
+    await tester.ensureVisible(finder);
+    await tester.tap(finder);
     await tester.pumpAndSettle();
   }
 
   Future<void> selectFullDay(WidgetTester tester) async {
-    expect(find.text('Full Day'), findsOneWidget);
-    await tester.tap(find.text('Full Day'));
+    expect(find.text('Toată ziua'), findsOneWidget);
+    await tester.tap(find.text('Toată ziua'));
     await tester.pumpAndSettle();
   }
 
   Future<void> openCustomHoursSheet(WidgetTester tester) async {
-    expect(find.text('Custom Hours'), findsOneWidget);
-    await tester.tap(find.text('Custom Hours'));
+    expect(find.text('Ore personalizate'), findsOneWidget);
+    await tester.tap(find.text('Ore personalizate'));
     await tester.pumpAndSettle();
   }
 
@@ -117,7 +119,7 @@ void main() {
 
     await tapDay(tester, '15');
     await openCustomHoursSheet(tester);
-    await tester.tap(find.text('Confirm'));
+    await tester.tap(find.text('Confirmă'));
     await tester.pumpAndSettle();
 
     expect(find.text('15'), findsWidgets);
@@ -143,7 +145,7 @@ void main() {
     expect(customHoursCircleFor('9'), findsOneWidget);
 
     await tapDay(tester, '9');
-    await tester.tap(find.text('Change availability'));
+    await tester.tap(find.text('Schimbă disponibilitatea'));
     await tester.pumpAndSettle();
     await selectFullDay(tester);
 
@@ -161,8 +163,8 @@ void main() {
     expect(fullDayCircleFor('15'), findsOneWidget);
 
     await tapDay(tester, '15');
-    expect(find.text('Change availability'), findsOneWidget);
-    expect(find.text('Remove availability'), findsOneWidget);
+    expect(find.text('Schimbă disponibilitatea'), findsOneWidget);
+    expect(find.text('Șterge disponibilitatea'), findsOneWidget);
   });
 
   testWidgets('edit flow can remove availability', (tester) async {
@@ -174,7 +176,7 @@ void main() {
     expect(fullDayCircleFor('15'), findsOneWidget);
 
     await tapDay(tester, '15');
-    await tester.tap(find.text('Remove availability'));
+    await tester.tap(find.text('Șterge disponibilitatea'));
     await tester.pumpAndSettle();
 
     expect(fullDayCircleFor('15'), findsNothing);
@@ -191,10 +193,10 @@ void main() {
     expect(fullDayCircleFor('15'), findsOneWidget);
 
     await tapDay(tester, '15');
-    await tester.tap(find.text('Change availability'));
+    await tester.tap(find.text('Schimbă disponibilitatea'));
     await tester.pumpAndSettle();
     await openCustomHoursSheet(tester);
-    await tester.tap(find.text('Confirm'));
+    await tester.tap(find.text('Confirmă'));
     await tester.pumpAndSettle();
 
     expect(customHoursCircleFor('15'), findsOneWidget);

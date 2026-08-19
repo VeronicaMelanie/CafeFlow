@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/admin_guard.dart';
@@ -39,13 +40,14 @@ class _DistributionScreenState extends State<DistributionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AdminGuard(
       child: Scaffold(
         backgroundColor: AppColors.offWhite,
         body: Column(
           children: [
             ScreenHeader(
-              title: 'App Distribution',
+              title: l10n.pick('Share the app', 'Distribuie aplicația'),
               topPadding: MediaQuery.paddingOf(context).top + 12,
               onBack: () => Navigator.pop(context),
             ),
@@ -76,52 +78,85 @@ class _DistributionScreenState extends State<DistributionScreen>
 
   Widget _buildIosPwaTab(BuildContext context) {
     final pwaUrl = PwaConfig.installLandingUrl;
+    final l10n = L10n.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         children: [
           _buildQRCard(
-            title: 'Scan to install on iPhone',
-            subtitle:
-                'Opens Safari → install tutorial → Add to Home Screen. No App Store.',
+            title: l10n.pick(
+              'Scan to install on iPhone',
+              'Scanează ca să instalezi pe iPhone',
+            ),
+            subtitle: l10n.pick(
+              'Open Safari → install tutorial → Add to Home Screen. No App Store.',
+              'Deschide Safari → tutorial de instalare → Adaugă pe ecranul principal. Fără App Store.',
+            ),
             data: pwaUrl,
             accent: AppColors.softBlue,
           ),
           const SizedBox(height: AppSpacing.xl),
           _buildInfoExpansionTile(
-            'iPhone install steps',
+            l10n.pick('iPhone install steps', 'Pași de instalare pe iPhone'),
             Icons.phone_iphone,
             AppColors.softBlue,
             [
-              '1. Employee scans this QR with the Camera app.',
-              '2. Safari opens CafeFlow with install instructions.',
-              '3. Tap Share → Add to Home Screen.',
-              '4. Open CafeFlow from the new home screen icon.',
+              l10n.pick(
+                '1. The employee scans the QR with the Camera app.',
+                '1. Angajatul scanează QR-ul cu aplicația Cameră.',
+              ),
+              l10n.pick(
+                '2. Safari opens CafeFlow with the install instructions.',
+                '2. Safari deschide CafeFlow cu instrucțiunile de instalare.',
+              ),
+              l10n.pick(
+                '3. Tap Share → Add to Home Screen.',
+                '3. Atinge Partajează → Adaugă pe ecranul principal.',
+              ),
+              l10n.pick(
+                '4. Open CafeFlow from the new home-screen icon.',
+                '4. Deschide CafeFlow de pe noua iconiță de pe ecran.',
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          _buildUrlRow(context, pwaUrl, 'PWA install link'),
+          _buildUrlRow(
+            context,
+            pwaUrl,
+            l10n.pick('PWA install link', 'Link instalare PWA'),
+          ),
           const SizedBox(height: AppSpacing.lg),
           OutlinedButton.icon(
             onPressed: () async {
               await PwaInstallService().resetInstallTutorial();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text(
-                      'Install tutorial reset — will show again on next visit.',
+                      l10n.pick(
+                        'Install tutorial reset — it will show again on the next visit.',
+                        'Tutorialul de instalare a fost resetat — apare din nou la următoarea vizită.',
+                      ),
                     ),
                   ),
                 );
               }
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Reset install tutorial for testing'),
+            label: Text(
+              l10n.pick(
+                'Reset install tutorial (test)',
+                'Resetează tutorialul de instalare (test)',
+              ),
+            ),
           ),
           if (kIsWeb) ...[
             const SizedBox(height: AppSpacing.md),
-            const Text(
-              'Update PwaConfig.hostingUrl after deploying to Firebase Hosting.',
+            Text(
+              l10n.pick(
+                'Update PwaConfig.hostingUrl after you publish to Firebase Hosting.',
+                'Actualizează PwaConfig.hostingUrl după ce publici pe Firebase Hosting.',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11, color: AppColors.textLight),
             ),
@@ -132,31 +167,50 @@ class _DistributionScreenState extends State<DistributionScreen>
   }
 
   Widget _buildAndroidTab(BuildContext context) {
+    final l10n = L10n.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         children: [
           _buildQRCard(
-            title: 'Scan to download APK',
-            subtitle: 'Scan with your mobile camera',
+            title: l10n.pick(
+              'Scan to download the APK',
+              'Scanează ca să descarci APK-ul',
+            ),
+            subtitle: l10n.pick(
+              'Scan with your phone camera',
+              'Scanează cu camera telefonului',
+            ),
             data: apkDownloadUrl,
             accent: AppColors.softGreen,
           ),
           const SizedBox(height: AppSpacing.xl),
           _buildInfoExpansionTile(
-            'Android Guide',
+            l10n.pick('Android guide', 'Ghid Android'),
             Icons.android,
             AppColors.softGreen,
             [
-              '1. Scan QR and download APK.',
-              '2. Open file and tap Install.',
-              '3. Allow Unknown Sources if asked.',
-              '4. Follow prompts to finish.',
+              l10n.pick(
+                '1. Scan the QR and download the APK.',
+                '1. Scanează QR-ul și descarcă APK-ul.',
+              ),
+              l10n.pick(
+                '2. Open the file and tap Install.',
+                '2. Deschide fișierul și atinge Instalează.',
+              ),
+              l10n.pick(
+                '3. Allow unknown sources if asked.',
+                '3. Permite surse necunoscute dacă ți se cere.',
+              ),
+              l10n.pick(
+                '4. Follow the steps to the end.',
+                '4. Urmează pașii până la final.',
+              ),
             ],
           ),
           const SizedBox(height: 24),
           _buildPrimaryCTA(
-            label: 'Download APK Directly',
+            label: l10n.pick('Download APK directly', 'Descarcă APK-ul direct'),
             onPressed: () => _launchUrl(apkDownloadUrl),
           ),
         ],
@@ -244,7 +298,11 @@ class _DistributionScreenState extends State<DistributionScreen>
             onPressed: () {
               Clipboard.setData(ClipboardData(text: url));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Link copied')),
+                SnackBar(
+                  content: Text(
+                    L10n.of(context).pick('Link copied', 'Link copiat'),
+                  ),
+                ),
               );
             },
           ),
@@ -333,8 +391,11 @@ class _DistributionScreenState extends State<DistributionScreen>
   }
 
   Future<void> _launchUrl(String url) async {
+    final l10n = L10n.of(context);
     if (!await launchUrl(Uri.parse(url))) {
-      throw Exception('Could not launch $url');
+      throw Exception(
+        '${l10n.pick('Could not open', 'Nu s-a putut deschide')} $url',
+      );
     }
   }
 }

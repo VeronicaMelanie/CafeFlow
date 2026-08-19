@@ -1,9 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+import 'core/l10n/app_locale.dart';
+import 'core/l10n/l10n.dart';
+import 'core/l10n/language_switch.dart';
 import 'core/pwa/pwa_detector.dart';
 import 'core/pwa/widgets/pwa_root_shell.dart';
 import 'core/theme/app_theme.dart';
@@ -13,6 +19,10 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ro');
+  await initializeDateFormatting('en');
+  final savedLocale = await AppLocaleController.loadSaved();
+  Intl.defaultLocale = savedLocale.languageCode;
 
   try {
     await Firebase.initializeApp(
@@ -51,8 +61,13 @@ void main() async {
   }
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        appLocaleProvider.overrideWith(
+          (ref) => AppLocaleController(savedLocale),
+        ),
+      ],
+      child: const MyApp(),
     ),
   );
 }
@@ -77,18 +92,31 @@ Future<void> _initWebMessaging() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
     return MaterialApp(
       title: 'CafeFlow',
+      locale: locale,
+      supportedLocales: const [Locale('ro'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: AppTheme.lightTheme,
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return PwaRootShell(child: child ?? const SizedBox.shrink());
+        return L10nScope(
+          l10n: L10n(locale),
+          child: AppLanguageLayer(
+            child: PwaRootShell(child: child ?? const SizedBox.shrink()),
+          ),
+        );
       },
     );
   }

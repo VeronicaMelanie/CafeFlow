@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import 'auth_providers.dart';
 import 'widgets/auth_shell.dart';
 
@@ -25,8 +26,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .sendPasswordResetEmail(_emailCtrl.text.trim());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent.'),
+        SnackBar(
+          content: Text(
+            L10n.of(context).pick(
+              'Password reset email sent.',
+              'Emailul de resetare a parolei a fost trimis.',
+            ),
+          ),
           backgroundColor: AppColors.softGreen,
           behavior: SnackBarBehavior.floating,
         ),
@@ -36,7 +42,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed: $e'),
+            content: Text(
+              '${L10n.of(context).pick('Failed', 'A eșuat')}: $e',
+            ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
           ),
@@ -55,16 +63,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AuthShell(
       showBack: true,
-      subtitle: 'Reset your password',
+      subtitle: l10n.pick('Reset your password', 'Resetează-ți parola'),
       cardChild: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Enter your email and we’ll send you a reset link.',
+              l10n.pick(
+                'Enter your email and we\'ll send you a reset link.',
+                'Introdu emailul și îți vom trimite un link de resetare.',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -80,14 +92,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               keyboardType: TextInputType.emailAddress,
               validator: (v) {
                 final value = (v ?? '').trim();
-                if (value.isEmpty) return 'Email is required';
-                if (!value.contains('@')) return 'Invalid email';
+                if (value.isEmpty) {
+                  return l10n.pick('Email is required', 'Emailul este obligatoriu');
+                }
+                if (!value.contains('@')) {
+                  return l10n.pick('Invalid email', 'Email invalid');
+                }
                 return null;
               },
             ),
             const SizedBox(height: 20),
             AuthGradientButton(
-              text: 'Send reset link',
+              text: l10n.pick('Send reset link', 'Trimite linkul de resetare'),
               isLoading: _isLoading,
               onPressed: _isLoading ? null : _send,
             ),
@@ -95,8 +111,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
       ),
       belowCard: AuthFooterLink(
-        prompt: 'Remember your password? ',
-        actionLabel: 'Back to Login',
+        prompt: l10n.pick('Remember your password? ', 'Îți amintești parola? '),
+        actionLabel: l10n.pick('Back to log in', 'Înapoi la autentificare'),
         onTap: () => Navigator.pop(context),
       ),
     );

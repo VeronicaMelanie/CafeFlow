@@ -4,6 +4,7 @@ import '../../scheduling/data/vacation_repository.dart';
 import '../../scheduling/domain/vacation_model.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_skeleton.dart';
@@ -15,6 +16,7 @@ class VacationApprovalScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vacationsAsync = ref.watch(pendingVacationsProvider);
+    final l10n = L10n.of(context);
 
     return AdminGuard(
       child: Scaffold(
@@ -22,13 +24,13 @@ class VacationApprovalScreen extends ConsumerWidget {
         body: Column(
           children: [
             ScreenHeader(
-              title: 'Vacation Requests',
+              title: l10n.pick('Time-off requests', 'Cereri de concediu'),
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
               child: vacationsAsync.when(
                 data: (vacations) {
-                  if (vacations.isEmpty) return _buildEmptyState();
+                  if (vacations.isEmpty) return _buildEmptyState(context);
 
                   return ListView.builder(
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -40,7 +42,7 @@ class VacationApprovalScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const AppLoadingIndicator(),
-                error: (e, st) => Center(child: Text('Error: $e')),
+                error: (e, st) => Center(child: Text(l10n.errorWith(e))),
               ),
             ),
           ],
@@ -54,6 +56,8 @@ class VacationApprovalScreen extends ConsumerWidget {
     WidgetRef ref,
     VacationModel vacation,
   ) {
+    final l10n = L10n.of(context);
+    final locale = l10n.isRo ? null : l10n.locale.languageCode;
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +73,10 @@ class VacationApprovalScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(vacation.userName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                  const Text('Pending Request', style: TextStyle(color: AppColors.textLight, fontSize: 11)),
+                  Text(
+                    l10n.pick('Pending request', 'Cerere în așteptare'),
+                    style: const TextStyle(color: AppColors.textLight, fontSize: 11),
+                  ),
                 ],
               ),
             ],
@@ -78,18 +85,42 @@ class VacationApprovalScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDateInfo('From', DateFormat('dd MMM').format(vacation.startDate)),
+              _buildDateInfo(
+                l10n.pick('From', 'De la'),
+                DateFormat('dd MMM', locale).format(vacation.startDate),
+              ),
               const Icon(Icons.arrow_forward, size: 16, color: AppColors.textLight),
-              _buildDateInfo('To', DateFormat('dd MMM').format(vacation.endDate)),
-              _buildDateInfo('Duration', '${vacation.durationInDays} Days'),
+              _buildDateInfo(
+                l10n.pick('Until', 'Până la'),
+                DateFormat('dd MMM', locale).format(vacation.endDate),
+              ),
+              _buildDateInfo(
+                l10n.pick('Duration', 'Durată'),
+                l10n.pick(
+                  '${vacation.durationInDays} days',
+                  '${vacation.durationInDays} zile',
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _buildActionBtn('Reject', Colors.redAccent, () => _handleStatus(context, ref, vacation, 'rejected'))),
+              Expanded(
+                child: _buildActionBtn(
+                  l10n.pick('Reject', 'Respinge'),
+                  Colors.redAccent,
+                  () => _handleStatus(context, ref, vacation, 'rejected'),
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: _buildActionBtn('Approve', Colors.green, () => _handleStatus(context, ref, vacation, 'approved'))),
+              Expanded(
+                child: _buildActionBtn(
+                  l10n.pick('Approve', 'Aprobă'),
+                  Colors.green,
+                  () => _handleStatus(context, ref, vacation, 'approved'),
+                ),
+              ),
             ],
           ),
         ],
@@ -121,14 +152,20 @@ class VacationApprovalScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.beach_access_outlined, size: 64, color: AppColors.textLight.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
-          const Text('No pending requests', style: TextStyle(color: AppColors.textLight, fontSize: 16)),
+          Text(
+            L10n.of(context).pick(
+              'No pending requests',
+              'Nicio cerere în așteptare',
+            ),
+            style: const TextStyle(color: AppColors.textLight, fontSize: 16),
+          ),
         ],
       ),
     );
@@ -148,7 +185,10 @@ class VacationApprovalScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text(L10n.of(context).errorWith(e)),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }

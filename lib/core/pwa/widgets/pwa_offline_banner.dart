@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../pwa_detector.dart';
 
 /// Shows reconnect status when the device goes offline (web PWA focus).
@@ -36,9 +37,14 @@ class _PwaOfflineBannerState extends State<PwaOfflineBanner> {
       });
       if (_wasOffline) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Back online — schedules will refresh.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(
+              L10n.of(context).pick(
+                "You're back online — the schedule will refresh.",
+                'Ești din nou online — programul se va actualiza.',
+              ),
+            ),
+            duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -71,7 +77,10 @@ class _PwaOfflineBannerState extends State<PwaOfflineBanner> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Offline — showing cached schedule',
+                            L10n.of(context).pick(
+                              'Offline — showing the cached schedule',
+                              'Offline — se afișează programul din cache',
+                            ),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.95),
                               fontSize: 12,

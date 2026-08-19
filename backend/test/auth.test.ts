@@ -102,6 +102,7 @@ describe('GET /api/auth/me', () => {
       uid: 'firebase-uid-123',
       email: 'employee@example.com',
       name: 'Test Employee',
+      is_superadmin: false,
     });
     assert.equal(res.body.authProvider, undefined);
   });

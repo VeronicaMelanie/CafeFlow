@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/widgets/app_skeleton.dart';
@@ -89,6 +90,17 @@ class _CoffeeCalendarWidgetState extends ConsumerState<CoffeeCalendarWidget> {
               ),
             ),
             calendarBuilders: CalendarBuilders(
+              dowBuilder: (context, day) {
+                return Center(
+                  child: Text(
+                    L10n.of(context).weekdayShort(day.weekday),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                );
+              },
               defaultBuilder: (context, day, focusedDay) {
                 return _buildCell(day, shifts, false);
               },
@@ -121,7 +133,7 @@ class _CoffeeCalendarWidgetState extends ConsumerState<CoffeeCalendarWidget> {
         );
       },
       loading: () => const AppSkeleton(height: 280, borderRadius: AppSpacing.radiusXl),
-      error: (e, st) => Center(child: Text('Error: $e')),
+      error: (e, st) => Center(child: Text(L10n.of(context).errorWith(e))),
     );
   }
 

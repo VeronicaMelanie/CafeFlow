@@ -11,6 +11,7 @@ import '../../products/presentation/product_providers.dart';
 import '../../scheduling/presentation/scheduling_providers.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/app_skeleton.dart';
@@ -46,13 +47,14 @@ class _ConsumptionEntryScreenState
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).value;
     ref.watch(locationsProvider);
+    final l10n = L10n.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
       body: Column(
         children: [
           ScreenHeader(
-            title: 'Log Consumption',
+            title: l10n.pick('Consumption log', 'Jurnal consum'),
             onBack: () => Navigator.pop(context),
           ),
           Expanded(
@@ -62,7 +64,7 @@ class _ConsumptionEntryScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Daily Consumption',
+                    l10n.pick('Daily consumption', 'Consum zilnic'),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.textDark,
@@ -70,7 +72,10 @@ class _ConsumptionEntryScreenState
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Keep track of what you drink or eat during your shift.',
+                    l10n.pick(
+                      'Keep track of what you drink or eat during your shift.',
+                      'Ține evidența a ceea ce bei sau mănânci în timpul turei.',
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textLight,
                         ),
@@ -91,6 +96,7 @@ class _ConsumptionEntryScreenState
   }
 
   Widget _buildInputCard() {
+    final l10n = L10n.of(context);
     return AppSurface(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -98,14 +104,14 @@ class _ConsumptionEntryScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Product Detail',
+            l10n.pick('Product details', 'Detalii produs'),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildProductSearch(),
           const SizedBox(height: AppSpacing.xxl),
           Text(
-            'Quantity',
+            l10n.pick('Quantity', 'Cantitate'),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -132,7 +138,7 @@ class _ConsumptionEntryScreenState
           ),
           const SizedBox(height: AppSpacing.xxl),
           Text(
-            'Date',
+            l10n.pick('Date', 'Data'),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -153,7 +159,8 @@ class _ConsumptionEntryScreenState
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Text(
-                    DateFormat('dd MMM yyyy').format(_selectedDate),
+                    DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode)
+                        .format(_selectedDate),
                     style: const TextStyle(fontSize: 16),
                   ),
                 ],
@@ -162,14 +169,14 @@ class _ConsumptionEntryScreenState
           ),
           const SizedBox(height: AppSpacing.xxl),
           Text(
-            'Notes (optional)',
+            l10n.pick('Notes (optional)', 'Note (opțional)'),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _notesController,
             decoration: InputDecoration(
-              hintText: 'Add any notes...',
+              hintText: l10n.pick('Add notes...', 'Adaugă note...'),
               filled: true,
               fillColor: AppColors.softPink.withValues(alpha: 0.3),
               border: OutlineInputBorder(
@@ -185,9 +192,12 @@ class _ConsumptionEntryScreenState
 
   Widget _buildProductSearch() {
     final productsAsync = ref.watch(productsProvider);
+    final l10n = L10n.of(context);
     return productsAsync.when(
       loading: () => const AppSkeleton(height: 56, borderRadius: AppSpacing.radiusLg),
-      error: (error, _) => const Text('Could not load products'),
+      error: (error, _) => Text(
+        l10n.pick('Could not load products', 'Nu s-au putut încărca produsele'),
+      ),
       data: (products) {
         final query = _productQueryController.text.trim();
         final suggestions = _productSuggestions(products, query);
@@ -206,10 +216,10 @@ class _ConsumptionEntryScreenState
                 }
               }),
               decoration: InputDecoration(
-                labelText: 'What did you have?',
+                labelText: l10n.pick('What did you have?', 'Ce ai consumat?'),
                 hintText: products.isEmpty
-                    ? 'Type the product name'
-                    : 'Type to search, e.g. latte',
+                    ? l10n.pick('Type the product name', 'Tastează numele produsului')
+                    : l10n.pick('Search, e.g. latte', 'Caută, de ex. latte'),
                 prefixIcon: const Icon(
                   Icons.search,
                   color: AppColors.primaryPink,
@@ -269,9 +279,12 @@ class _ConsumptionEntryScreenState
             ] else if (query.isNotEmpty &&
                 _resolveProduct(products) == null) ...[
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'No catalog match — we will save what you typed.',
-                style: TextStyle(fontSize: 12, color: AppColors.textLight),
+              Text(
+                l10n.pick(
+                  'Not in the catalog — we\'ll save what you typed.',
+                  'Nu există în catalog — salvăm ce ai scris.',
+                ),
+                style: const TextStyle(fontSize: 12, color: AppColors.textLight),
               ),
             ],
           ],
@@ -345,6 +358,7 @@ class _ConsumptionEntryScreenState
   Widget _buildPrimaryCTA(String? userId) {
     final bool isValid =
         _productQueryController.text.trim().isNotEmpty && userId != null;
+    final l10n = L10n.of(context);
     return Container(
       width: double.infinity,
       height: 60,
@@ -364,7 +378,9 @@ class _ConsumptionEntryScreenState
           ),
         ),
         child: Text(
-          _editingId != null ? 'Update Entry' : 'Add to My Log',
+          _editingId != null
+              ? l10n.pick('Update entry', 'Actualizează înregistrarea')
+              : l10n.pick('Add to log', 'Adaugă la jurnal'),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -377,6 +393,7 @@ class _ConsumptionEntryScreenState
 
   Widget _buildHistorySection(String? userId) {
     if (userId == null) return const SizedBox.shrink();
+    final l10n = L10n.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,7 +402,7 @@ class _ConsumptionEntryScreenState
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent History',
+              l10n.pick('Recent history', 'Istoric recent'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             _buildFilterDropdown(),
@@ -401,14 +418,17 @@ class _ConsumptionEntryScreenState
               return const AppLoadingIndicator(size: 24);
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text(l10n.errorWith(snapshot.error!)));
             }
 
             final consumptions = _filterConsumptions(snapshot.data ?? []);
 
             if (consumptions.isEmpty) {
-              return const Text(
-                'No consumptions logged yet',
+              return Text(
+                l10n.pick(
+                  'No consumption logged yet',
+                  'Niciun consum înregistrat încă',
+                ),
                 style: TextStyle(color: AppColors.textLight),
               );
             }
@@ -429,6 +449,7 @@ class _ConsumptionEntryScreenState
   }
 
   Widget _buildFilterDropdown() {
+    final l10n = L10n.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
@@ -440,11 +461,23 @@ class _ConsumptionEntryScreenState
       child: DropdownButton<String>(
         value: _filterPeriod,
         underline: const SizedBox.shrink(),
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('All Time')),
-          DropdownMenuItem(value: 'today', child: Text('Today')),
-          DropdownMenuItem(value: 'week', child: Text('This Week')),
-          DropdownMenuItem(value: 'month', child: Text('This Month')),
+        items: [
+          DropdownMenuItem(
+            value: 'all',
+            child: Text(l10n.pick('All time', 'Tot timpul')),
+          ),
+          DropdownMenuItem(
+            value: 'today',
+            child: Text(l10n.pick('Today', 'Azi')),
+          ),
+          DropdownMenuItem(
+            value: 'week',
+            child: Text(l10n.pick('This week', 'Săptămâna aceasta')),
+          ),
+          DropdownMenuItem(
+            value: 'month',
+            child: Text(l10n.pick('This month', 'Luna aceasta')),
+          ),
         ],
         onChanged: (value) => setState(() => _filterPeriod = value!),
       ),
@@ -472,6 +505,7 @@ class _ConsumptionEntryScreenState
   }
 
   Widget _buildConsumptionCard(ConsumptionModel consumption) {
+    final l10n = L10n.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -504,7 +538,7 @@ class _ConsumptionEntryScreenState
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  '${consumption.quantity}x • ${DateFormat('dd MMM, HH:mm').format(consumption.date)}',
+                  '${consumption.quantity}x • ${DateFormat('dd MMM, HH:mm', l10n.isRo ? null : l10n.locale.languageCode).format(consumption.displayDateTime)}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textLight,
@@ -560,7 +594,9 @@ class _ConsumptionEntryScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not delete: $e'),
+          content: Text(
+            '${L10n.of(context).pick('Could not delete', 'Nu s-a putut șterge')}: $e',
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.redAccent,
         ),
@@ -611,7 +647,9 @@ class _ConsumptionEntryScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not save: ${_humanizeSaveError(e)}'),
+            content: Text(
+              '${L10n.of(context).pick('Could not save', 'Nu s-a putut salva')}: ${_humanizeSaveError(e)}',
+            ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.redAccent,
           ),
@@ -626,8 +664,14 @@ class _ConsumptionEntryScreenState
         SnackBar(
           content: Text(
             wasEditing
-                ? 'Entry updated!'
-                : 'Logged! Enjoy your coffee! ☕',
+                ? L10n.of(context).pick(
+                    'Entry updated!',
+                    'Înregistrare actualizată!',
+                  )
+                : L10n.of(context).pick(
+                    'Saved! Enjoy! ☕',
+                    'Salvat! Poftă bună! ☕',
+                  ),
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.primaryPink,
@@ -663,7 +707,10 @@ class _ConsumptionEntryScreenState
 
   String _humanizeSaveError(Object error) {
     if (error is ApiHttpException && error.message == 'invalid_consumption') {
-      return 'could not save this entry. Check the date, quantity, and try again.';
+      return L10n.of(context).pick(
+        'could not save this entry. Check the date and quantity, then try again.',
+        'nu s-a putut salva această înregistrare. Verifică data, cantitatea și încearcă din nou.',
+      );
     }
     return '$error';
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_skeleton.dart';
@@ -22,20 +23,27 @@ class _EmployeeManagementScreenState
     extends ConsumerState<EmployeeManagementScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AdminGuard(
       child: Scaffold(
         backgroundColor: AppColors.offWhite,
         body: Column(
           children: [
             ScreenHeader(
-              title: 'Our Team',
+              title: l10n.pick('Our team', 'Echipa noastră'),
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
               child: ref.watch(allUsersProvider).when(
                 loading: () => const AppLoadingIndicator(),
-                error: (error, _) =>
-                    const Center(child: Text('Error loading employees')),
+                error: (error, _) => Center(
+                  child: Text(
+                    l10n.pick(
+                      'Error loading employees',
+                      'Eroare la încărcarea angajaților',
+                    ),
+                  ),
+                ),
                 data: (users) {
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(
@@ -59,6 +67,7 @@ class _EmployeeManagementScreenState
 
   Widget _buildEmployeeCard(UserModel user) {
     final isAdmin = user.role == 'admin';
+    final l10n = L10n.of(context);
     return AppSurface(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -138,7 +147,11 @@ class _EmployeeManagementScreenState
                 ),
               ],
               const Spacer(),
-              _buildBadge(user.workType, AppColors.softGreen, Colors.green),
+              _buildBadge(
+                l10n.workTypeLabel(user.workType),
+                AppColors.softGreen,
+                Colors.green,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -148,8 +161,14 @@ class _EmployeeManagementScreenState
               const SizedBox(width: 4),
               Text(
                 user.employmentDate == null
-                    ? 'Employment date: not set'
-                    : 'Started: ${DateFormat('dd MMM yyyy').format(user.employmentDate!)}',
+                    ? l10n.pick(
+                        'Start date: not set',
+                        'Data angajării: nesetată',
+                      )
+                    : l10n.pick(
+                        'Started: ${DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode).format(user.employmentDate!)}',
+                        'Început: ${DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode).format(user.employmentDate!)}',
+                      ),
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textLight,
@@ -163,7 +182,10 @@ class _EmployeeManagementScreenState
               Icon(Icons.access_time, size: 14, color: AppColors.textLight),
               const SizedBox(width: 4),
               Text(
-                'Target: ${user.monthlyTargetHours}h/month',
+                l10n.pick(
+                  'Target: ${user.monthlyTargetHours}h/month',
+                  'Țintă: ${user.monthlyTargetHours}h/lună',
+                ),
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textLight,
@@ -173,8 +195,8 @@ class _EmployeeManagementScreenState
               if (!isAdmin)
                 TextButton(
                   onPressed: () => _showEditDialog(user),
-                  child: const Text(
-                    'Edit',
+                  child: Text(
+                    l10n.pick('Edit', 'Editează'),
                     style: TextStyle(
                       color: AppColors.primaryPink,
                       fontSize: 12,
@@ -207,6 +229,7 @@ class _EmployeeManagementScreenState
   }
 
   void _showEditDialog(UserModel user) {
+    final l10n = L10n.of(context);
     final TextEditingController nameController = TextEditingController(
       text: user.name,
     );
@@ -222,31 +245,37 @@ class _EmployeeManagementScreenState
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Edit Employee'),
+        title: Text(l10n.pick('Edit employee', 'Editează angajat')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(
+                  labelText: l10n.pick('Name', 'Nume'),
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: targetController,
-                decoration: const InputDecoration(
-                  labelText: 'Monthly Target Hours',
+                decoration: InputDecoration(
+                  labelText: l10n.pick(
+                    'Monthly target hours',
+                    'Ore țintă pe lună',
+                  ),
                 ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Employment Start Date'),
+                title: Text(l10n.pick('Start date', 'Data începerii')),
                 subtitle: Text(
                   selectedEmploymentDate == null
-                      ? 'Not set'
-                      : DateFormat('dd MMM yyyy').format(selectedEmploymentDate!),
+                      ? l10n.pick('Not set', 'Nesetată')
+                      : DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode)
+                          .format(selectedEmploymentDate!),
                 ),
                 trailing: const Icon(Icons.calendar_today_outlined),
                 onTap: () async {
@@ -268,16 +297,27 @@ class _EmployeeManagementScreenState
                     onPressed: () {
                       setDialogState(() => selectedEmploymentDate = null);
                     },
-                    child: const Text('Clear employment date'),
+                    child: Text(
+                      l10n.pick('Clear start date', 'Șterge data angajării'),
+                    ),
                   ),
                 ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: selectedWorkType,
-                decoration: const InputDecoration(labelText: 'Work Type'),
-                items: const ['Full-time', 'Part-time'].map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type));
-                }).toList(),
+                decoration: InputDecoration(
+                  labelText: l10n.pick('Contract type', 'Tip contract'),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'Full-time',
+                    child: Text(l10n.workTypeLabel('Full-time')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Part-time',
+                    child: Text(l10n.workTypeLabel('Part-time')),
+                  ),
+                ],
                 onChanged: (value) {
                   if (value != null) selectedWorkType = value;
                 },
@@ -293,8 +333,11 @@ class _EmployeeManagementScreenState
                           : selectedLocation);
                   return DropdownButtonFormField<String>(
                     value: locationNames.contains(value) ? value : null,
-                    decoration: const InputDecoration(
-                      labelText: 'Primary Location',
+                    decoration: InputDecoration(
+                      labelText: l10n.pick(
+                        'Primary location',
+                        'Locație principală',
+                      ),
                     ),
                     items: locationNames.map((loc) {
                       return DropdownMenuItem(value: loc, child: Text(loc));
@@ -311,7 +354,7 @@ class _EmployeeManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.pick('Cancel', 'Anulează')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -334,7 +377,7 @@ class _EmployeeManagementScreenState
               ref.invalidate(allUsersProvider);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Save'),
+            child: Text(l10n.pick('Save', 'Salvează')),
           ),
         ],
       ),

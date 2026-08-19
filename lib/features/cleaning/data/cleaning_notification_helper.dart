@@ -20,8 +20,8 @@ class CleaningNotificationHelper {
     final reminderTime = shiftEndTime.subtract(const Duration(minutes: 30));
     await NotificationService().scheduleShiftReminder(
       id: _reminderBaseId + employeeId.hashCode.abs() % 900,
-      title: 'Cleaning reminder',
-      body: "Don't forget to complete your cleaning tasks.",
+      title: 'Reminder curățenie',
+      body: 'Nu uita să completezi sarcinile de curățenie.',
       scheduledDate: reminderTime,
     );
   }
@@ -41,8 +41,8 @@ class CleaningNotificationHelper {
     await prefs.setBool(alertKey, true);
     try {
       await NotificationService().showInstantNotification(
-        title: 'Cleaning checklist complete',
-        body: '$employeeName completed all ${listKey.label} tasks.',
+        title: 'Lista de curățenie este completă',
+        body: '$employeeName a bifat toate sarcinile de ${listKey.label}.',
       );
     } catch (_) {
       // Platform notifications are unavailable in unit tests.

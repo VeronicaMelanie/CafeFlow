@@ -38,7 +38,7 @@ Future<void> _pumpDashboard(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 200));
   await tester.scrollUntilVisible(
-    find.text('Cleaning To-Do List'),
+    find.text('Lista de curățenie'),
     120,
     scrollable: find.byType(Scrollable).first,
   );
@@ -49,10 +49,10 @@ void main() {
   testWidgets('Cleaning To-Do List card exists on employee dashboard',
       (tester) async {
     await _pumpDashboard(tester);
-    expect(find.text('Cleaning To-Do List'), findsOneWidget);
-    expect(find.text('Consumption'), findsOneWidget);
-    expect(find.text('Availability'), findsOneWidget);
-    expect(find.text('Vacation Status'), findsOneWidget);
+    expect(find.text('Lista de curățenie'), findsOneWidget);
+    expect(find.text('Consum'), findsOneWidget);
+    expect(find.text('Disponibilitate'), findsOneWidget);
+    expect(find.text('Status concediu'), findsOneWidget);
   });
 
   testWidgets('four dashboard cards use a balanced 2x2 grid', (tester) async {

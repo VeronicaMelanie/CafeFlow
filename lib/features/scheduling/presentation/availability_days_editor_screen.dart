@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/screen_header.dart';
@@ -63,6 +64,7 @@ class _AvailabilityDaysEditorScreenState
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
     final repo = ref.read(availabilityRepositoryProvider);
+    final l10n = L10n.of(context);
 
     setState(() => _isSaving = true);
     try {
@@ -82,7 +84,12 @@ class _AvailabilityDaysEditorScreenState
             config.end.hour, config.end.minute,
           );
           if (!customEnd.isAfter(customStart)) {
-            throw Exception('Invalid hours on ${DateFormat.MMMd().format(day)}');
+            throw Exception(
+              l10n.pick(
+                'Invalid hours on ${DateFormat.MMMd(l10n.isRo ? null : l10n.locale.languageCode).format(day)}',
+                'Ore invalide pe ${DateFormat.MMMd(l10n.isRo ? null : l10n.locale.languageCode).format(day)}',
+              ),
+            );
           }
         }
 
@@ -96,7 +103,11 @@ class _AvailabilityDaysEditorScreenState
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Availability saved')),
+          SnackBar(
+            content: Text(
+              l10n.pick('Availability saved', 'Disponibilitate salvată'),
+            ),
+          ),
         );
         Navigator.pop(context, true);
       }
@@ -113,6 +124,7 @@ class _AvailabilityDaysEditorScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final user = ref.watch(currentUserProvider).value;
     final location = user?.primaryLocation ??
         LocationCatalog.preferredName(
@@ -124,7 +136,7 @@ class _AvailabilityDaysEditorScreenState
       body: Column(
         children: [
           ScreenHeader(
-            title: 'Edit availability',
+            title: l10n.pick('Edit availability', 'Editează disponibilitatea'),
             onBack: () => Navigator.pop(context),
           ),
           Expanded(
@@ -132,7 +144,10 @@ class _AvailabilityDaysEditorScreenState
               padding: const EdgeInsets.all(AppSpacing.xl),
               children: [
                 Text(
-                  'Configure each day. Full Time = 07:00–18:00 (11h).',
+                  l10n.pick(
+                    'Set up each day. All day = 07:00–18:00 (11h).',
+                    'Configurează fiecare zi. Toată ziua = 07:00–18:00 (11h).',
+                  ),
                   style: TextStyle(
                     color: AppColors.textDark.withValues(alpha: 0.7),
                     fontSize: 13,
@@ -142,7 +157,7 @@ class _AvailabilityDaysEditorScreenState
                 ..._configs.entries.map((e) => _buildDayTile(e.key, e.value, location)),
                 const SizedBox(height: AppSpacing.xxl),
                 AppButton(
-                  text: 'Save availability',
+                  text: l10n.pick('Save availability', 'Salvează disponibilitatea'),
                   isLoading: _isSaving,
                   onPressed: _isSaving ? null : _save,
                 ),
@@ -155,6 +170,7 @@ class _AvailabilityDaysEditorScreenState
   }
 
   Widget _buildDayTile(DateTime day, _DayConfig config, String location) {
+    final l10n = L10n.of(context);
     return AppSurface(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -165,7 +181,7 @@ class _AvailabilityDaysEditorScreenState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  DateFormat('EEE, MMM d').format(day),
+                  DateFormat('EEE, MMM d', l10n.isRo ? null : l10n.locale.languageCode).format(day),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 _CapacityChip(date: day, location: location),
@@ -176,11 +192,11 @@ class _AvailabilityDaysEditorScreenState
               segments: [
                 ButtonSegment(
                   value: AvailabilityShiftType.fullTime,
-                  label: Text(AvailabilityShiftType.fullTime.displayLabel),
+                  label: Text(l10n.pick('All day', 'Toată ziua')),
                 ),
                 ButtonSegment(
                   value: AvailabilityShiftType.customHours,
-                  label: Text(AvailabilityShiftType.customHours.displayLabel),
+                  label: Text(l10n.pick('Custom hours', 'Ore personalizate')),
                 ),
               ],
               selected: {config.shiftType},
@@ -200,7 +216,12 @@ class _AvailabilityDaysEditorScreenState
                         );
                         if (t != null) setState(() => config.start = t);
                       },
-                      child: Text('Start ${config.start.format(context)}'),
+                      child: Text(
+                        l10n.pick(
+                          'Start ${config.start.format(context)}',
+                          'Început ${config.start.format(context)}',
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -213,7 +234,12 @@ class _AvailabilityDaysEditorScreenState
                         );
                         if (t != null) setState(() => config.end = t);
                       },
-                      child: Text('End ${config.end.format(context)}'),
+                      child: Text(
+                        l10n.pick(
+                          'End ${config.end.format(context)}',
+                          'Sfârșit ${config.end.format(context)}',
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -258,17 +284,24 @@ class _CapacityChip extends ConsumerWidget {
         }
         final data = snapshot.data!;
         final remaining = data['remainingHours'] as double;
+        final l10n = L10n.of(context);
         Color color;
         String label;
         if (data['isFull'] == true) {
           color = Colors.red.shade100;
-          label = 'Full';
+          label = l10n.pick('Full', 'Complet');
         } else if (data['isAlmostFull'] == true) {
           color = Colors.amber.shade100;
-          label = '${remaining.toStringAsFixed(0)}h left';
+          label = l10n.pick(
+            '${remaining.toStringAsFixed(0)}h left',
+            '${remaining.toStringAsFixed(0)}h rămase',
+          );
         } else {
           color = Colors.green.shade100;
-          label = '${remaining.toStringAsFixed(0)}h left';
+          label = l10n.pick(
+            '${remaining.toStringAsFixed(0)}h left',
+            '${remaining.toStringAsFixed(0)}h rămase',
+          );
         }
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

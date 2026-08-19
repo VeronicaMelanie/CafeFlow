@@ -85,7 +85,7 @@ class SchedulingService {
     final capacity = await getCapacityInfo(shift.date, shift.location);
 
     if (capacity['isFull'] == true) {
-      return 'This location is fully booked for this day.';
+      return 'Această locație este complet rezervată pentru această zi.';
     }
 
     if (capacity['maxEmployees'] == true) {
@@ -103,13 +103,13 @@ class SchedulingService {
       }
 
       if (concurrentEmployees >= _maxEmployeesPerShift(config)) {
-        return 'This time slot is full (max ${_maxEmployeesPerShift(config)} employees).';
+        return 'Acest interval orar este ocupat (maxim ${_maxEmployeesPerShift(config)} angajați).';
       }
     }
 
     final remainingHours = capacity['remainingHours'] as double;
     if (remainingHours < shift.durationInHours) {
-      return 'Not enough hours available. Only ${remainingHours.toStringAsFixed(1)}h remaining.';
+      return 'Nu sunt suficiente ore disponibile. Mai rămân ${remainingHours.toStringAsFixed(1)}h.';
     }
 
     return null; // Valid

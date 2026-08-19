@@ -2,6 +2,13 @@ import express from 'express';
 import { prisma } from './db.js';
 import { requireAuth } from './auth/requireAuth.js';
 import type { TokenVerifier } from './auth/verifyToken.js';
+import { getFirebaseAuth } from './firebase.js';
+import {
+  isPrivilegedActor,
+  isSuperadminEmail,
+  isSuperadminSession,
+  locationCodeFromName,
+} from './superadmin.js';
 
 function formatDateOnly(value: Date | null): string | null {
   if (!value) return null;
@@ -165,7 +172,7 @@ function parseAvailabilityWrite(
 async function findAppUserByFirebaseUid(firebaseUid: string) {
   return prisma.user.findUnique({
     where: { firebaseUid },
-    select: { id: true, firebaseUid: true, role: true },
+    select: { id: true, firebaseUid: true, role: true, email: true },
   });
 }
 
@@ -218,6 +225,65 @@ function serializeUser(row: PublicUserRow) {
 function isPredefinedAdminName(name: string): boolean {
   const normalized = name.trim().toLowerCase();
   return ADMIN_NAME_TOKENS.some((token) => normalized.includes(token));
+}
+
+const PRODUCT_PUBLIC_SELECT = {
+  id: true,
+  name: true,
+  categoryId: true,
+  sku: true,
+  isActive: true,
+} as const;
+
+function serializeProduct(row: {
+  id: string;
+  name: string;
+  categoryId: string | null;
+  sku: string | null;
+  isActive: boolean;
+}) {
+  return {
+    id: row.id,
+    name: row.name,
+    category_id: row.categoryId,
+    sku: row.sku,
+    is_active: row.isActive,
+  };
+}
+
+function serializeLocation(row: {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  openedOn: Date | null;
+  closedOn: Date | null;
+}) {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    is_active: row.isActive,
+    opened_on: formatDateOnly(row.openedOn),
+    closed_on: formatDateOnly(row.closedOn),
+  };
+}
+
+async function deleteUserAndRelations(userId: string) {
+  await prisma.$transaction(async (tx) => {
+    await tx.notification.deleteMany({ where: { userId } });
+    await tx.cleaningCompletion.deleteMany({ where: { userId } });
+    await tx.consumption.deleteMany({ where: { userId } });
+    await tx.shift.deleteMany({ where: { userId } });
+    await tx.availability.deleteMany({ where: { userId } });
+    await tx.vacation.deleteMany({ where: { userId } });
+    await tx.userLocation.deleteMany({ where: { userId } });
+    await tx.schedulingConfig.updateMany({
+      where: { enabledById: userId },
+      data: { enabledById: null },
+    });
+    await tx.user.delete({ where: { id: userId } });
+  });
 }
 
 function mapAuthProvider(value: string | undefined): AuthProviderValue {
@@ -1423,6 +1489,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
       uid: user.uid,
       email: user.email ?? null,
       name: user.name ?? null,
+      is_superadmin: isSuperadminSession(user),
     });
   });
 
@@ -1533,7 +1600,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
       }
 
       const isOwner = actor.id === existing.id;
-      const isAdmin = actor.role === 'admin';
+      const isAdmin = isPrivilegedActor(actor, authUser);
       if (!isOwner && !isAdmin) {
         res.status(403).json({ error: 'forbidden' });
         return;
@@ -1631,7 +1698,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -1719,7 +1786,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
         res.status(400).json({ error: 'invalid_shift' });
         return;
       }
-      if (actor.role !== 'admin' && parsed.userId !== actor.id) {
+      if (!isPrivilegedActor(actor, authUser) && parsed.userId !== actor.id) {
         res.status(403).json({ error: 'forbidden' });
         return;
       }
@@ -1801,7 +1868,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (actor.role !== 'admin' && existing.userId !== actor.id) {
+        if (!isPrivilegedActor(actor, authUser) && existing.userId !== actor.id) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -1875,7 +1942,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (actor.role !== 'admin' && existing.userId !== actor.id) {
+        if (!isPrivilegedActor(actor, authUser) && existing.userId !== actor.id) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -1995,7 +2062,10 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (existing.userId !== actor.id) {
+        if (
+          existing.userId !== actor.id &&
+          !isPrivilegedActor(actor, authUser)
+        ) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2050,7 +2120,10 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (existing.userId !== actor.id) {
+        if (
+          existing.userId !== actor.id &&
+          !isPrivilegedActor(actor, authUser)
+        ) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2146,7 +2219,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2252,7 +2325,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
 
         let targetUserId = actor.id;
         if (parsed.clientUserId && parsed.clientUserId !== actor.id) {
-          if (actor.role !== 'admin') {
+          if (!isPrivilegedActor(actor, authUser)) {
             res.status(403).json({ error: 'forbidden' });
             return;
           }
@@ -2330,7 +2403,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2408,7 +2481,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2465,7 +2538,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2523,7 +2596,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2574,7 +2647,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2647,7 +2720,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
-        if (actor.role !== 'admin') {
+        if (!isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2809,7 +2882,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (existing.userId !== actor.id && actor.role !== 'admin') {
+        if (existing.userId !== actor.id && !isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2875,7 +2948,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
           res.status(404).json({ error: 'not_found' });
           return;
         }
-        if (existing.userId !== actor.id && actor.role !== 'admin') {
+        if (existing.userId !== actor.id && !isPrivilegedActor(actor, authUser)) {
           res.status(403).json({ error: 'forbidden' });
           return;
         }
@@ -2914,6 +2987,464 @@ export function createApp(verifyIdToken: TokenVerifier) {
       res.status(500).json({ error: 'internal_error' });
     }
   });
+
+  async function requireSuperadmin(
+    req: express.Request,
+    res: express.Response,
+  ) {
+    const authUser = req.authUser;
+    if (!authUser) {
+      res.status(401).json({ error: 'unauthorized' });
+      return null;
+    }
+    if (!isSuperadminSession(authUser)) {
+      res.status(403).json({ error: 'forbidden' });
+      return null;
+    }
+    const actor = await findAppUserByFirebaseUid(authUser.uid);
+    if (!actor) {
+      res.status(403).json({ error: 'forbidden' });
+      return null;
+    }
+    return { authUser, actor };
+  }
+
+  app.get(
+    '/api/superadmin/overview',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const [
+          users,
+          products,
+          locations,
+          shifts,
+          availability,
+          vacations,
+          consumptions,
+        ] = await Promise.all([
+          prisma.user.count(),
+          prisma.product.count(),
+          prisma.location.count(),
+          prisma.shift.count(),
+          prisma.availability.count(),
+          prisma.vacation.count(),
+          prisma.consumption.count(),
+        ]);
+        res.json({
+          users,
+          products,
+          locations,
+          shifts,
+          availability,
+          vacations,
+          consumptions,
+        });
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.patch(
+    '/api/superadmin/users/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_user' });
+          return;
+        }
+        if (
+          req.body == null ||
+          typeof req.body !== 'object' ||
+          Array.isArray(req.body)
+        ) {
+          res.status(400).json({ error: 'invalid_user' });
+          return;
+        }
+        const data = req.body as Record<string, unknown>;
+        const patch: { name?: string; role?: 'admin' | 'employee' } = {};
+        if (Object.hasOwn(data, 'name')) {
+          if (typeof data.name !== 'string' || data.name.trim() === '') {
+            res.status(400).json({ error: 'invalid_user' });
+            return;
+          }
+          patch.name = data.name.trim();
+        }
+        if (Object.hasOwn(data, 'role')) {
+          if (data.role !== 'admin' && data.role !== 'employee') {
+            res.status(400).json({ error: 'invalid_user' });
+            return;
+          }
+          patch.role = data.role;
+        }
+        if (patch.name === undefined && patch.role === undefined) {
+          res.status(400).json({ error: 'invalid_user' });
+          return;
+        }
+
+        const existing = await prisma.user.findUnique({
+          where: { id },
+          select: USER_PUBLIC_SELECT,
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+
+        const row = await prisma.user.update({
+          where: { id },
+          data: patch,
+          select: USER_PUBLIC_SELECT,
+        });
+        res.json(serializeUser(row));
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.delete(
+    '/api/superadmin/users/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        const gate = await requireSuperadmin(req, res);
+        if (!gate) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_user' });
+          return;
+        }
+
+        const existing = await prisma.user.findUnique({
+          where: { id },
+          select: { id: true, firebaseUid: true, email: true },
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+        if (existing.id === gate.actor.id) {
+          res.status(400).json({ error: 'invalid_user' });
+          return;
+        }
+        if (isSuperadminEmail(existing.email)) {
+          res.status(403).json({ error: 'forbidden' });
+          return;
+        }
+
+        await deleteUserAndRelations(existing.id);
+        try {
+          await getFirebaseAuth().deleteUser(existing.firebaseUid);
+        } catch {
+          // Postgres row is already gone; login recreation is acceptable.
+        }
+        res.status(204).send();
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.post(
+    '/api/superadmin/products',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        if (
+          req.body == null ||
+          typeof req.body !== 'object' ||
+          Array.isArray(req.body)
+        ) {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+        const data = req.body as Record<string, unknown>;
+        if (typeof data.name !== 'string' || data.name.trim() === '') {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+        const name = data.name.trim();
+        let sku: string | null | undefined;
+        if (Object.hasOwn(data, 'sku')) {
+          if (data.sku !== null && typeof data.sku !== 'string') {
+            res.status(400).json({ error: 'invalid_product' });
+            return;
+          }
+          sku = typeof data.sku === 'string' ? data.sku.trim() || null : null;
+        }
+        const duplicate = await prisma.product.findFirst({
+          where: { name: { equals: name, mode: 'insensitive' } },
+          select: { id: true },
+        });
+        if (duplicate) {
+          res.status(409).json({ error: 'conflict' });
+          return;
+        }
+        const row = await prisma.product.create({
+          data: {
+            name,
+            ...(sku !== undefined ? { sku } : {}),
+            isActive: data.is_active === false ? false : true,
+          },
+          select: PRODUCT_PUBLIC_SELECT,
+        });
+        res.status(201).json(serializeProduct(row));
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          res.status(409).json({ error: 'conflict' });
+          return;
+        }
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.patch(
+    '/api/superadmin/products/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+        if (
+          req.body == null ||
+          typeof req.body !== 'object' ||
+          Array.isArray(req.body)
+        ) {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+        const data = req.body as Record<string, unknown>;
+        const patch: {
+          name?: string;
+          sku?: string | null;
+          isActive?: boolean;
+        } = {};
+        if (Object.hasOwn(data, 'name')) {
+          if (typeof data.name !== 'string' || data.name.trim() === '') {
+            res.status(400).json({ error: 'invalid_product' });
+            return;
+          }
+          patch.name = data.name.trim();
+        }
+        if (Object.hasOwn(data, 'sku')) {
+          if (data.sku !== null && typeof data.sku !== 'string') {
+            res.status(400).json({ error: 'invalid_product' });
+            return;
+          }
+          patch.sku = typeof data.sku === 'string' ? data.sku.trim() || null : null;
+        }
+        if (Object.hasOwn(data, 'is_active')) {
+          if (typeof data.is_active !== 'boolean') {
+            res.status(400).json({ error: 'invalid_product' });
+            return;
+          }
+          patch.isActive = data.is_active;
+        }
+        if (
+          patch.name === undefined &&
+          patch.sku === undefined &&
+          patch.isActive === undefined
+        ) {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+
+        const existing = await prisma.product.findUnique({
+          where: { id },
+          select: { id: true },
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+
+        const row = await prisma.product.update({
+          where: { id },
+          data: patch,
+          select: PRODUCT_PUBLIC_SELECT,
+        });
+        res.json(serializeProduct(row));
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          res.status(409).json({ error: 'conflict' });
+          return;
+        }
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.delete(
+    '/api/superadmin/products/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_product' });
+          return;
+        }
+        const existing = await prisma.product.findUnique({
+          where: { id },
+          select: { id: true },
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+        await prisma.$transaction(async (tx) => {
+          await tx.consumption.deleteMany({ where: { productId: id } });
+          await tx.product.delete({ where: { id } });
+        });
+        res.status(204).send();
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.post(
+    '/api/superadmin/locations',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        if (
+          req.body == null ||
+          typeof req.body !== 'object' ||
+          Array.isArray(req.body)
+        ) {
+          res.status(400).json({ error: 'invalid_location' });
+          return;
+        }
+        const data = req.body as Record<string, unknown>;
+        if (typeof data.name !== 'string' || data.name.trim() === '') {
+          res.status(400).json({ error: 'invalid_location' });
+          return;
+        }
+        const name = data.name.trim();
+        let code =
+          typeof data.code === 'string' && data.code.trim() !== ''
+            ? locationCodeFromName(data.code)
+            : locationCodeFromName(name);
+        const taken = await prisma.location.findUnique({
+          where: { code },
+          select: { id: true },
+        });
+        if (taken) {
+          code = `${code}_${Date.now().toString(36).slice(-4)}`;
+        }
+        const row = await prisma.location.create({
+          data: { name, code, isActive: true },
+        });
+        res.status(201).json(serializeLocation(row));
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          res.status(409).json({ error: 'conflict' });
+          return;
+        }
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.patch(
+    '/api/superadmin/locations/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_location' });
+          return;
+        }
+        if (
+          req.body == null ||
+          typeof req.body !== 'object' ||
+          Array.isArray(req.body)
+        ) {
+          res.status(400).json({ error: 'invalid_location' });
+          return;
+        }
+        const data = req.body as Record<string, unknown>;
+        const patch: { name?: string; isActive?: boolean } = {};
+        if (Object.hasOwn(data, 'name')) {
+          if (typeof data.name !== 'string' || data.name.trim() === '') {
+            res.status(400).json({ error: 'invalid_location' });
+            return;
+          }
+          patch.name = data.name.trim();
+        }
+        if (Object.hasOwn(data, 'is_active')) {
+          if (typeof data.is_active !== 'boolean') {
+            res.status(400).json({ error: 'invalid_location' });
+            return;
+          }
+          patch.isActive = data.is_active;
+        }
+        if (patch.name === undefined && patch.isActive === undefined) {
+          res.status(400).json({ error: 'invalid_location' });
+          return;
+        }
+        const existing = await prisma.location.findUnique({
+          where: { id },
+          select: { id: true },
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+        const row = await prisma.location.update({
+          where: { id },
+          data: patch,
+        });
+        res.json(serializeLocation(row));
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
+
+  app.delete(
+    '/api/superadmin/vacations/:id',
+    requireAuth(verifyIdToken),
+    async (req, res) => {
+      try {
+        if (!(await requireSuperadmin(req, res))) return;
+        const id = routeUuid(req.params.id);
+        if (!id) {
+          res.status(400).json({ error: 'invalid_vacation' });
+          return;
+        }
+        const existing = await prisma.vacation.findUnique({
+          where: { id },
+          select: { id: true },
+        });
+        if (!existing) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+        await prisma.vacation.delete({ where: { id } });
+        res.status(204).send();
+      } catch {
+        res.status(500).json({ error: 'internal_error' });
+      }
+    },
+  );
 
   app.get('/api/audit', requireAuth(verifyIdToken), async (_req, res) => {
     try {

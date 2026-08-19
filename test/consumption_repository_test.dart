@@ -38,6 +38,9 @@ void main() {
     expect(model.quantity, 2);
     expect(model.date, DateTime(2026, 8, 13));
     expect(model.date.isUtc, isFalse);
+    expect(model.loggedAt, DateTime.utc(2026, 8, 13, 9, 15).toLocal());
+    expect(model.displayDateTime.hour, DateTime.utc(2026, 8, 13, 9, 15).toLocal().hour);
+    expect(model.displayDateTime.minute, 15);
     expect(model.notes, 'after shift');
   });
 

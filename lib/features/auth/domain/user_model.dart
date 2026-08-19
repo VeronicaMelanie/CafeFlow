@@ -19,6 +19,7 @@ class UserModel {
   final String? contractType; // 'full_time' | 'part_time'
   final bool needsContractType;
   final String? authProvider; // 'google' | 'email'
+  final bool isSuperadmin;
 
   UserModel({
     required this.uid,
@@ -36,6 +37,7 @@ class UserModel {
     this.contractType,
     this.needsContractType = false,
     this.authProvider,
+    this.isSuperadmin = false,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
@@ -126,4 +128,26 @@ class UserModel {
   }
 
   bool get isAdmin => role == 'admin';
+
+  UserModel withSuperadmin(bool value) {
+    if (isSuperadmin == value) return this;
+    return UserModel(
+      uid: uid,
+      postgresId: postgresId,
+      email: email,
+      name: name,
+      role: role,
+      workType: workType,
+      monthlyTargetHours: monthlyTargetHours,
+      primaryLocation: primaryLocation,
+      secondaryLocation: secondaryLocation,
+      employmentDate: employmentDate,
+      fcmToken: fcmToken,
+      availability: availability,
+      contractType: contractType,
+      needsContractType: needsContractType,
+      authProvider: authProvider,
+      isSuperadmin: value,
+    );
+  }
 }

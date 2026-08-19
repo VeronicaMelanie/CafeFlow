@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/cleaning_list_key.dart';
@@ -23,7 +24,7 @@ class CleaningDaySelector extends StatelessWidget {
         children: [
           for (final key in CleaningListKey.ordered) ...[
             _CleaningDayChip(
-              label: key.shortLabel,
+              label: key.shortLabelFor(L10n.of(context)),
               isSelected: selectedKey == key,
               onTap: () => onChanged(key),
             ),

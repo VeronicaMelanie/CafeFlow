@@ -16,10 +16,11 @@ class AuthRepository {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _usersRepository = usersRepository,
-        _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance {
-    _googleSignIn = googleSignIn ??
+  }) : _usersRepository = usersRepository,
+       _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance {
+    _googleSignIn =
+        googleSignIn ??
         GoogleSignIn(
           clientId: kIsWeb
               ? '925861994797-80vrot56p4iimj07ho21h51khr8p21sm.apps.googleusercontent.com'
@@ -66,6 +67,8 @@ class AuthRepository {
           .signInWithEmailAndPassword(email: email, password: password);
       final User? user = userCredential.user;
       if (user != null) {
+        await user.reload();
+        await user.getIdToken(true);
         return await createUserInFirestoreIfNotExists(user);
       }
     } on FirebaseAuthException catch (e) {
@@ -87,6 +90,9 @@ class AuthRepository {
       final User? user = userCredential.user;
       if (user != null) {
         await user.updateDisplayName(name);
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+        }
         return await createUserInFirestoreIfNotExists(user, name: name);
       }
     } on FirebaseAuthException catch (e) {
@@ -142,11 +148,16 @@ class AuthRepository {
     final usersRepository = _usersRepository;
     if (usersRepository != null) {
       final fromApi = await usersRepository.findByFirebaseUid(user.uid);
-      if (fromApi != null) return fromApi;
-      final displayName = (user.displayName ?? '').trim();
-      return usersRepository.ensureCurrentUser(
-        name: displayName.isNotEmpty ? displayName : null,
-      );
+      final UserModel resolved;
+      if (fromApi != null) {
+        resolved = fromApi;
+      } else {
+        final displayName = (user.displayName ?? '').trim();
+        resolved = await usersRepository.ensureCurrentUser(
+          name: displayName.isNotEmpty ? displayName : null,
+        );
+      }
+      return usersRepository.attachSuperadminFlag(resolved);
     }
 
     final docSnap = await _firestore.collection('users').doc(user.uid).get();
@@ -223,18 +234,61 @@ class AuthRepository {
         .collection('users')
         .where('role', isEqualTo: 'employee')
         .get();
+    await _writeNotifications(
+      uids: snapshot.docs.map((doc) => doc.id),
+      title: title,
+      body: body,
+      requireFcmToken: true,
+      tokenByUid: {
+        for (final doc in snapshot.docs)
+          doc.id: doc.data()['fcmToken'] as String?,
+      },
+    );
+  }
 
-    for (var doc in snapshot.docs) {
-      final fcmToken = doc.data()['fcmToken'] as String?;
-      if (fcmToken != null && fcmToken.isNotEmpty) {
-        await _firestore.collection('notifications').add({
-          'userId': doc.id,
-          'title': title,
-          'body': body,
-          'createdAt': FieldValue.serverTimestamp(),
-          'read': false,
-        });
+  Future<void> sendNotificationToAdmins({
+    required String title,
+    required String body,
+  }) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'admin')
+        .get();
+    await _writeNotifications(
+      uids: snapshot.docs.map((doc) => doc.id),
+      title: title,
+      body: body,
+    );
+  }
+
+  Future<void> sendNotificationToUids({
+    required Iterable<String> uids,
+    required String title,
+    required String body,
+  }) async {
+    await _writeNotifications(uids: uids, title: title, body: body);
+  }
+
+  Future<void> _writeNotifications({
+    required Iterable<String> uids,
+    required String title,
+    required String body,
+    bool requireFcmToken = false,
+    Map<String, String?> tokenByUid = const {},
+  }) async {
+    for (final uid in uids) {
+      if (uid.isEmpty) continue;
+      if (requireFcmToken) {
+        final token = tokenByUid[uid];
+        if (token == null || token.isEmpty) continue;
       }
+      await _firestore.collection('notifications').add({
+        'userId': uid,
+        'title': title,
+        'body': body,
+        'createdAt': FieldValue.serverTimestamp(),
+        'read': false,
+      });
     }
   }
 

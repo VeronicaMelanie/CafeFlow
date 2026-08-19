@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/app_button.dart';
@@ -15,6 +16,7 @@ import '../domain/shift_type.dart';
 import '../utils/scheduling_month_utils.dart';
 import 'availability_day_draft.dart';
 import 'scheduling_providers.dart';
+import 'widgets/scheduling_status_banner.dart';
 import 'widgets/shift_type_selection_sheet.dart';
 
 class SubmitAvailabilityScreen extends ConsumerStatefulWidget {
@@ -108,6 +110,7 @@ class _SubmitAvailabilityScreenState
     if (profile == null) return;
 
     final repo = ref.read(availabilityRepositoryProvider);
+    final l10n = L10n.of(context);
 
     setState(() => _isSaving = true);
     try {
@@ -137,7 +140,10 @@ class _SubmitAvailabilityScreenState
               customEnd = draft.customEndDateTime(day);
               if (customStart == null || customEnd == null) {
                 throw Exception(
-                  'Custom hours require start and end time on ${DateFormat.MMMd().format(day)}.',
+                  l10n.pick(
+                    'Custom hours need a start and end time on ${DateFormat.MMMd(l10n.isRo ? null : l10n.locale.languageCode).format(day)}.',
+                    'Orele personalizate necesită oră de început și de sfârșit pe ${DateFormat.MMMd(l10n.isRo ? null : l10n.locale.languageCode).format(day)}.',
+                  ),
                 );
               }
               final validationError = await repo.validatePartTimeHours(
@@ -162,8 +168,10 @@ class _SubmitAvailabilityScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Availability saved'),
+        SnackBar(
+          content: Text(
+            l10n.pick('Availability saved', 'Disponibilitate salvată'),
+          ),
           backgroundColor: AppColors.primaryPink,
         ),
       );
@@ -171,10 +179,7 @@ class _SubmitAvailabilityScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$e'),
-            backgroundColor: Colors.redAccent,
-          ),
+          SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
         );
       }
     } finally {
@@ -195,22 +200,24 @@ class _SubmitAvailabilityScreenState
   Widget build(BuildContext context) {
     final scheduleMonth = _scheduleMonth;
     final access = ref.watch(monthSchedulingAccessProvider(scheduleMonth));
-    final availabilityAsync =
-        ref.watch(userAvailabilityForMonthProvider(scheduleMonth));
+    final availabilityAsync = ref.watch(
+      userAvailabilityForMonthProvider(scheduleMonth),
+    );
     final canEdit = access.canEdit;
+    final l10n = L10n.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
       body: availabilityAsync.when(
         loading: () => const Scaffold(body: AppLoadingIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(l10n.errorWith(e))),
         data: (entries) {
           _syncDraftsFromEntries(entries);
 
           return Column(
             children: [
               ScreenHeader(
-                title: 'Availability',
+                title: l10n.pick('Availability', 'Disponibilitate'),
                 onBack: () => Navigator.pop(context),
               ),
               Expanded(
@@ -224,7 +231,11 @@ class _SubmitAvailabilityScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoCard(canEdit),
+                      if (access.bannerMessageFor(l10n) != null) ...[
+                        SchedulingStatusBanner(access: access),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                      _buildInfoCard(access, l10n),
                       const SizedBox(height: AppSpacing.xxl),
                       _buildCalendarCard(
                         scheduleMonth: scheduleMonth,
@@ -234,10 +245,7 @@ class _SubmitAvailabilityScreenState
                   ),
                 ),
               ),
-              _buildSaveButton(
-                entries: entries,
-                access: access,
-              ),
+              _buildSaveButton(entries: entries, access: access, l10n: l10n),
             ],
           );
         },
@@ -245,7 +253,18 @@ class _SubmitAvailabilityScreenState
     );
   }
 
-  Widget _buildInfoCard(bool canEdit) {
+  Widget _buildInfoCard(MonthSchedulingAccess access, L10n l10n) {
+    final canEdit = access.canEdit;
+    final until = access.windowEnd;
+    final openText = until == null
+        ? l10n.pick(
+            'Tap a day to set All day or Custom hours. Green = all day, light green = custom hours.',
+            'Atinge o zi ca să setezi Toată ziua sau Ore personalizate. Verde = toată ziua, verde deschis = ore personalizate.',
+          )
+        : l10n.pick(
+            'The window is open until ${until.day} ${_monthShort(until.month, l10n)}. Tap a day: green = all day, light green = custom hours.',
+            'Fereastra e deschisă până pe ${until.day} ${_monthShort(until.month, l10n)}. Atinge o zi: verde = toată ziua, verde deschis = ore personalizate.',
+          );
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -266,10 +285,16 @@ class _SubmitAvailabilityScreenState
           Expanded(
             child: Text(
               canEdit
-                  ? 'Tap a day to set Full Day or Custom Hours availability. Green = full day, lighter green = custom hours.'
-                  : 'You can view your submitted days. Editing is disabled for this month.',
+                  ? openText
+                  : (access.bannerMessageFor(l10n) ??
+                        l10n.pick(
+                          'You can view submitted days. Editing is disabled for this month.',
+                          'Poți vedea zilele trimise. Editarea este dezactivată pentru luna aceasta.',
+                        )),
               style: TextStyle(
-                color: AppColors.textDark.withValues(alpha: canEdit ? 0.8 : 0.55),
+                color: AppColors.textDark.withValues(
+                  alpha: canEdit ? 0.8 : 0.55,
+                ),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -314,6 +339,17 @@ class _SubmitAvailabilityScreenState
           setState(() => _focusedDay = focusedDay);
         },
         calendarBuilders: CalendarBuilders(
+          dowBuilder: (context, day) {
+            return Center(
+              child: Text(
+                L10n.of(context).weekdayShort(day.weekday),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          },
           selectedBuilder: (context, day, focusedDay) {
             return _DayCell(
               day: day.day,
@@ -364,6 +400,7 @@ class _SubmitAvailabilityScreenState
   Widget _buildSaveButton({
     required List<AvailabilityModel> entries,
     required MonthSchedulingAccess access,
+    required L10n l10n,
   }) {
     final canSave = access.canEdit && !_isSaving;
 
@@ -375,12 +412,47 @@ class _SubmitAvailabilityScreenState
         AppSpacing.xxl,
       ),
       child: AppButton(
-        text: _isSaving ? 'Saving...' : 'Save & Done',
+        text: _isSaving
+            ? l10n.pick('Saving...', 'Se salvează...')
+            : l10n.pick('Save', 'Salvează'),
         onPressed: canSave ? () => _saveAvailability(entries, access) : null,
         isLoading: _isSaving,
       ),
     );
   }
+
+  static const _monthsRo = [
+    'ian',
+    'feb',
+    'mar',
+    'apr',
+    'mai',
+    'iun',
+    'iul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
+  ];
+
+  static const _monthsEn = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  static String _monthShort(int month, L10n l10n) =>
+      l10n.isRo ? _monthsRo[month - 1] : _monthsEn[month - 1];
 }
 
 enum _DayCellVisual { none, fullDay, customHours }
@@ -440,10 +512,7 @@ class _DayCell extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.softPink.withValues(alpha: 0.85),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.primaryPink,
-                    width: 2,
-                  ),
+                  border: Border.all(color: AppColors.primaryPink, width: 2),
                 ),
                 child: Text(
                   '$day',

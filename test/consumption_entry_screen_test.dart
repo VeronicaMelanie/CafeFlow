@@ -119,7 +119,7 @@ void main() {
   }
 
   Future<void> submitConsumption(WidgetTester tester) async {
-    await tester.tap(find.text('Add to My Log'));
+    await tester.tap(find.text('Adaugă la jurnal'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
   }
@@ -142,7 +142,7 @@ void main() {
     await selectProduct(tester, 'espresso lung');
     await submitConsumption(tester);
 
-    expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
+    expect(find.text('Salvat! Poftă bună! ☕'), findsOneWidget);
     expect(find.byKey(const Key('product-search')), findsOneWidget);
     expect(find.text('espresso lung'), findsOneWidget);
   });
@@ -157,7 +157,7 @@ void main() {
     await selectProduct(tester, 'latte');
     await submitConsumption(tester);
 
-    expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
+    expect(find.text('Salvat! Poftă bună! ☕'), findsOneWidget);
     expect(repository.items, hasLength(2));
     expect(repository.items[0].productName, 'latte');
     expect(repository.items[1].productName, 'espresso lung');
@@ -170,7 +170,7 @@ void main() {
     await selectProduct(tester, 'espresso lung');
     await submitConsumption(tester);
 
-    expect(find.text('Could not save: Exception: save failed'), findsOneWidget);
+    expect(find.text('Nu s-a putut salva: Exception: save failed'), findsOneWidget);
     expect(find.text('espresso lung'), findsWidgets);
   });
 
@@ -182,7 +182,7 @@ void main() {
     await tester.pump();
     await submitConsumption(tester);
 
-    expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
+    expect(find.text('Salvat! Poftă bună! ☕'), findsOneWidget);
     expect(repository.items, hasLength(1));
     expect(repository.items.single.productName, 'ceai verde');
   });

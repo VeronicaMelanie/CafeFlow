@@ -8,6 +8,7 @@ import '../../scheduling/presentation/scheduling_providers.dart';
 import '../../auth/domain/user_model.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/admin_guard.dart';
@@ -20,6 +21,7 @@ class ConsumptionLogScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final employeesAsync = ref.watch(allEmployeesProvider);
+    final l10n = L10n.of(context);
 
     return AdminGuard(
       child: Scaffold(
@@ -27,20 +29,23 @@ class ConsumptionLogScreen extends ConsumerWidget {
         body: Column(
           children: [
             ScreenHeader(
-              title: 'Employee Consumption',
+              title: l10n.pick('Employee consumption', 'Consum angajați'),
               onBack: () => Navigator.pop(context),
             ),
             Expanded(
               child: employeesAsync.when(
                 data: (employees) {
-                  if (employees.isEmpty) return _buildEmptyState();
+                  if (employees.isEmpty) return _buildEmptyState(context);
 
                   return ListView(
                     padding: const EdgeInsets.all(AppSpacing.xl),
                     children: [
                       _buildSectionHeader(
-                        'Employees',
-                        '${employees.length} total',
+                        l10n.pick('Employees', 'Angajați'),
+                        l10n.pick(
+                          '${employees.length} total',
+                          '${employees.length} în total',
+                        ),
                       ),
                       const SizedBox(height: 12),
                       ...employees.map(
@@ -51,7 +56,7 @@ class ConsumptionLogScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const AppLoadingIndicator(),
-                error: (e, st) => Center(child: Text('Error: $e')),
+                error: (e, st) => Center(child: Text(l10n.errorWith(e))),
               ),
             ),
           ],
@@ -141,9 +146,10 @@ class ConsumptionLogScreen extends ConsumerWidget {
                         .read(consumptionRepositoryProvider)
                         .getUserConsumptions(employee.uid, now),
                     builder: (context, snapshot) {
+                      final l10n = L10n.of(context);
                       if (snapshot.hasError) {
-                        return const Text(
-                          'Error loading',
+                        return Text(
+                          l10n.pick('Error loading', 'Eroare la încărcare'),
                           style: TextStyle(
                             color: AppColors.textLight,
                             fontSize: 12,
@@ -151,8 +157,8 @@ class ConsumptionLogScreen extends ConsumerWidget {
                         );
                       }
                       if (!snapshot.hasData) {
-                        return const Text(
-                          'Loading...',
+                        return Text(
+                          l10n.pick('Loading...', 'Se încarcă...'),
                           style: TextStyle(
                             color: AppColors.textLight,
                             fontSize: 12,
@@ -165,7 +171,10 @@ class ConsumptionLogScreen extends ConsumerWidget {
                         (sum, c) => sum + c.quantity,
                       );
                       return Text(
-                        '$totalQty items this month',
+                        l10n.pick(
+                          '$totalQty products this month',
+                          '$totalQty produse luna asta',
+                        ),
                         style: const TextStyle(
                           color: AppColors.textLight,
                           fontSize: 12,
@@ -187,7 +196,7 @@ class ConsumptionLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -198,8 +207,11 @@ class ConsumptionLogScreen extends ConsumerWidget {
             color: AppColors.textLight.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No employees found',
+          Text(
+            L10n.of(context).pick(
+              'No employees found',
+              'Niciun angajat găsit',
+            ),
             style: TextStyle(color: AppColors.textLight, fontSize: 16),
           ),
         ],
@@ -244,7 +256,9 @@ class _EmployeeConsumptionDetailScreenState
                   .getUserShiftsForMonth(widget.employee.uid, _selectedMonth),
               builder: (context, shiftsSnapshot) {
                 if (shiftsSnapshot.hasError) {
-                  return Center(child: Text('Error: ${shiftsSnapshot.error}'));
+                  return Center(
+                    child: Text(L10n.of(context).errorWith(shiftsSnapshot.error!)),
+                  );
                 }
                 if (!shiftsSnapshot.hasData) {
                   return const AppLoadingIndicator();
@@ -258,7 +272,9 @@ class _EmployeeConsumptionDetailScreenState
                   builder: (context, consumptionsSnapshot) {
                     if (consumptionsSnapshot.hasError) {
                       return Center(
-                        child: Text('Error: ${consumptionsSnapshot.error}'),
+                        child: Text(
+                          L10n.of(context).errorWith(consumptionsSnapshot.error!),
+                        ),
                       );
                     }
                     if (!consumptionsSnapshot.hasData) {
@@ -293,7 +309,10 @@ class _EmployeeConsumptionDetailScreenState
         ),
         Expanded(
           child: Text(
-            DateFormat('MMMM yyyy').format(_selectedMonth),
+            DateFormat(
+              'MMMM yyyy',
+              L10n.of(context).isRo ? null : L10n.of(context).locale.languageCode,
+            ).format(_selectedMonth),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 16,
@@ -359,6 +378,7 @@ class _EmployeeConsumptionDetailScreenState
   }
 
   Widget _buildDayCard(DayData dayData) {
+    final l10n = L10n.of(context);
     final hasShift = dayData.shifts.isNotEmpty;
     final hasConsumption = dayData.consumptions.isNotEmpty;
     final isIrregular = hasConsumption && !hasShift;
@@ -391,7 +411,8 @@ class _EmployeeConsumptionDetailScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('EEE, dd MMM').format(dayData.date),
+                DateFormat('EEE, dd MMM', l10n.isRo ? null : l10n.locale.languageCode)
+                    .format(dayData.date),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -408,8 +429,8 @@ class _EmployeeConsumptionDetailScreenState
                     color: AppColors.brandRed.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'Irregular',
+                  child: Text(
+                    l10n.pick('Irregular', 'Neregulat'),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -425,7 +446,7 @@ class _EmployeeConsumptionDetailScreenState
             const SizedBox(height: 8),
           ] else if (!hasConsumption) ...[
             Text(
-              'No shift',
+              l10n.pick('No shift', 'Fără tură'),
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textLight.withValues(alpha: 0.7),
@@ -434,8 +455,8 @@ class _EmployeeConsumptionDetailScreenState
             const SizedBox(height: 8),
           ],
           if (hasConsumption) ...[
-            const Text(
-              'Consumption:',
+            Text(
+              l10n.pick('Consumption:', 'Consum:'),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -535,8 +556,11 @@ class _EmployeeConsumptionDetailScreenState
             color: AppColors.textLight.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No data for this month',
+          Text(
+            L10n.of(context).pick(
+              'No data for this month',
+              'Nicio dată pentru luna asta',
+            ),
             style: TextStyle(color: AppColors.textLight, fontSize: 16),
           ),
         ],

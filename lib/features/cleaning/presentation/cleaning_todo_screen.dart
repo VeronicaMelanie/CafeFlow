@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../auth/domain/user_model.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../scheduling/presentation/scheduling_providers.dart';
@@ -95,7 +96,10 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
         _optimisticCompleted.remove(task.id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(L10n.of(context).errorWith(e)),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
@@ -144,12 +148,13 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
       body: userAsync.when(
         data: (user) {
           if (user == null) {
-            return const Center(child: Text('Not logged in'));
+            return Center(child: Text(L10n.of(context).notSignedIn()));
           }
           return _buildForUser(user);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+        error: (error, _) =>
+            Center(child: Text(L10n.of(context).errorWith(error))),
       ),
     );
   }
@@ -196,10 +201,17 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
   }
 
   String _humanizeCleaningError(Object error) {
+    final l10n = L10n.of(context);
     final message = error.toString();
     if (message.contains('permission-denied')) {
-      return 'Could not load cleaning tasks. Please check your connection and try again.';
+      return l10n.pick(
+        'Could not load cleaning tasks. Check your connection and try again.',
+        'Nu s-au putut încărca sarcinile de curățenie. Verifică conexiunea și încearcă din nou.',
+      );
     }
-    return 'Could not load cleaning tasks. $message';
+    return l10n.pick(
+      'Could not load cleaning tasks. $message',
+      'Nu s-au putut încărca sarcinile de curățenie. $message',
+    );
   }
 }

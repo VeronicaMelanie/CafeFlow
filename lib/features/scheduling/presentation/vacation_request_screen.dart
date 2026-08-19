@@ -5,6 +5,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../data/vacation_repository.dart';
 import '../domain/vacation_model.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/screen_header.dart';
 
@@ -56,8 +57,13 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vacation request submitted successfully!'),
+          SnackBar(
+            content: Text(
+              L10n.of(context).pick(
+                'Vacation request sent!',
+                'Cererea de concediu a fost trimisă!',
+              ),
+            ),
             backgroundColor: AppColors.softGreen,
           ),
         );
@@ -66,7 +72,7 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(L10n.of(context).errorWith(e)), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -76,6 +82,7 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final duration = _endDate.difference(_startDate).inDays + 1;
     final textTheme = Theme.of(context).textTheme;
 
@@ -84,7 +91,7 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
       body: Column(
         children: [
           ScreenHeader(
-            title: 'Request Vacation',
+            title: l10n.pick('Request vacation', 'Cere concediu'),
             onBack: () => Navigator.pop(context),
           ),
           Expanded(
@@ -115,7 +122,7 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Select Dates',
+            L10n.of(context).pick('Select dates', 'Selectează datele'),
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -149,6 +156,19 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
                 Icons.chevron_right,
                 color: AppColors.primaryPink,
               ),
+            ),
+            calendarBuilders: CalendarBuilders(
+              dowBuilder: (context, day) {
+                return Center(
+                  child: Text(
+                    L10n.of(context).weekdayShort(day.weekday),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
             ),
             calendarStyle: CalendarStyle(
               rangeHighlightColor: AppColors.primaryPink.withValues(alpha: 0.2),
@@ -191,11 +211,13 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Duration',
+                  L10n.of(context).pick('Duration', 'Durată'),
                   style: textTheme.bodySmall?.copyWith(color: AppColors.textLight),
                 ),
                 Text(
-                  '$duration day${duration > 1 ? 's' : ''}',
+                  duration == 1
+                      ? L10n.of(context).pick('1 day', '1 zi')
+                      : L10n.of(context).pick('$duration days', '$duration zile'),
                   style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ],
@@ -227,10 +249,13 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
       child: TextField(
         controller: _commentController,
         maxLines: 3,
-        decoration: const InputDecoration(
-          labelText: 'Comments (optional)',
-          hintText: 'Add any notes for the admin...',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: L10n.of(context).pick('Comments (optional)', 'Comentarii (opțional)'),
+          hintText: L10n.of(context).pick(
+            'Add notes for your manager...',
+            'Adaugă observații pentru manager...',
+          ),
+          border: const OutlineInputBorder(),
         ),
       ),
     );
@@ -260,9 +285,9 @@ class _VacationRequestScreenState extends ConsumerState<VacationRequestScreen> {
                   strokeCap: StrokeCap.round,
                 ),
               )
-            : const Text(
-                'Submit Request',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            : Text(
+                L10n.of(context).pick('Submit request', 'Trimite cererea'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
       ),
     );

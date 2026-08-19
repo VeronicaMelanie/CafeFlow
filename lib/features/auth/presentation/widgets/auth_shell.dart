@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -99,33 +100,35 @@ class _AuthHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (showBack)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                  child: Material(
-                    color: AppColors.glassWhite,
-                    child: InkWell(
-                      onTap: () => Navigator.maybePop(context),
-                      child: const SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 18,
+          Row(
+            children: [
+              if (showBack)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Material(
+                      color: AppColors.glassWhite,
+                      child: InkWell(
+                        onTap: () => Navigator.maybePop(context),
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            )
-          else
-            const SizedBox(height: 48),
+                )
+              else
+                const SizedBox(width: 40, height: 40),
+              const Spacer(),
+            ],
+          ),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
@@ -342,7 +345,7 @@ class AuthOrDivider extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Text(
-              'OR CONTINUE WITH',
+              L10n.of(context).pick('OR', 'SAU'),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -367,12 +370,12 @@ class AuthGoogleButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.isLoading = false,
-    this.label = 'Google Account',
+    this.label,
   });
 
   final VoidCallback? onPressed;
   final bool isLoading;
-  final String label;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -417,7 +420,7 @@ class AuthGoogleButton extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Text(
-                      label,
+                      label ?? L10n.of(context).pick('Google account', 'Cont Google'),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

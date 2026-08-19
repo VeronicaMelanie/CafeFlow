@@ -21,6 +21,8 @@ class UsersRepository {
     return _cache.getOrLoad(_fetchUsers);
   }
 
+  void invalidateCache() => _cache.invalidate();
+
   Future<List<UserModel>> _fetchUsers() async {
     final json = await _api.getJson('/api/users');
     if (json is! List) {
@@ -138,6 +140,18 @@ class UsersRepository {
       primaryLocation: names.primary,
       secondaryLocation: names.secondary,
     );
+  }
+
+  Future<UserModel> attachSuperadminFlag(UserModel user) async {
+    try {
+      final json = await _api.getJson('/api/auth/me');
+      if (json is Map && json['is_superadmin'] == true) {
+        return user.withSuperadmin(true);
+      }
+    } catch (_) {
+      // Keep the cafe role only; the console stays hidden.
+    }
+    return user.withSuperadmin(false);
   }
 
   Future<({String primary, String secondary})> _catalogLocationNames() async {

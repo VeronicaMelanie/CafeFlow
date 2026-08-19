@@ -37,9 +37,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Closing'), findsOneWidget);
-    expect(find.text('Mon'), findsOneWidget);
-    expect(find.text('Sun'), findsOneWidget);
+    expect(find.text('Înch.'), findsOneWidget);
+    expect(find.text('Lu'), findsOneWidget);
+    expect(find.text('Du'), findsOneWidget);
   });
 
   testWidgets('horizontal day selection changes selected list key', (tester) async {
@@ -61,7 +61,7 @@ void main() {
     );
 
     expect(find.text('Empty coffee grounds'), findsOneWidget);
-    await tester.tap(find.text('Tue'));
+    await tester.tap(find.text('Ma'));
     await tester.pumpAndSettle();
     expect(selected, CleaningListKey.tuesday);
   });
@@ -97,15 +97,15 @@ void main() {
       ),
     );
 
-    expect(find.text('0 / 2 completed'), findsOneWidget);
+    expect(find.text('0 / 2 bifate'), findsOneWidget);
 
     await tester.tap(find.text('Clean espresso machine'));
     await tester.pumpAndSettle();
-    expect(find.text('1 / 2 completed'), findsOneWidget);
+    expect(find.text('1 / 2 bifate'), findsOneWidget);
 
     await tester.tap(find.text('Clean espresso machine'));
     await tester.pumpAndSettle();
-    expect(find.text('0 / 2 completed'), findsOneWidget);
+    expect(find.text('0 / 2 bifate'), findsOneWidget);
   });
 
   testWidgets('all-completed state appears', (tester) async {
@@ -123,8 +123,8 @@ void main() {
       ),
     );
 
-    expect(find.text('2 / 2 completed'), findsOneWidget);
-    expect(find.text('All checks are marked!'), findsOneWidget);
+    expect(find.text('2 / 2 bifate'), findsOneWidget);
+    expect(find.text('Totul e bifat!'), findsOneWidget);
   });
 
   testWidgets('employee cannot edit task definitions from checklist UI',
@@ -155,12 +155,12 @@ void main() {
           onListKeyChanged: (_) {},
           taskViews: const [],
           onToggleTask: (_) {},
-          errorMessage: 'Could not load cleaning tasks.',
+          errorMessage: 'Nu s-au putut încărca sarcinile de curățenie.',
         ),
       ),
     );
 
-    expect(find.text('Could not load cleaning tasks.'), findsOneWidget);
-    expect(find.textContaining('No tasks configured'), findsNothing);
+    expect(find.text('Nu s-au putut încărca sarcinile de curățenie.'), findsOneWidget);
+    expect(find.textContaining('Nu există sarcini configurate'), findsNothing);
   });
 }

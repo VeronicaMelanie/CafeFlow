@@ -1,3 +1,5 @@
+import '../../../core/l10n/l10n.dart';
+
 /// Employee availability shift type for a single day.
 enum AvailabilityShiftType {
   fullTime('full_time'),
@@ -15,6 +17,9 @@ enum AvailabilityShiftType {
     return AvailabilityShiftType.fullTime;
   }
 
-  String get displayLabel =>
-      this == AvailabilityShiftType.fullTime ? 'Full Time' : 'Custom hours';
+  String get displayLabel => labelFor(L10n.fallback);
+
+  String labelFor(L10n l10n) => this == AvailabilityShiftType.fullTime
+      ? l10n.pick('All day', 'Toată ziua')
+      : l10n.pick('Custom hours', 'Ore personalizate');
 }

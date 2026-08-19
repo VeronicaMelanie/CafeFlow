@@ -16,10 +16,10 @@ class ShiftRepository {
     UsersRepository? usersRepository,
     LocationRepository? locationRepository,
     bool testMode = false,
-  })  : _api = apiClient,
-        _users = usersRepository,
-        _locations = locationRepository,
-        _testMode = testMode;
+  }) : _api = apiClient,
+       _users = usersRepository,
+       _locations = locationRepository,
+       _testMode = testMode;
 
   @visibleForTesting
   ShiftRepository.test() : this(testMode: true);
@@ -98,7 +98,10 @@ class ShiftRepository {
     }).toList();
   }
 
-  Stream<List<ShiftModel>> getUserShiftsForMonth(String userId, DateTime month) {
+  Stream<List<ShiftModel>> getUserShiftsForMonth(
+    String userId,
+    DateTime month,
+  ) {
     return Stream.fromFuture(_userShiftsForMonth(userId, month));
   }
 
@@ -141,10 +144,7 @@ class ShiftRepository {
 
   Future<void> createShift(ShiftModel shift) async {
     if (_testMode) return;
-    await _client.postJson(
-      '/api/shifts',
-      body: await _toWriteBody(shift),
-    );
+    await _client.postJson('/api/shifts', body: await _toWriteBody(shift));
   }
 
   Future<void> updateShift(ShiftModel shift) async {
@@ -180,22 +180,31 @@ class ShiftRepository {
     return all.where((shift) => shift.userId == userId).toList();
   }
 
+  Future<List<ShiftModel>> getShiftsOnDate(DateTime date) async {
+    final day = DateTime(date.year, date.month, date.day);
+    final all = await getAllShifts();
+    return all
+        .where(
+          (shift) =>
+              shift.date.year == day.year &&
+              shift.date.month == day.month &&
+              shift.date.day == day.day,
+        )
+        .toList();
+  }
+
   Future<List<ShiftModel>> getShiftsForDay({
     required DateTime date,
     required String location,
     List<String> statuses = const ['approved', 'pending'],
   }) async {
-    final day = DateTime(date.year, date.month, date.day);
-    final all = await getAllShifts();
-    return all.where((shift) {
-      if (shift.location != location) return false;
-      if (shift.date.year != day.year ||
-          shift.date.month != day.month ||
-          shift.date.day != day.day) {
-        return false;
-      }
-      return statuses.contains(shift.status);
-    }).toList();
+    final all = await getShiftsOnDate(date);
+    return all
+        .where(
+          (shift) =>
+              shift.location == location && statuses.contains(shift.status),
+        )
+        .toList();
   }
 
   Future<List<ShiftModel>> getShiftsForMonthLocation({

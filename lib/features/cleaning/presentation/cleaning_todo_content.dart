@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../domain/cleaning_list_key.dart';
@@ -42,10 +43,11 @@ class CleaningTodoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return Column(
       children: [
         ScreenHeader(
-          title: 'Cleaning To-Do List',
+          title: l10n.pick('Cleaning list', 'Lista de curățenie'),
           onBack: () => Navigator.pop(context),
         ),
         Expanded(
@@ -61,7 +63,7 @@ class CleaningTodoContent extends StatelessWidget {
                 if (locationLabel != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Location: $locationLabel',
+                    '${l10n.pick('Location', 'Locație')}: $locationLabel',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -75,14 +77,14 @@ class CleaningTodoContent extends StatelessWidget {
                 else if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else if (taskViews.isEmpty)
-                  _EmptyTasksState(listLabel: selectedListKey.label)
+                  _EmptyTasksState(listLabel: selectedListKey.labelFor(l10n))
                 else ...[
                   AppSurface(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          selectedListKey.label,
+                          selectedListKey.labelFor(l10n),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -91,7 +93,10 @@ class CleaningTodoContent extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          '$_completedCount / ${taskViews.length} completed',
+                          l10n.pick(
+                            '$_completedCount / ${taskViews.length} checked',
+                            '$_completedCount / ${taskViews.length} bifate',
+                          ),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -121,17 +126,20 @@ class CleaningTodoContent extends StatelessWidget {
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusMd),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.check_circle_rounded,
                                   color: AppColors.brandGreen,
                                 ),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Text(
-                                    'All checks are marked!',
-                                    style: TextStyle(
+                                    l10n.pick(
+                                      'Everything is checked!',
+                                      'Totul e bifat!',
+                                    ),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.brandGreen,
                                     ),
@@ -298,6 +306,7 @@ class _EmptyTasksState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AppSurface(
       child: Column(
         children: [
@@ -308,7 +317,10 @@ class _EmptyTasksState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'No tasks configured for $listLabel yet.',
+            l10n.pick(
+              'No tasks configured for $listLabel yet.',
+              'Nu există sarcini configurate pentru $listLabel încă.',
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textLight,

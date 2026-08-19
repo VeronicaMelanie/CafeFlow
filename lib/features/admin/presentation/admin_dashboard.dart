@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/l10n/language_switch.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -14,6 +16,7 @@ import 'employee_management_screen.dart';
 import 'consumption_log_screen.dart';
 import 'distribution_screen.dart';
 import 'calendar_schedule_screen.dart';
+import 'cover_requests_screen.dart';
 import '../../cleaning/presentation/cleaning_lists_admin_screen.dart';
 import 'open_scheduling_screen.dart';
 
@@ -22,12 +25,13 @@ class AdminDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = L10n.of(context);
     return AdminGuard(
       child: Scaffold(
         backgroundColor: AppColors.offWhite,
         body: Column(
           children: [
-            _buildHeader(context, ref),
+            _buildHeader(context, ref, l10n),
             Expanded(
               child: GridView.count(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -37,7 +41,7 @@ class AdminDashboard extends ConsumerWidget {
                 children: [
                   _buildAdminCard(
                     context,
-                    'Current\nSchedule',
+                    l10n.pick('Current\nschedule', 'Program\ncurent'),
                     Icons.calendar_today_outlined,
                     AppColors.softBlue,
                     () {
@@ -51,7 +55,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Open\nScheduling',
+                    l10n.pick('Open\nscheduling', 'Deschide\nprogramarea'),
                     Icons.event_available_outlined,
                     AppColors.softPink,
                     () {
@@ -65,7 +69,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Manage\nSchedule',
+                    l10n.pick('Schedule\nmanager', 'Manager\nprogram'),
                     Icons.calendar_month_outlined,
                     AppColors.softPurple,
                     () {
@@ -79,7 +83,21 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Approve\nVacations',
+                    l10n.pick('Cover\nrequests', 'Cereri de\nînlocuire'),
+                    Icons.swap_horiz_outlined,
+                    AppColors.softYellow,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CoverRequestsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildAdminCard(
+                    context,
+                    l10n.pick('Approve\nvacation', 'Aprobă\nconcedii'),
                     Icons.beach_access_outlined,
                     AppColors.softYellow,
                     () {
@@ -93,7 +111,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'View\nEmployees',
+                    l10n.pick('View\nemployees', 'Vezi\nangajații'),
                     Icons.people_outline,
                     AppColors.softGreen,
                     () {
@@ -108,7 +126,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Consumption\nLogs',
+                    l10n.pick('Consumption\nlogs', 'Jurnale\nconsum'),
                     Icons.coffee_outlined,
                     AppColors.softPurple,
                     () {
@@ -122,7 +140,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Cleaning\nTo-Do Lists',
+                    l10n.pick('Cleaning\nlists', 'Liste\ncurățenie'),
                     Icons.cleaning_services_outlined,
                     AppColors.brandGreen,
                     () {
@@ -137,7 +155,7 @@ class AdminDashboard extends ConsumerWidget {
                   ),
                   _buildAdminCard(
                     context,
-                    'Distribute\nApp',
+                    l10n.pick('Share\nthe app', 'Distribuie\naplicația'),
                     Icons.qr_code_2_outlined,
                     AppColors.softBlue,
                     () {
@@ -158,7 +176,7 @@ class AdminDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref, L10n l10n) {
     return Container(
       padding: const EdgeInsets.only(
         top: 56,
@@ -175,28 +193,30 @@ class AdminDashboard extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Admin Panel',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.pick('Admin panel', 'Panou admin'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Managing CafeFlow System',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n.pick('Manage the CafeFlow system', 'Gestionezi sistemul CafeFlow'),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -204,13 +224,28 @@ class AdminDashboard extends ConsumerWidget {
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Material(
                 color: AppColors.glassWhite,
-                child: IconButton(
-                  icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (Navigator.of(context).canPop())
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      onPressed: () =>
+                          ref.read(authRepositoryProvider).signOut(),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+          const SizedBox(width: kLanguageSwitchReserve),
         ],
       ),
     );

@@ -16,6 +16,8 @@ import '../domain/shift_model.dart';
 import '../data/vacation_repository.dart';
 import '../utils/monthly_progress_calculator.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/l10n/language_switch.dart';
 import '../../../core/pwa/pwa_responsive.dart';
 import '../../../core/pwa/widgets/pwa_limitations_banner.dart';
 import '../../../core/services/notification_service.dart';
@@ -42,6 +44,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
 
   Future<void> _scheduleReminders() async {
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    final l10n = L10n.of(context);
     final user = ref.read(currentUserProvider).value;
     if (user != null) {
       final shifts = await ref
@@ -58,8 +62,11 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           if (reminderTime.isAfter(DateTime.now())) {
             await notificationService.scheduleShiftReminder(
               id: i,
-              title: 'Shift Tomorrow!',
-              body: 'Reminder: You have a shift tomorrow at  from  to .',
+              title: l10n.pick('Shift tomorrow!', 'Tură mâine!'),
+              body: l10n.pick(
+                'Reminder: you have a shift tomorrow.',
+                'Reminder: Ai o tură mâine.',
+              ),
               scheduledDate: reminderTime,
             );
           }
@@ -79,12 +86,13 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
     final location = ref.watch(selectedLocationProvider);
+    final l10n = L10n.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.creamBackground,
       body: userAsync.when(
         data: (user) {
-          if (user == null) return const Center(child: Text('Not logged in'));
+          if (user == null) return Center(child: Text(l10n.notSignedIn()));
 
           return Column(
             children: [
@@ -121,12 +129,13 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           );
         },
         loading: () => const AppLoadingIndicator(),
-        error: (e, st) => Center(child: Text('Error: ')),
+        error: (e, st) => Center(child: Text(l10n.errorWith(e))),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, String userName) {
+    final l10n = L10n.of(context);
     final top = PwaResponsive.topSafePadding(context);
     final now = DateTime.now();
     return Container(
@@ -152,7 +161,9 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Hi, $userName',
+                  l10n.pick('Hi, $userName', 'Salut, $userName'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -162,7 +173,10 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  DateFormat('EEEE, MMM d').format(now),
+                  DateFormat(
+                    'EEEE, MMM d',
+                    l10n.isRo ? null : l10n.locale.languageCode,
+                  ).format(now),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 14,
@@ -175,14 +189,10 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           Row(
             children: [
               _HeaderIconButton(
-                icon: Icons.notifications_outlined,
-                onPressed: () {},
-              ),
-              const SizedBox(width: 8),
-              _HeaderIconButton(
                 icon: Icons.logout_rounded,
                 onPressed: () => ref.read(authRepositoryProvider).signOut(),
               ),
+              const SizedBox(width: kLanguageSwitchReserve),
             ],
           ),
         ],
@@ -197,6 +207,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           .read(shiftRepositoryProvider)
           .getUserShiftsForMonth(userId, now),
       builder: (context, shiftSnap) {
+        final l10n = L10n.of(context);
         if (shiftSnap.connectionState == ConnectionState.waiting) {
           return const AppStatSkeletonRow();
         }
@@ -233,9 +244,9 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Monthly Progress',
-                        style: TextStyle(
+                      Text(
+                        l10n.pick('Monthly progress', 'Progres lunar'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textDark,
@@ -268,17 +279,17 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildMiniStat(
-                        'Target',
+                        l10n.pick('Target', 'Țintă'),
                         '$targetHours h',
                         AppColors.brandTurquoise,
                       ),
                       _buildMiniStat(
-                        'Done',
+                        l10n.pick('Worked', 'Lucrate'),
                         '${completed.toStringAsFixed(1)} h',
                         AppColors.brandGreen,
                       ),
                       _buildMiniStat(
-                        'Left',
+                        l10n.pick('Left', 'Rămase'),
                         '${remaining.toStringAsFixed(1)} h',
                         AppColors.brandMustard,
                       ),
@@ -415,6 +426,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   }
 
   Widget _buildUpcomingShiftsSection(String userId) {
+    final l10n = L10n.of(context);
     final now = DateTime.now();
     return Column(
       children: [
@@ -422,7 +434,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Upcoming Shifts',
+              l10n.pick('Upcoming shifts', 'Ture viitoare'),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             TextButton.icon(
@@ -434,8 +446,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                   ),
                 );
               },
-              icon: const Text(
-                'View calendar',
+              icon: Text(
+                l10n.pick('View calendar', 'Vezi calendarul'),
                 style: TextStyle(
                   color: AppColors.brandGreen,
                   fontSize: 13,
@@ -473,7 +485,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                 );
               }
               if (snapshot.hasError) {
-                return Center(child: Text('Error: '));
+                return Center(child: Text(L10n.of(context).errorWith(snapshot.error ?? '')));
               }
 
               final shifts = snapshot.data ?? [];
@@ -492,6 +504,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                       .toList();
 
                   return _buildShiftCard(
+                    context,
                     date,
                     dayShifts.isNotEmpty ? dayShifts.first : null,
                   );
@@ -504,7 +517,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     );
   }
 
-  Widget _buildShiftCard(DateTime date, ShiftModel? shift) {
+  Widget _buildShiftCard(BuildContext context, DateTime date, ShiftModel? shift) {
+    final l10n = L10n.of(context);
     final isToday = date.day == DateTime.now().day;
     final colors = [
       AppColors.brandTurquoise.withValues(alpha: 0.15),
@@ -536,7 +550,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            DateFormat('EEE').format(date).toUpperCase(),
+            l10n.weekdayShort(date.weekday),
             style: TextStyle(
               color: isToday
                   ? AppColors.brandGreen
@@ -580,8 +594,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
             ),
           ] else ...[
             const Text('—', style: TextStyle(color: AppColors.textLight)),
-            const Text(
-              'No shift',
+            Text(
+              l10n.pick('Off', 'Fără tură'),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -595,6 +609,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   }
 
   Widget _buildActionGrid(BuildContext context) {
+    final l10n = L10n.of(context);
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -604,8 +619,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       childAspectRatio: 1,
       children: [
         _buildSquareActionCard(
-          'Consumption',
-          'Log daily items',
+          l10n.pick('Consumption', 'Consum'),
+          l10n.pick("Log today's products", 'Notează produsele zilei'),
           Icons.emoji_food_beverage_rounded,
           AppColors.brandRed,
           () {
@@ -618,8 +633,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           },
         ),
         _buildSquareActionCard(
-          'Availability',
-          'Manage days',
+          l10n.pick('Availability', 'Disponibilitate'),
+          l10n.pick('Manage your days', 'Gestionează zilele'),
           Icons.calendar_month_rounded,
           AppColors.brandTurquoise,
           () {
@@ -632,8 +647,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           },
         ),
         _buildSquareActionCard(
-          'Vacation Status',
-          'View your time off',
+          l10n.pick('Vacation status', 'Status concediu'),
+          l10n.pick('See your time off', 'Vezi zilele libere'),
           Icons.beach_access_rounded,
           AppColors.brandPurple,
           () {
@@ -646,8 +661,8 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           },
         ),
         _buildSquareActionCard(
-          'Cleaning To-Do List',
-          'View and complete tasks',
+          l10n.pick('Cleaning list', 'Lista de curățenie'),
+          l10n.pick('View and check tasks', 'Vezi și bifează sarcinile'),
           Icons.cleaning_services_rounded,
           AppColors.brandGreen,
           () {

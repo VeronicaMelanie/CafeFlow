@@ -60,14 +60,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('APPROVED'), findsOneWidget);
-    expect(find.text('REJECTED'), findsNothing);
+    expect(find.text('Aprobat'), findsNWidgets(2));
+    expect(find.text('Respins'), findsOneWidget);
 
-    await tester.tap(find.text('Rejected'));
+    await tester.tap(find.text('Respins'));
     await tester.pumpAndSettle();
 
-    expect(find.text('REJECTED'), findsOneWidget);
-    expect(find.text('APPROVED'), findsNothing);
+    expect(find.text('Respins'), findsNWidgets(2));
+    expect(find.text('Aprobat'), findsOneWidget);
   });
 
   testWidgets('Rejected tab shows empty state when no rejected requests', (tester) async {
@@ -88,10 +88,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Rejected'));
+    await tester.tap(find.text('Respins'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No rejected vacation requests'), findsOneWidget);
+    expect(find.text('Nu există cereri de concediu respinse'), findsOneWidget);
   });
 
   testWidgets('Missing employment date shows safe balance message', (tester) async {
@@ -106,9 +106,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('employment start date has not been configured'),
+    expect(find.textContaining('Data de angajare nu a fost setată'),
         findsOneWidget);
-    expect(find.textContaining('days remaining'), findsNothing);
+    expect(find.textContaining('zile rămase'), findsNothing);
   });
 
   testWidgets('Request Vacation button is integrated and not a floating action button',
@@ -131,10 +131,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(FloatingActionButton), findsNothing);
-    expect(find.text('Request Vacation'), findsOneWidget);
+    expect(find.text('Cere concediu'), findsOneWidget);
 
-    final buttonRect = tester.getRect(find.text('Request Vacation'));
-    final cardRect = tester.getRect(find.text('APPROVED'));
+    final buttonRect = tester.getRect(find.text('Cere concediu'));
+    final cardRect = tester.getRect(find.byType(VacationRequestCard));
     expect(buttonRect.bottom <= cardRect.top, isTrue);
   });
 
@@ -158,10 +158,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Vacation Balance'), findsOneWidget);
-    expect(find.textContaining('days remaining'), findsOneWidget);
-    expect(find.text('Used'), findsOneWidget);
-    expect(find.text('Earned'), findsOneWidget);
+    expect(find.text('Sold concediu'), findsOneWidget);
+    expect(find.textContaining('zile rămase'), findsOneWidget);
+    expect(find.text('Folosite'), findsOneWidget);
+    expect(find.text('Acumulate'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 }

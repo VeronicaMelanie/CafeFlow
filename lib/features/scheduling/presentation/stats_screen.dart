@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/pwa/pwa_responsive.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/location_color_utils.dart';
@@ -27,17 +28,18 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
     final textTheme = Theme.of(context).textTheme;
+    final l10n = L10n.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.offWhite,
       body: userAsync.when(
         data: (user) {
-          if (user == null) return const Center(child: Text('Not logged in'));
+          if (user == null) return Center(child: Text(l10n.notSignedIn()));
 
           return Column(
             children: [
               ScreenHeader(
-                title: 'Statistics',
+                title: l10n.pick('Statistics', 'Statistici'),
                 topPadding: PwaResponsive.topSafePadding(context) + AppSpacing.lg,
               ),
               Expanded(
@@ -64,13 +66,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           );
         },
         loading: () => const Scaffold(body: AppLoadingIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        error: (e, st) => Center(child: Text(l10n.errorWith(e))),
       ),
     );
   }
 
   Widget _buildMonthlyOverview(dynamic user, TextTheme textTheme) {
     final now = DateTime.now();
+    final l10n = L10n.of(context);
     final shiftsAsync = ref.watch(shiftRepositoryProvider).getUserShiftsForMonth(user.uid, now);
 
     return AppSurface(
@@ -78,7 +81,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Monthly Overview',
+            L10n.of(context).pick('Monthly summary', 'Rezumat lunar'),
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -117,9 +120,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildStatItem('Worked', '${totalHours.toStringAsFixed(1)}h', AppColors.softPink),
-                          _buildStatItem('Target', '${targetHours.toInt()}h', AppColors.softYellow),
-                          _buildStatItem('Remaining', '${remaining.toStringAsFixed(0)}h', AppColors.softGreen),
+                          _buildStatItem(l10n.pick('Worked', 'Lucrate'), '${totalHours.toStringAsFixed(1)}h', AppColors.softPink),
+                          _buildStatItem(l10n.pick('Target', 'Țintă'), '${targetHours.toInt()}h', AppColors.softYellow),
+                          _buildStatItem(l10n.pick('Left', 'Rămase'), '${remaining.toStringAsFixed(0)}h', AppColors.softGreen),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xl),
@@ -130,7 +133,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Progress',
+                                L10n.of(context).pick('Progress', 'Progres'),
                                 style: textTheme.bodySmall?.copyWith(color: AppColors.textLight),
                               ),
                               Text(
@@ -191,7 +194,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Location Breakdown',
+            L10n.of(context).pick('By location', 'Pe locații'),
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -255,7 +258,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Recent Shifts',
+            L10n.of(context).pick('Recent shifts', 'Ture recente'),
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -270,7 +273,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               final recentShifts = shifts.take(5).toList();
 
               if (recentShifts.isEmpty) {
-                return const Text('No recent shifts', style: TextStyle(color: AppColors.textLight));
+                return Text(
+                  L10n.of(context).pick('No recent shifts', 'Nu există ture recente'),
+                  style: const TextStyle(color: AppColors.textLight),
+                );
               }
 
               return Column(
@@ -286,6 +292,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildShiftItem(ShiftModel shift) {
+    final l10n = L10n.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -313,7 +320,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  DateFormat('EEE, MMM dd').format(shift.date),
+                  DateFormat('EEE, MMM dd', l10n.isRo ? null : l10n.locale.languageCode).format(shift.date),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
                 Text(

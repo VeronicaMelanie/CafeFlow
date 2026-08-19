@@ -11,6 +11,7 @@ export function createFirebaseTokenVerifier(auth: Auth): TokenVerifier {
       email: decoded.email,
       name: typeof decoded.name === 'string' ? decoded.name : undefined,
       authProvider: decoded.firebase?.sign_in_provider,
+      emailVerified: decoded.email_verified === true,
     };
   };
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_shadows.dart';
@@ -24,6 +25,7 @@ class _PwaLimitationsBannerState extends State<PwaLimitationsBanner> {
     if (!kIsWeb || _dismissed) return const SizedBox.shrink();
     if (!pwaIsIosDevice()) return const SizedBox.shrink();
 
+    final l10n = L10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -61,10 +63,13 @@ class _PwaLimitationsBannerState extends State<PwaLimitationsBanner> {
                         color: AppColors.textDark.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'iPhone app notes',
-                          style: TextStyle(
+                          l10n.pick(
+                            'Notes about the iPhone app',
+                            'Note despre aplicația iPhone',
+                          ),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
                           ),
@@ -85,23 +90,41 @@ class _PwaLimitationsBannerState extends State<PwaLimitationsBanner> {
                   if (_expanded) ...[
                     const SizedBox(height: AppSpacing.sm),
                     _limitationRow(
-                      'Push notifications',
+                      l10n.pick('Push notifications', 'Notificări push'),
                       pwaIsStandalone()
-                          ? 'Limited on iOS PWA. Open the app to see schedule updates.'
-                          : 'Install to Home Screen first; iOS web push support is limited.',
+                          ? l10n.pick(
+                              'Limited on iOS PWA. Open the app for schedule updates.',
+                              'Limitate pe iOS PWA. Deschide aplicația pentru actualizări de program.',
+                            )
+                          : l10n.pick(
+                              'Install on the home screen; iOS web push support is limited.',
+                              'Instalează pe ecranul de pornire; suportul iOS pentru web push este limitat.',
+                            ),
                     ),
                     _limitationRow(
-                      'Background updates',
-                      'The app refreshes when you open it. Keep Safari PWA on your Home Screen.',
+                      l10n.pick('Background updates', 'Actualizări în fundal'),
+                      l10n.pick(
+                        'The app updates when you open it. Keep the Safari PWA on the home screen.',
+                        'Aplicația se actualizează când o deschizi. Păstrează PWA-ul Safari pe ecranul de pornire.',
+                      ),
                     ),
                     _limitationRow(
-                      'Storage',
-                      'Schedules are cached locally; sign in again if cache is cleared.',
+                      l10n.pick('Storage', 'Stocare'),
+                      l10n.pick(
+                        'The schedule is saved locally; sign in again if the cache is cleared.',
+                        'Programul este salvat local; autentifică-te din nou dacă cache-ul este șters.',
+                      ),
                     ),
                   ] else
-                    const Text(
-                      'Tap for iOS install & notification info',
-                      style: TextStyle(fontSize: 11, color: AppColors.textLight),
+                    Text(
+                      l10n.pick(
+                        'Tap for info about iOS install and notifications',
+                        'Apasă pentru info despre instalare și notificări iOS',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textLight,
+                      ),
                     ),
                 ],
               ),

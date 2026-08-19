@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -35,12 +36,12 @@ class AvailabilityDayEditOutcome {
         selection = result;
 }
 
-String _formatDayLabel(DateTime day) =>
-    DateFormat('EEEE, MMM d').format(day);
+String _formatDayLabel(DateTime day, L10n l10n) =>
+    DateFormat('EEEE, MMM d', l10n.isRo ? null : l10n.locale.languageCode).format(day);
 
-String _formatTimeRange(ShiftTypeSelectionResult initial) {
+String _formatTimeRange(ShiftTypeSelectionResult initial, L10n l10n) {
   if (initial.shiftType == AvailabilityShiftType.fullTime) {
-    return '07:00 – 18:00 (Full Day)';
+    return l10n.pick('07:00 – 18:00 (All day)', '07:00 – 18:00 (Toată ziua)');
   }
   final start = initial.start!;
   final end = initial.end!;
@@ -48,7 +49,10 @@ String _formatTimeRange(ShiftTypeSelectionResult initial) {
       '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';
   final endStr =
       '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
-  return '$startStr – $endStr (Custom Hours)';
+  return l10n.pick(
+    '$startStr – $endStr (Custom hours)',
+    '$startStr – $endStr (Ore personalizate)',
+  );
 }
 
 /// Edit sheet for a day that already has availability.
@@ -159,6 +163,7 @@ class _AvailabilityEditSheetState extends State<_AvailabilityEditSheet>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return FadeTransition(
@@ -202,7 +207,7 @@ class _AvailabilityEditSheetState extends State<_AvailabilityEditSheet>
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    _formatDayLabel(widget.day),
+                    _formatDayLabel(widget.day, l10n),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -211,7 +216,10 @@ class _AvailabilityEditSheetState extends State<_AvailabilityEditSheet>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Current: ${_formatTimeRange(widget.initial)}',
+                    l10n.pick(
+                      'Current: ${_formatTimeRange(widget.initial, l10n)}',
+                      'Actual: ${_formatTimeRange(widget.initial, l10n)}',
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textDark.withValues(alpha: 0.65),
@@ -219,16 +227,22 @@ class _AvailabilityEditSheetState extends State<_AvailabilityEditSheet>
                   ),
                   const SizedBox(height: 20),
                   _ChoiceTile(
-                    title: 'Change availability',
-                    subtitle: 'Switch Full Day / Custom Hours or edit times',
+                    title: l10n.pick('Change availability', 'Schimbă disponibilitatea'),
+                    subtitle: l10n.pick(
+                      'Switch All day / Custom hours or the times',
+                      'Schimbă Toată ziua / Ore personalizate sau orele',
+                    ),
                     icon: Icons.edit_calendar,
                     accent: AppColors.softPink,
                     onTap: () => Navigator.pop(context, 'change'),
                   ),
                   const SizedBox(height: 12),
                   _ChoiceTile(
-                    title: 'Remove availability',
-                    subtitle: 'This day will no longer be marked as available',
+                    title: l10n.pick('Remove availability', 'Șterge disponibilitatea'),
+                    subtitle: l10n.pick(
+                      'This day will no longer be marked as available',
+                      'Ziua nu va mai fi marcată ca disponibilă',
+                    ),
                     icon: Icons.delete_outline,
                     accent: AppColors.softYellow,
                     onTap: () => Navigator.pop(context, 'remove'),
@@ -274,6 +288,7 @@ class _AvailabilityChoiceSheetState extends State<_AvailabilityChoiceSheet>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return FadeTransition(
@@ -317,7 +332,10 @@ class _AvailabilityChoiceSheetState extends State<_AvailabilityChoiceSheet>
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'How are you available on ${_formatDayLabel(widget.day)}?',
+                    l10n.pick(
+                      'How can you work ${_formatDayLabel(widget.day, l10n)}?',
+                      'Cum poți lucra ${_formatDayLabel(widget.day, l10n)}?',
+                    ),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -326,7 +344,10 @@ class _AvailabilityChoiceSheetState extends State<_AvailabilityChoiceSheet>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Choose how long you can work this day.',
+                    l10n.pick(
+                      'Choose how much you can work this day.',
+                      'Alege cât poți lucra în această zi.',
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textDark.withValues(alpha: 0.65),
@@ -334,8 +355,11 @@ class _AvailabilityChoiceSheetState extends State<_AvailabilityChoiceSheet>
                   ),
                   const SizedBox(height: 20),
                   _ChoiceTile(
-                    title: 'Full Day',
-                    subtitle: "I'm available all day · 07:00 → 18:00 (11h)",
+                    title: l10n.pick('All day', 'Toată ziua'),
+                    subtitle: l10n.pick(
+                      'Available all day · 07:00 → 18:00 (11h)',
+                      'Sunt disponibil toată ziua · 07:00 → 18:00 (11h)',
+                    ),
                     icon: Icons.schedule,
                     accent: AppColors.softPink,
                     onTap: () =>
@@ -343,8 +367,11 @@ class _AvailabilityChoiceSheetState extends State<_AvailabilityChoiceSheet>
                   ),
                   const SizedBox(height: 12),
                   _ChoiceTile(
-                    title: 'Custom Hours',
-                    subtitle: "Select the hours when you're available",
+                    title: l10n.pick('Custom hours', 'Ore personalizate'),
+                    subtitle: l10n.pick(
+                      'Pick the hours you can work',
+                      'Alege orele în care poți lucra',
+                    ),
                     icon: Icons.tune,
                     accent: AppColors.softYellow,
                     onTap: () => Navigator.pop(
@@ -519,11 +546,21 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
     );
 
     if (!_isWithinShopHours(_start) || !_isWithinShopHours(_end)) {
-      setState(() => _error = 'Hours must be between 07:00 and 18:00.');
+      setState(
+        () => _error = L10n.of(context).pick(
+          'Hours must be between 07:00 and 18:00.',
+          'Orele trebuie să fie între 07:00 și 18:00.',
+        ),
+      );
       return;
     }
     if (!endDt.isAfter(startDt)) {
-      setState(() => _error = 'End time must be after start time.');
+      setState(
+        () => _error = L10n.of(context).pick(
+          'End time must be after start time.',
+          'Ora de sfârșit trebuie să fie după ora de început.',
+        ),
+      );
       return;
     }
 
@@ -539,6 +576,7 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return FadeTransition(
@@ -582,7 +620,10 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Custom hours — ${_formatDayLabel(widget.day)}',
+                    l10n.pick(
+                      'Custom hours — ${_formatDayLabel(widget.day, l10n)}',
+                      'Ore personalizate — ${_formatDayLabel(widget.day, l10n)}',
+                    ),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -591,7 +632,10 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Pick a start and end time (07:00–18:00).',
+                    l10n.pick(
+                      'Pick start and end times (07:00–18:00).',
+                      'Alege ora de început și de sfârșit (07:00–18:00).',
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textDark.withValues(alpha: 0.65),
@@ -602,7 +646,7 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
                     children: [
                       Expanded(
                         child: _TimePickerTile(
-                          label: 'Start',
+                          label: l10n.pick('Start', 'Început'),
                           time: _start,
                           onTap: () async {
                             final t = await _pickTime(_start);
@@ -613,7 +657,7 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
                       const SizedBox(width: 12),
                       Expanded(
                         child: _TimePickerTile(
-                          label: 'End',
+                          label: l10n.pick('End', 'Sfârșit'),
                           time: _end,
                           onTap: () async {
                             final t = await _pickTime(_end);
@@ -644,9 +688,9 @@ class _CustomHoursSheetState extends State<_CustomHoursSheet>
                           borderRadius: BorderRadius.circular(26),
                         ),
                       ),
-                      child: const Text(
-                        'Confirm',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.pick('Confirm', 'Confirmă'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),

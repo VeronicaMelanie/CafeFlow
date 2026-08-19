@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/pwa/pwa_responsive.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -56,11 +57,12 @@ class _VacationStatusContentState extends State<VacationStatusContent> {
     final visibleRequests = _selectedTab == VacationHistoryTab.approved
         ? approved
         : rejected;
+    final l10n = L10n.of(context);
 
     return Column(
       children: [
         ScreenHeader(
-          title: 'My Vacations',
+          title: l10n.pick('My vacation', 'Concediile mele'),
           topPadding: PwaResponsive.topSafePadding(context) + AppSpacing.lg,
           onBack: () => Navigator.pop(context),
         ),
@@ -81,14 +83,14 @@ class _VacationStatusContentState extends State<VacationStatusContent> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AppButton(
-                  text: 'Request Vacation',
+                  text: l10n.pick('Request vacation', 'Cere concediu'),
                   onPressed: widget.onRequestVacation,
                   backgroundColor: AppColors.primaryPink,
                 ),
                 if (pending.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   Text(
-                    'Pending approval',
+                    l10n.pick('Pending approval', 'În așteptarea aprobării'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.textDark,
@@ -139,6 +141,7 @@ class _VacationBalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +162,7 @@ class _VacationBalanceCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.md),
               Text(
-                'Vacation Balance',
+                l10n.pick('Vacation balance', 'Sold concediu'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppColors.textDark,
@@ -169,11 +172,14 @@ class _VacationBalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           if (!balance.hasEmploymentDate)
-            const Text(
-              'Your employment start date has not been configured yet. '
-              'Please contact an administrator to set it before viewing your '
-              'vacation balance.',
-              style: TextStyle(
+            Text(
+              l10n.pick(
+                'Your hire date is not set. Contact an administrator to see your vacation balance.',
+                'Data de angajare nu a fost setată. '
+                'Contactează un administrator ca să poți vedea '
+                'soldul de concediu.',
+              ),
+              style: const TextStyle(
                 color: AppColors.textLight,
                 fontSize: 13,
                 height: 1.4,
@@ -181,7 +187,10 @@ class _VacationBalanceCard extends StatelessWidget {
             )
           else ...[
             Text(
-              '${balance.remainingDays} days remaining',
+              l10n.pick(
+                '${balance.remainingDays} days left',
+                '${balance.remainingDays} zile rămase',
+              ),
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
@@ -193,14 +202,14 @@ class _VacationBalanceCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _BalanceMetric(
-                    label: 'Used',
+                    label: l10n.pick('Used', 'Folosite'),
                     value: '${balance.usedDays}',
                     color: AppColors.brandMustard,
                   ),
                 ),
                 Expanded(
                   child: _BalanceMetric(
-                    label: 'Earned',
+                    label: l10n.pick('Accrued', 'Acumulate'),
                     value: '${balance.earnedDays}',
                     color: AppColors.brandTurquoise,
                   ),
@@ -222,9 +231,14 @@ class _VacationBalanceCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               employmentDate == null
-                  ? 'Earned based on employment date'
-                  : 'Earned based on employment date · '
-                      '${DateFormat('dd MMM yyyy').format(employmentDate!)}',
+                  ? l10n.pick(
+                      'Accrued based on hire date',
+                      'Acumulate pe baza datei de angajare',
+                    )
+                  : l10n.pick(
+                      'Accrued based on hire date · ${DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode).format(employmentDate!)}',
+                      'Acumulate pe baza datei de angajare · ${DateFormat('dd MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode).format(employmentDate!)}',
+                    ),
               style: const TextStyle(
                 fontSize: 11,
                 color: AppColors.textLight,
@@ -302,7 +316,7 @@ class _VacationTabSelector extends StatelessWidget {
         children: [
           Expanded(
             child: _TabChip(
-              label: 'Approved',
+              label: L10n.of(context).pick('Approved', 'Aprobat'),
               count: approvedCount,
               isSelected: selectedTab == VacationHistoryTab.approved,
               selectedColor: AppColors.brandGreen,
@@ -311,7 +325,7 @@ class _VacationTabSelector extends StatelessWidget {
           ),
           Expanded(
             child: _TabChip(
-              label: 'Rejected',
+              label: L10n.of(context).pick('Rejected', 'Respins'),
               count: rejectedCount,
               isSelected: selectedTab == VacationHistoryTab.rejected,
               selectedColor: AppColors.brandPurple,
@@ -415,10 +429,15 @@ class VacationRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final locale = l10n.isRo ? null : l10n.locale.languageCode;
     final statusColor = _statusColor(vacation.status);
     final rangeText =
-        '${DateFormat('dd MMM').format(vacation.startDate)} → '
-        '${DateFormat('dd MMM yyyy').format(vacation.endDate)}';
+        '${DateFormat('dd MMM', locale).format(vacation.startDate)} → '
+        '${DateFormat('dd MMM yyyy', locale).format(vacation.endDate)}';
+    final daysLabel = vacation.durationInDays == 1
+        ? l10n.pick('1 day', '1 zi')
+        : l10n.pick('${vacation.durationInDays} days', '${vacation.durationInDays} zile');
 
     return AppSurface(
       child: Column(
@@ -436,7 +455,7 @@ class VacationRequestCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(
-                  vacation.status.toUpperCase(),
+                  _statusLabel(vacation.status, l10n),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -446,7 +465,10 @@ class VacationRequestCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                'Requested ${DateFormat('dd MMM yyyy').format(vacation.requestedAt)}',
+                l10n.pick(
+                  'Requested ${DateFormat('dd MMM yyyy', locale).format(vacation.requestedAt)}',
+                  'Cerere din ${DateFormat('dd MMM yyyy', locale).format(vacation.requestedAt)}',
+                ),
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.textLight,
@@ -465,7 +487,7 @@ class VacationRequestCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${vacation.durationInDays} Days',
+            daysLabel,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -477,16 +499,16 @@ class VacationRequestCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDateInfo(
-                'From',
-                DateFormat('dd MMM yyyy').format(vacation.startDate),
+                l10n.pick('From', 'De la'),
+                DateFormat('dd MMM yyyy', locale).format(vacation.startDate),
               ),
               _buildDateInfo(
-                'To',
-                DateFormat('dd MMM yyyy').format(vacation.endDate),
+                l10n.pick('To', 'Până la'),
+                DateFormat('dd MMM yyyy', locale).format(vacation.endDate),
               ),
               _buildDateInfo(
-                'Duration',
-                '${vacation.durationInDays} Days',
+                l10n.pick('Duration', 'Durată'),
+                daysLabel,
               ),
             ],
           ),
@@ -524,6 +546,19 @@ class VacationRequestCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _statusLabel(String status, L10n l10n) {
+    switch (status) {
+      case 'approved':
+        return l10n.pick('Approved', 'Aprobat');
+      case 'rejected':
+        return l10n.pick('Rejected', 'Respins');
+      case 'pending':
+        return l10n.pick('Pending', 'În așteptare');
+      default:
+        return status;
+    }
   }
 
   static Color _statusColor(String status) {
@@ -582,8 +617,14 @@ class _VacationTabEmptyState extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             isApproved
-                ? 'No approved vacation requests'
-                : 'No rejected vacation requests',
+                ? L10n.of(context).pick(
+                    'No approved vacation requests',
+                    'Nu există cereri de concediu aprobate',
+                  )
+                : L10n.of(context).pick(
+                    'No rejected vacation requests',
+                    'Nu există cereri de concediu respinse',
+                  ),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textLight,

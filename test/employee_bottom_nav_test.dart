@@ -23,7 +23,7 @@ void main() {
     );
     await tester.pump();
 
-    final statsLabel = tester.widget<Text>(find.text('Stats'));
+    final statsLabel = tester.widget<Text>(find.text('Statistici'));
     expect(statsLabel.style?.color, AppColors.brandGreen);
   });
 
@@ -49,7 +49,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Schedule'), findsOneWidget);
+    expect(find.text('Program'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.people_rounded));
     await tester.pump();
@@ -110,7 +110,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Schedule'), findsNothing);
+    expect(find.text('Program'), findsNothing);
     expect(find.textContaining('...'), findsNothing);
     expect(find.byIcon(Icons.calendar_today_rounded), findsWidgets);
   });
@@ -196,7 +196,7 @@ void main() {
     await tester.pump();
 
     final pillFinder = find.byType(DecoratedBox).first;
-    final labelFinder = find.text('Schedule');
+    final labelFinder = find.text('Program');
     expect(labelFinder, findsOneWidget);
 
     final pillRect = tester.getRect(pillFinder);
@@ -207,11 +207,11 @@ void main() {
 
   test('EmployeeBottomNavLayout hides Schedule label when pill is too narrow', () {
     expect(
-      EmployeeBottomNavLayout.activeLabelFits('Schedule', 42),
+      EmployeeBottomNavLayout.activeLabelFits('Program', 42),
       isFalse,
     );
     expect(
-      EmployeeBottomNavLayout.activeLabelFits('Team', 120),
+      EmployeeBottomNavLayout.activeLabelFits('Echipă', 120),
       isTrue,
     );
   });

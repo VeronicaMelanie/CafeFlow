@@ -3,4 +3,5 @@ export type AuthenticatedUser = {
   email?: string;
   name?: string;
   authProvider?: string;
+  emailVerified?: boolean;
 };

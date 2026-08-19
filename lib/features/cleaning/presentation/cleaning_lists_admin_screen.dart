@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/admin_guard.dart';
 import '../../../core/widgets/app_button.dart';
@@ -42,24 +43,27 @@ class _CleaningListsAdminScreenState
   }
 
   Future<void> _addTask() async {
+    final l10n = L10n.of(context);
     final controller = TextEditingController();
     final title = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add cleaning task'),
+        title: Text(l10n.pick('Add cleaning task', 'Adaugă sarcină de curățenie')),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Task name'),
+          decoration: InputDecoration(
+            labelText: l10n.pick('Task name', 'Numele sarcinii'),
+          ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.pick('Cancel', 'Anulează')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Add'),
+            child: Text(l10n.pick('Add', 'Adaugă')),
           ),
         ],
       ),
@@ -77,30 +81,38 @@ class _CleaningListsAdminScreenState
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(L10n.of(context).errorWith(e)),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
 
   Future<void> _editTask(CleaningTaskModel task) async {
+    final l10n = L10n.of(context);
     final controller = TextEditingController(text: task.title);
     final title = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit cleaning task'),
+        title: Text(
+          l10n.pick('Edit cleaning task', 'Editează sarcina de curățenie'),
+        ),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Task name'),
+          decoration: InputDecoration(
+            labelText: l10n.pick('Task name', 'Numele sarcinii'),
+          ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.pick('Cancel', 'Anulează')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Save'),
+            child: Text(l10n.pick('Save', 'Salvează')),
           ),
         ],
       ),
@@ -114,7 +126,10 @@ class _CleaningListsAdminScreenState
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(L10n.of(context).errorWith(e)),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -126,7 +141,10 @@ class _CleaningListsAdminScreenState
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(L10n.of(context).errorWith(e)),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -139,7 +157,10 @@ class _CleaningListsAdminScreenState
         body: Column(
           children: [
             ScreenHeader(
-              title: 'Cleaning To-Do Lists',
+              title: L10n.of(context).pick(
+                'Cleaning lists',
+                'Liste de curățenie',
+              ),
               onBack: () => Navigator.pop(context),
             ),
             Padding(
@@ -163,9 +184,19 @@ class _CleaningListsAdminScreenState
                     labelColor: AppColors.brandGreen,
                     unselectedLabelColor: AppColors.textLight,
                     indicatorColor: AppColors.brandGreen,
-                    tabs: const [
-                      Tab(text: 'Manage Tasks'),
-                      Tab(text: 'Completion'),
+                    tabs: [
+                      Tab(
+                        text: L10n.of(context).pick(
+                          'Manage tasks',
+                          'Gestionează sarcini',
+                        ),
+                      ),
+                      Tab(
+                        text: L10n.of(context).pick(
+                          'Completion',
+                          'Finalizare',
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -259,24 +290,29 @@ class _ManageTasksTab extends ConsumerWidget {
 
     return tasksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('Error: $error')),
+      error: (error, _) =>
+          Center(child: Text(L10n.of(context).errorWith(error))),
       data: (tasks) {
+        final l10n = L10n.of(context);
         return Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: AppButton(
-                text: '+ Add Item',
+                text: l10n.pick('+ Add item', '+ Adaugă element'),
                 onPressed: onAddTask,
                 backgroundColor: AppColors.brandGreen,
               ),
             ),
             Expanded(
               child: tasks.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'No tasks yet. Add the first cleaning task.',
-                        style: TextStyle(color: AppColors.textLight),
+                        l10n.pick(
+                          'No tasks yet. Add the first cleaning task.',
+                          'Nicio sarcină încă. Adaugă prima sarcină de curățenie.',
+                        ),
+                        style: const TextStyle(color: AppColors.textLight),
                       ),
                     )
                   : ReorderableListView.builder(
@@ -298,7 +334,7 @@ class _ManageTasksTab extends ConsumerWidget {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('$e'),
+                              content: Text(L10n.of(context).errorWith(e)),
                               backgroundColor: Colors.redAccent,
                             ),
                           );
@@ -370,15 +406,18 @@ class _CompletionTab extends ConsumerWidget {
 
     return tasksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('Error: $error')),
+      error: (error, _) =>
+          Center(child: Text(L10n.of(context).errorWith(error))),
       data: (tasks) {
         return employeesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
+          error: (error, _) =>
+          Center(child: Text(L10n.of(context).errorWith(error))),
           data: (employees) {
             return completionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
+              error: (error, _) =>
+          Center(child: Text(L10n.of(context).errorWith(error))),
               data: (completions) {
                 final locationEmployees = employees
                     .where(
@@ -389,8 +428,13 @@ class _CompletionTab extends ConsumerWidget {
                     .toList();
 
                 if (locationEmployees.isEmpty) {
-                  return const Center(
-                    child: Text('No employees for this location.'),
+                  return Center(
+                    child: Text(
+                      L10n.of(context).pick(
+                        'No employees for this location.',
+                        'Niciun angajat pentru această locație.',
+                      ),
+                    ),
                   );
                 }
 
@@ -428,7 +472,7 @@ class _CompletionTab extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  listKey.label,
+                                  listKey.labelFor(L10n.of(context)),
                                   style: const TextStyle(
                                     color: AppColors.textLight,
                                     fontSize: 12,
@@ -438,7 +482,10 @@ class _CompletionTab extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '${progress.completedCount} / ${progress.totalCount} completed',
+                            L10n.of(context).pick(
+                              '${progress.completedCount} / ${progress.totalCount} checked',
+                              '${progress.completedCount} / ${progress.totalCount} bifate',
+                            ),
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               color: progress.isComplete

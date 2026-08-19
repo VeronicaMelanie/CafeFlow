@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/admin_guard.dart';
@@ -57,13 +58,14 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
     return AdminGuard(
       child: Scaffold(
         backgroundColor: AppColors.offWhite,
         body: Column(
           children: [
             ScreenHeader(
-              title: 'Staffing Overview',
+              title: l10n.pick('Staffing overview', 'Situație personal'),
               onBack: () => Navigator.pop(context),
             ),
             _buildControls(),
@@ -76,21 +78,27 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
                         _buildSummaryCards(),
                         const SizedBox(height: AppSpacing.xxl),
                         _buildSection(
-                          'Underbooked days (< 18h)',
+                          l10n.pick(
+                            'Understaffed days (< 18h)',
+                            'Zile sub-acoperite (< 18h)',
+                          ),
                           _underbooked,
                           AppColors.softYellow,
                           Icons.trending_down,
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         _buildSection(
-                          'Fully occupied (22h)',
+                          l10n.pick(
+                            'Fully occupied (22h)',
+                            'Complet ocupate (22h)',
+                          ),
                           _full,
                           AppColors.softPink,
                           Icons.block,
                         ),
                         const SizedBox(height: AppSpacing.xxl),
                         Text(
-                          'Daily occupancy',
+                          l10n.pick('Daily occupancy', 'Ocupare zilnică'),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -109,6 +117,7 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
     final selected = names.contains(_location)
         ? _location
         : (names.isNotEmpty ? names.first : _location);
+    final l10n = L10n.of(context);
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -135,7 +144,9 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
               _load();
             },
           ),
-          Text(DateFormat('MMM yyyy').format(_month)),
+          Text(
+            DateFormat('MMM yyyy', l10n.isRo ? null : l10n.locale.languageCode).format(_month),
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () {
@@ -149,12 +160,13 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
   }
 
   Widget _buildSummaryCards() {
+    final l10n = L10n.of(context);
     return Row(
       children: [
         Expanded(
           child: _summaryCard(
             '${_underbooked.length}',
-            'Underbooked',
+            l10n.pick('Understaffed', 'Sub-acoperite'),
             AppColors.softYellow,
           ),
         ),
@@ -162,7 +174,7 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
         Expanded(
           child: _summaryCard(
             '${_full.length}',
-            'Fully booked',
+            l10n.pick('Fully occupied', 'Complet ocupate'),
             AppColors.softPink,
           ),
         ),
@@ -213,14 +225,23 @@ class _StaffingOverviewScreenState extends ConsumerState<StaffingOverviewScreen>
           ),
           const SizedBox(height: 12),
           if (days.isEmpty)
-            const Text('None this month', style: TextStyle(color: AppColors.textLight))
+            Text(
+              L10n.of(context).pick(
+                'None this month',
+                'Niciuna luna asta',
+              ),
+              style: const TextStyle(color: AppColors.textLight),
+            )
           else
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: days.map((d) {
                 return Chip(
-                  label: Text(DateFormat('MMM d').format(d)),
+                  label: Text(
+                    DateFormat('MMM d', L10n.of(context).isRo ? null : L10n.of(context).locale.languageCode)
+                        .format(d),
+                  ),
                   backgroundColor: color.withValues(alpha: 0.4),
                 );
               }).toList(),
