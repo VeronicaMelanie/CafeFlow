@@ -669,13 +669,27 @@ type ConsumptionRow = {
   consumedOn: Date;
   loggedAt: Date;
   notes: string | null;
+  product?: { name: string } | null;
 };
+
+const consumptionSelect = {
+  id: true,
+  userId: true,
+  productId: true,
+  locationId: true,
+  quantity: true,
+  consumedOn: true,
+  loggedAt: true,
+  notes: true,
+  product: { select: { name: true } },
+} as const;
 
 function serializeConsumption(row: ConsumptionRow) {
   return {
     id: row.id,
     user_id: row.userId,
     product_id: row.productId,
+    product_name: row.product?.name ?? null,
     location_id: row.locationId,
     quantity: Number(row.quantity),
     consumed_on: formatDateOnly(row.consumedOn),
@@ -685,10 +699,19 @@ function serializeConsumption(row: ConsumptionRow) {
 }
 
 function parseConsumptionQuantity(value: unknown): number | null {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+  const numeric =
+    typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+  if (typeof numeric !== 'number' || !Number.isFinite(numeric) || numeric <= 0) {
     return null;
   }
-  return value;
+  return numeric;
+}
+
+function parseProductName(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().replace(/\s+/g, ' ');
+  if (trimmed.length < 1 || trimmed.length > 80) return null;
+  return trimmed;
 }
 
 function parseConsumptionNotes(value: unknown): string | null | undefined {
@@ -700,7 +723,8 @@ function parseConsumptionNotes(value: unknown): string | null | undefined {
 }
 
 type ParsedConsumptionCreate = {
-  productId: string;
+  productId?: string;
+  productName?: string;
   consumedOn: Date;
   quantity: number;
   notes: string | null;
@@ -718,9 +742,10 @@ function parseConsumptionCreate(
   const productId = routeUuid(
     typeof data.product_id === 'string' ? data.product_id : undefined,
   );
+  const productName = parseProductName(data.product_name);
   const consumedOn = parseDateOnlyInput(data.consumed_on);
   const quantity = parseConsumptionQuantity(data.quantity);
-  if (!productId || !consumedOn || quantity == null) {
+  if ((!productId && !productName) || !consumedOn || quantity == null) {
     return { error: 'invalid_consumption' };
   }
   if (data.notes !== undefined && data.notes !== null && typeof data.notes !== 'string') {
@@ -743,7 +768,8 @@ function parseConsumptionCreate(
     return { error: 'invalid_consumption' };
   }
   return {
-    productId,
+    productId: productId ?? undefined,
+    productName: productName ?? undefined,
     consumedOn,
     quantity,
     notes: parseConsumptionNotes(data.notes) ?? null,
@@ -754,6 +780,7 @@ function parseConsumptionCreate(
 
 type ParsedConsumptionPatch = {
   productId?: string;
+  productName?: string;
   quantity?: number;
   notes?: string | null;
   hasNotes: boolean;
@@ -774,6 +801,11 @@ function parseConsumptionPatch(
     if (!productId) return { error: 'invalid_consumption' };
     parsed.productId = productId;
   }
+  if (data.product_name !== undefined) {
+    const productName = parseProductName(data.product_name);
+    if (!productName) return { error: 'invalid_consumption' };
+    parsed.productName = productName;
+  }
   if (data.quantity !== undefined) {
     const quantity = parseConsumptionQuantity(data.quantity);
     if (quantity == null) return { error: 'invalid_consumption' };
@@ -788,12 +820,27 @@ function parseConsumptionPatch(
   }
   if (
     parsed.productId === undefined &&
+    parsed.productName === undefined &&
     parsed.quantity === undefined &&
     !parsed.hasNotes
   ) {
     return { error: 'invalid_consumption' };
   }
   return parsed;
+}
+
+async function findOrCreateProductByName(name: string): Promise<string> {
+  const existing = await prisma.product.findFirst({
+    where: { name: { equals: name, mode: 'insensitive' } },
+    select: { id: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  if (existing) return existing.id;
+  const created = await prisma.product.create({
+    data: { name, isActive: true },
+    select: { id: true },
+  });
+  return created.id;
 }
 
 async function resolveConsumptionLocation(
@@ -827,7 +874,6 @@ async function resolveConsumptionLocation(
   ) {
     return requestedLocationId;
   }
-  if (shiftLocations.length > 1 && !requestedLocationId) return null;
 
   const assignments = await prisma.userLocation.findMany({
     where: {
@@ -850,7 +896,14 @@ async function resolveConsumptionLocation(
   }
   const preferred =
     assignments.find((row) => row.isPrimary) ?? assignments[0];
-  return preferred?.locationId ?? null;
+  if (preferred) return preferred.locationId;
+
+  const fallbackLocation = await prisma.location.findFirst({
+    where: { isActive: true },
+    orderBy: { name: 'asc' },
+    select: { id: true },
+  });
+  return fallbackLocation?.id ?? null;
 }
 
 const schedulingConfigSelect = {
@@ -2638,16 +2691,7 @@ export function createApp(verifyIdToken: TokenVerifier) {
   app.get('/api/consumptions', requireAuth(verifyIdToken), async (_req, res) => {
     try {
       const rows = await prisma.consumption.findMany({
-        select: {
-          id: true,
-          userId: true,
-          productId: true,
-          locationId: true,
-          quantity: true,
-          consumedOn: true,
-          loggedAt: true,
-          notes: true,
-        },
+        select: consumptionSelect,
         orderBy: [{ consumedOn: 'asc' }, { loggedAt: 'asc' }, { id: 'asc' }],
       });
 
@@ -2684,8 +2728,17 @@ export function createApp(verifyIdToken: TokenVerifier) {
           return;
         }
 
+        let productId = parsed.productId ?? null;
+        if (!productId && parsed.productName) {
+          productId = await findOrCreateProductByName(parsed.productName);
+        }
+        if (!productId) {
+          res.status(400).json({ error: 'invalid_consumption' });
+          return;
+        }
+
         const product = await prisma.product.findUnique({
-          where: { id: parsed.productId },
+          where: { id: productId },
           select: { id: true },
         });
         if (!product) {
@@ -2706,13 +2759,14 @@ export function createApp(verifyIdToken: TokenVerifier) {
         const row = await prisma.consumption.create({
           data: {
             userId: actor.id,
-            productId: parsed.productId,
+            productId,
             locationId,
             quantity: parsed.quantity,
             consumedOn: parsed.consumedOn,
             loggedAt: new Date(),
             notes: parsed.notes,
           },
+          select: consumptionSelect,
         });
         res.status(201).json(serializeConsumption(row));
       } catch {
@@ -2760,9 +2814,13 @@ export function createApp(verifyIdToken: TokenVerifier) {
           return;
         }
 
-        if (parsed.productId) {
+        let nextProductId = parsed.productId ?? null;
+        if (!nextProductId && parsed.productName) {
+          nextProductId = await findOrCreateProductByName(parsed.productName);
+        }
+        if (nextProductId) {
           const product = await prisma.product.findUnique({
-            where: { id: parsed.productId },
+            where: { id: nextProductId },
             select: { id: true },
           });
           if (!product) {
@@ -2774,12 +2832,13 @@ export function createApp(verifyIdToken: TokenVerifier) {
         const row = await prisma.consumption.update({
           where: { id },
           data: {
-            ...(parsed.productId ? { productId: parsed.productId } : {}),
+            ...(nextProductId ? { productId: nextProductId } : {}),
             ...(parsed.quantity !== undefined
               ? { quantity: parsed.quantity }
               : {}),
             ...(parsed.hasNotes ? { notes: parsed.notes ?? null } : {}),
           },
+          select: consumptionSelect,
         });
         res.json(serializeConsumption(row));
       } catch {

@@ -75,8 +75,24 @@ class CleaningRepository {
     return api;
   }
 
+  Future<_CleaningBundle>? _bundleInFlight;
+
   /// GET /api/cleaning returns lists + tasks + completions; filter client-side.
   Future<_CleaningBundle> _loadBundle() async {
+    final pending = _bundleInFlight;
+    if (pending != null) return pending;
+    final future = _fetchBundle();
+    _bundleInFlight = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_bundleInFlight, future)) {
+        _bundleInFlight = null;
+      }
+    }
+  }
+
+  Future<_CleaningBundle> _fetchBundle() async {
     final users = _users;
     final locations = _locations;
     if (users == null || locations == null) {

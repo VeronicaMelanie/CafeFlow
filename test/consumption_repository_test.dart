@@ -136,7 +136,7 @@ void main() {
     expect(calls, 0);
   });
 
-  test('creates a consumption with POST product_id and DATE, no user_id',
+  test('creates a consumption with POST product_name and DATE, no user_id',
       () async {
     final requests = <http.Request>[];
     final repos = buildVccRepos(
@@ -147,7 +147,8 @@ void main() {
           expect(request.url.path, '/api/consumptions');
           return http.Response(
             '{"id":"cons-new","user_id":"cb3355e2-1bad-4826-8796-ca1734ce288a",'
-            '"product_id":"prod-coffee","location_id":"ff63f35a-ddd1-449e-9021-33ee78e2261a",'
+            '"product_id":"prod-coffee","product_name":"Espresso",'
+            '"location_id":"ff63f35a-ddd1-449e-9021-33ee78e2261a",'
             '"quantity":2,"consumed_on":"2026-11-02","logged_at":"2026-08-15T12:00:00.000Z",'
             '"notes":"after shift"}',
             201,
@@ -168,13 +169,44 @@ void main() {
     );
 
     expect(requests, hasLength(1));
-    expect(requests.single.body, contains('"product_id":"prod-coffee"'));
+    expect(requests.single.body, contains('"product_name":"Espresso"'));
     expect(requests.single.body, contains('"consumed_on":"2026-11-02"'));
     expect(requests.single.body, contains('"quantity":2'));
     expect(requests.single.body, contains('"notes":"after shift"'));
     expect(requests.single.body.contains('user_id'), isFalse);
     expect(requests.single.body.contains('productName'), isFalse);
-    expect(requests.single.body.contains('Espresso'), isFalse);
+  });
+
+  test('posts typed product_name when the catalog has no match', () async {
+    final requests = <http.Request>[];
+    final repos = buildVccRepos(
+      vccApiMock(
+        onWrite: (request) async {
+          requests.add(request);
+          return http.Response(
+            '{"id":"cons-new","user_id":"cb3355e2-1bad-4826-8796-ca1734ce288a",'
+            '"product_id":"prod-new","product_name":"ceai verde",'
+            '"location_id":"ff63f35a-ddd1-449e-9021-33ee78e2261a",'
+            '"quantity":1,"consumed_on":"2026-11-02","logged_at":"2026-08-15T12:00:00.000Z",'
+            '"notes":null}',
+            201,
+          );
+        },
+      ),
+    );
+
+    await repos.consumptions.addConsumption(
+      ConsumptionModel(
+        id: '',
+        userId: 'firebase-employee-1',
+        productName: 'ceai verde',
+        quantity: 1,
+        date: DateTime(2026, 11, 2),
+      ),
+    );
+
+    expect(requests.single.body, contains('"product_name":"ceai verde"'));
+    expect(requests.single.body.contains('product_id'), isFalse);
   });
 
   test('updates and deletes through PATCH/DELETE with PostgreSQL UUID',
@@ -201,7 +233,7 @@ void main() {
     await repos.consumptions.updateConsumption('cons-1', 'Espresso', 4, 'updated');
     expect(requests.single.method, 'PATCH');
     expect(requests.single.url.path, '/api/consumptions/cons-1');
-    expect(requests.single.body, contains('"product_id":"prod-coffee"'));
+    expect(requests.single.body, contains('"product_name":"Espresso"'));
     expect(requests.single.body, contains('"quantity":4'));
     expect(requests.single.body, contains('"notes":"updated"'));
     expect(requests.single.body.contains('productName'), isFalse);

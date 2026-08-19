@@ -70,12 +70,14 @@ class ConsumptionRepository {
       final map = Map<String, dynamic>.from(item as Map);
       final user = usersByPostgresId[map['user_id']?.toString() ?? ''];
       final product = productById[map['product_id']?.toString() ?? ''];
-      if (user == null || product == null) continue;
+      final productName =
+          product?.name ?? map['product_name']?.toString().trim();
+      if (user == null || productName == null || productName.isEmpty) continue;
       result.add(
         ConsumptionModel.fromApiJson(
           map,
           firebaseUid: user.uid,
-          productName: product.name,
+          productName: productName,
         ),
       );
     }
@@ -133,11 +135,16 @@ class ConsumptionRepository {
     String? locationId,
   }) async {
     if (_testMode) return;
-    final productId = await _productIdForName(consumption.productName);
+    final productName = consumption.productName.trim();
+    if (productName.isEmpty) {
+      throw const ApiException('Product name is required');
+    }
+    final productId = await _lookupProductId(productName);
     await _client.postJson(
       '/api/consumptions',
       body: {
-        'product_id': productId,
+        if (productId != null) 'product_id': productId,
+        'product_name': productName,
         'consumed_on': ApiDateTime.formatDateOnly(consumption.date),
         'quantity': consumption.quantity,
         if (locationId != null && locationId.isNotEmpty) 'location_id': locationId,
@@ -145,6 +152,7 @@ class ConsumptionRepository {
           'notes': consumption.notes!.trim(),
       },
     );
+    _products?.invalidateCache();
   }
 
   Future<void> updateConsumption(
@@ -154,15 +162,21 @@ class ConsumptionRepository {
     String notes,
   ) async {
     if (_testMode) return;
-    final productId = await _productIdForName(productName);
+    final trimmedName = productName.trim();
+    if (trimmedName.isEmpty) {
+      throw const ApiException('Product name is required');
+    }
+    final productId = await _lookupProductId(trimmedName);
     await _client.patchJson(
       '/api/consumptions/$id',
       body: {
-        'product_id': productId,
+        if (productId != null) 'product_id': productId,
+        'product_name': trimmedName,
         'quantity': quantity,
         'notes': notes.trim().isEmpty ? null : notes.trim(),
       },
     );
+    _products?.invalidateCache();
   }
 
   Future<void> deleteConsumption(String id) async {
@@ -170,8 +184,9 @@ class ConsumptionRepository {
     await _client.delete('/api/consumptions/$id');
   }
 
-  Future<String> _productIdForName(String name) async {
+  Future<String?> _lookupProductId(String name) async {
     final needle = name.trim().toLowerCase();
+    if (needle.isEmpty) return null;
     final products = await _productRepo.getProducts();
     ProductModel? exact;
     ProductModel? partial;
@@ -182,17 +197,22 @@ class ConsumptionRepository {
         exact = product;
         break;
       }
-      if (product.isActive && productName.contains(needle) && needle.isNotEmpty) {
+      if (product.isActive && productName.contains(needle)) {
         partialCount += 1;
         partial = product;
       }
     }
     final match = exact ?? (partialCount == 1 ? partial : null);
-    if (match == null) {
-      throw ApiException('Unknown product: $name');
-    }
-    return match.id;
+    final id = match?.id;
+    if (id == null || !_looksLikeUuid(id)) return null;
+    return id;
   }
+
+  static final _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  bool _looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
 }
 
 final consumptionRepositoryProvider = Provider(

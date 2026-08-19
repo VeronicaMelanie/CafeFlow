@@ -22,6 +22,7 @@ class CleaningTodoScreen extends ConsumerStatefulWidget {
 
 class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
   CleaningListKey _selectedListKey = CleaningListKey.closing;
+  final Map<String, bool> _optimisticCompleted = {};
 
   @override
   void initState() {
@@ -40,6 +41,19 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
     }
   }
 
+  List<CleaningTaskViewModel> _withOptimistic(
+    List<CleaningTaskViewModel> views,
+  ) {
+    if (_optimisticCompleted.isEmpty) return views;
+    return [
+      for (final view in views)
+        CleaningTaskViewModel(
+          task: view.task,
+          completed: _optimisticCompleted[view.task.id] ?? view.completed,
+        ),
+    ];
+  }
+
   Future<void> _toggleTask(CleaningTaskModel task) async {
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
@@ -56,12 +70,17 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
       employeeId: user.uid,
       location: location,
     );
-    final views = ref.read(cleaningTaskViewsProvider(query)).value ?? [];
+    final views = _withOptimistic(
+      ref.read(cleaningTaskViewsProvider(query)).value ?? [],
+    );
     final current = views.firstWhere(
       (view) => view.task.id == task.id,
       orElse: () => CleaningTaskViewModel(task: task, completed: false),
     );
     final nextCompleted = !current.completed;
+    setState(() {
+      _optimisticCompleted[task.id] = nextCompleted;
+    });
 
     try {
       await repository.setTaskCompletion(
@@ -70,24 +89,29 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
         weekId: weekId,
         completed: nextCompleted,
       );
-      ref.invalidate(cleaningTaskViewsProvider(query));
-      ref.invalidate(
-        cleaningAdminCompletionsProvider(
-          CleaningListQuery(
-            listId: query.listId,
-            location: location,
-            employeeId: '',
-            weekId: weekId,
-          ),
-        ),
-      );
     } catch (e) {
       if (!mounted) return;
+      setState(() {
+        _optimisticCompleted.remove(task.id);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$e'), backgroundColor: Colors.redAccent),
       );
       return;
     }
+
+    if (!mounted) return;
+    ref.invalidate(cleaningTaskViewsProvider(query));
+    ref.invalidate(
+      cleaningAdminCompletionsProvider(
+        CleaningListQuery(
+          listId: query.listId,
+          location: location,
+          employeeId: '',
+          weekId: weekId,
+        ),
+      ),
+    );
 
     if (!nextCompleted) return;
 
@@ -143,6 +167,8 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
     final taskViewsAsync = ref.watch(cleaningTaskViewsProvider(query));
 
     return taskViewsAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       loading: () => CleaningTodoContent(
         selectedListKey: _selectedListKey,
         onListKeyChanged: (key) => setState(() => _selectedListKey = key),
@@ -162,7 +188,7 @@ class _CleaningTodoScreenState extends ConsumerState<CleaningTodoScreen> {
       data: (taskViews) => CleaningTodoContent(
         selectedListKey: _selectedListKey,
         onListKeyChanged: (key) => setState(() => _selectedListKey = key),
-        taskViews: taskViews,
+        taskViews: _withOptimistic(taskViews),
         onToggleTask: _toggleTask,
         locationLabel: location,
       ),

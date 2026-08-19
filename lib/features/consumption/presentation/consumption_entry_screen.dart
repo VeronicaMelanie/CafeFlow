@@ -208,7 +208,7 @@ class _ConsumptionEntryScreenState
               decoration: InputDecoration(
                 labelText: 'What did you have?',
                 hintText: products.isEmpty
-                    ? 'No products available'
+                    ? 'Type the product name'
                     : 'Type to search, e.g. latte',
                 prefixIcon: const Icon(
                   Icons.search,
@@ -270,7 +270,7 @@ class _ConsumptionEntryScreenState
                 _resolveProduct(products) == null) ...[
               const SizedBox(height: AppSpacing.sm),
               const Text(
-                'No matching product. Keep typing or pick from the list.',
+                'No catalog match — we will save what you typed.',
                 style: TextStyle(fontSize: 12, color: AppColors.textLight),
               ),
             ],
@@ -571,18 +571,10 @@ class _ConsumptionEntryScreenState
   Future<void> _submit(String userId) async {
     final wasEditing = _editingId != null;
     final products = ref.read(productsProvider).valueOrNull ?? [];
-    final product = _resolveProduct(products);
-    if (product == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Type a product name and pick it from the suggestions.'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
+    final typedName = _productQueryController.text.trim();
+    if (typedName.isEmpty) return;
+    final resolved = _resolveProduct(products);
+    final productName = resolved?.name ?? typedName;
 
     final locationName = ref.read(selectedLocationProvider);
     final locations = ref.read(locationsProvider).valueOrNull ?? [];
@@ -594,7 +586,7 @@ class _ConsumptionEntryScreenState
             .read(consumptionRepositoryProvider)
             .updateConsumption(
               _editingId!,
-              product.name,
+              productName,
               _quantity,
               _notesController.text,
             );
@@ -602,7 +594,7 @@ class _ConsumptionEntryScreenState
         final consumption = ConsumptionModel(
           id: '',
           userId: userId,
-          productName: product.name,
+          productName: productName,
           quantity: _quantity,
           date: _selectedDate,
           notes: _notesController.text,
@@ -611,6 +603,9 @@ class _ConsumptionEntryScreenState
               consumption,
               locationId: locationId,
             );
+      }
+      if (resolved == null) {
+        ref.invalidate(productsProvider);
       }
     } catch (e) {
       if (mounted) {
@@ -668,7 +663,7 @@ class _ConsumptionEntryScreenState
 
   String _humanizeSaveError(Object error) {
     if (error is ApiHttpException && error.message == 'invalid_consumption') {
-      return 'could not match this product or location. Try another product name.';
+      return 'could not save this entry. Check the date, quantity, and try again.';
     }
     return '$error';
   }

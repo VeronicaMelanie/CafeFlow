@@ -25,6 +25,7 @@ const ALLOWED_FIELDS = [
   'id',
   'user_id',
   'product_id',
+  'product_name',
   'location_id',
   'quantity',
   'consumed_on',
@@ -38,6 +39,9 @@ const WRITE_DATE = '2099-08-15';
 async function cleanupConsumptionWriteTests() {
   await prisma.consumption.deleteMany({
     where: { consumedOn: { gte: new Date('2099-01-01T00:00:00.000Z') } },
+  });
+  await prisma.product.deleteMany({
+    where: { name: { startsWith: 'test-cons-product-' } },
   });
 }
 
@@ -95,6 +99,7 @@ async function expectedConsumptionsFromPostgres() {
       consumedOn: true,
       loggedAt: true,
       notes: true,
+      product: { select: { name: true } },
     },
     orderBy: [{ consumedOn: 'asc' }, { loggedAt: 'asc' }, { id: 'asc' }],
   });
@@ -103,6 +108,7 @@ async function expectedConsumptionsFromPostgres() {
     id: row.id,
     user_id: row.userId,
     product_id: row.productId,
+    product_name: row.product.name,
     location_id: row.locationId,
     quantity: Number(row.quantity),
     consumed_on: formatDateOnly(row.consumedOn),
@@ -137,9 +143,8 @@ describe('GET /api/consumptions', () => {
     assert.equal(JSON.stringify(res.body).includes('not-a-real-token'), false);
   });
 
-  it('returns 200 with zero PostgreSQL consumptions and valid empty constraints', async () => {
+  it('returns 200 with PostgreSQL consumptions and allowed fields', async () => {
     const expected = await expectedConsumptionsFromPostgres();
-    assert.equal(expected.length, 0);
 
     const preview = JSON.parse(
       fs.readFileSync(
@@ -151,7 +156,6 @@ describe('GET /api/consumptions', () => {
       ),
     );
     assert.ok(Array.isArray(preview));
-    assert.equal(preview.length, 0);
 
     const app = createApp(mockVerifier(async (token) => {
       assert.equal(token, 'valid-id-token');
@@ -163,7 +167,7 @@ describe('GET /api/consumptions', () => {
 
     assert.equal(res.status, 200);
     assert.ok(Array.isArray(res.body));
-    assert.equal(res.body.length, 0);
+    assert.equal(res.body.length, expected.length);
     assert.deepEqual(res.body, expected);
 
     const userIds = new Set(
@@ -187,6 +191,7 @@ describe('GET /api/consumptions', () => {
       assert.ok(row.quantity > 0);
       assert.ok(row.consumed_on);
       assert.ok(row.logged_at);
+      assert.equal(typeof row.product_name, 'string');
     }
   });
 
@@ -209,7 +214,6 @@ describe('GET /api/consumptions', () => {
 
     assert.equal(res.status, 200);
     assert.equal(res.body.length, pgCount);
-    assert.equal(res.body.length, 0);
   });
 });
 
@@ -352,6 +356,7 @@ describe('POST /api/consumptions', () => {
     assert.equal(res.body.user_id, employee.id);
     assert.notEqual(res.body.user_id, admin.id);
     assert.equal(res.body.product_id, product.id);
+    assert.equal(res.body.product_name, product.name);
     assert.equal(res.body.consumed_on, WRITE_DATE);
     assert.equal(res.body.quantity, 2);
     assert.equal(res.body.notes, 'test write');
@@ -377,7 +382,38 @@ describe('POST /api/consumptions', () => {
     assert.ok(fromGet);
     assert.equal(fromGet.user_id, employee.id);
     assert.equal(fromGet.product_id, product.id);
+    assert.equal(fromGet.product_name, product.name);
     assert.equal(fromGet.consumed_on, WRITE_DATE);
+  });
+
+  it('creates a consumption from product_name and finds or creates the product', async () => {
+    const { employee } = await loadEmployeeAndAdmin();
+    const app = createApp(
+      mockVerifier(async () => ({ uid: employee.firebaseUid })),
+    );
+    const productName = `test-cons-product-${Date.now()}`;
+
+    const res = await request(app)
+      .post('/api/consumptions')
+      .set('Authorization', 'Bearer valid-id-token')
+      .send({
+        product_name: productName,
+        consumed_on: WRITE_DATE,
+        quantity: 1,
+      });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.product_name, productName);
+    assert.ok(res.body.product_id);
+    assert.ok(res.body.location_id);
+
+    const created = await prisma.product.findUnique({
+      where: { id: res.body.product_id },
+      select: { id: true, name: true, isActive: true },
+    });
+    assert.ok(created);
+    assert.equal(created.name, productName);
+    assert.equal(created.isActive, true);
   });
 });
 

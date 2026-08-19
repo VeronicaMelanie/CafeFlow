@@ -1,6 +1,7 @@
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_datetime.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/api/ttl_cache.dart';
 import '../../locations/data/location_repository.dart';
 import '../../locations/utils/location_catalog.dart';
 import '../domain/user_model.dart';
@@ -14,8 +15,13 @@ class UsersRepository {
 
   final ApiClient _api;
   final LocationRepository _locations;
+  final TtlCache<List<UserModel>> _cache = TtlCache();
 
-  Future<List<UserModel>> getUsers() async {
+  Future<List<UserModel>> getUsers() {
+    return _cache.getOrLoad(_fetchUsers);
+  }
+
+  Future<List<UserModel>> _fetchUsers() async {
     final json = await _api.getJson('/api/users');
     if (json is! List) {
       throw const ApiException('Expected a JSON array from /api/users');
@@ -73,6 +79,7 @@ class UsersRepository {
     if (json is! Map) {
       throw const ApiException('Expected a JSON object from POST /api/users');
     }
+    _cache.invalidate();
     return _userFromApiJson(Map<String, dynamic>.from(json));
   }
 
@@ -104,6 +111,7 @@ class UsersRepository {
     if (json is! Map) {
       throw const ApiException('Expected a JSON object from PATCH /api/users');
     }
+    _cache.invalidate();
     return _userFromApiJson(Map<String, dynamic>.from(json));
   }
 

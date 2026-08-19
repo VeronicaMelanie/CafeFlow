@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/api/api_providers.dart';
 import '../../locations/presentation/location_providers.dart';
+import '../../products/presentation/product_providers.dart';
 import '../data/auth_repository.dart';
 import '../data/users_repository.dart';
 import '../domain/user_model.dart';
@@ -28,7 +31,12 @@ final authStateProvider = StreamProvider<User?>((ref) {
 final currentUserProvider = FutureProvider<UserModel?>((ref) async {
   final user = await ref.watch(authStateProvider.future);
   if (user == null) return null;
-  return ref.read(authRepositoryProvider).getCurrentUserModel();
+  final model = await ref.read(authRepositoryProvider).getCurrentUserModel();
+  if (model != null) {
+    unawaited(ref.read(locationRepositoryProvider).getLocations());
+    unawaited(ref.read(productRepositoryProvider).getProducts());
+  }
+  return model;
 });
 
 final allEmployeesProvider = StreamProvider<List<UserModel>>((ref) {

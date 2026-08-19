@@ -16,7 +16,7 @@ class ApiClient {
     required AuthTokenSource tokenSource,
     http.Client? httpClient,
     String? baseUrl,
-    Duration timeout = const Duration(seconds: 20),
+    Duration timeout = const Duration(seconds: 60),
   })  : _tokenSource = tokenSource,
         _ownsClient = httpClient == null,
         _http = httpClient ?? http.Client(),

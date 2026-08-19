@@ -173,4 +173,17 @@ void main() {
     expect(find.text('Could not save: Exception: save failed'), findsOneWidget);
     expect(find.text('espresso lung'), findsWidgets);
   });
+
+  testWidgets('saves typed product name without picking a suggestion',
+      (tester) async {
+    await prepareScreen(tester);
+
+    await tester.enterText(find.byKey(const Key('product-search')), 'ceai verde');
+    await tester.pump();
+    await submitConsumption(tester);
+
+    expect(find.text('Logged! Enjoy your coffee! ☕'), findsOneWidget);
+    expect(repository.items, hasLength(1));
+    expect(repository.items.single.productName, 'ceai verde');
+  });
 }
